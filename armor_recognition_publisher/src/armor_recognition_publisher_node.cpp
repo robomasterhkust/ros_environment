@@ -18,15 +18,17 @@ using namespace std;
 ros::Publisher pub_cmd;
 
 void img_callback(const sensor_msgs::ImageConstPtr &img_msg) {
+    Mat frame;
     cv_bridge::CvImagePtr bridge_ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::RGB8);
 
+    frame = bridge_ptr->image;
 }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "armor_recognition_publisher");
     ros::NodeHandle n("~");
 
-    ros::Subscriber sub = n.subscribe("/raw_image", 2, img_callback);
+    ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 2, img_callback);
 
     ros::spin();
 }
