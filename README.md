@@ -9,12 +9,14 @@ http://wiki.ros.org/ROS/Installation
 
 3. git clone --recursive git@github.com:robomasterhkust/ros_environment.git src
 
-4. catkin_make
+4. cd cv_camera && git clone git@github.com:OTL/cv_camera.git
+
+5. catkin_make
 
 ## Start the program
-5. roscore
+6. roscore
 
-6. cd src/armor_recognition_publisher/launch
+7. cd src/armor_recognition_publisher/launch
 
-7. roslaunch armor_recognition.launch
+8. roslaunch armor_recognition.launch
 
