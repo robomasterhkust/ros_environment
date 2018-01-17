@@ -20,3 +20,8 @@ http://wiki.ros.org/ROS/Installation
 
 8. roslaunch armor_recognition.launch
 
+
+## Reference
+My TA GAO Wenliang's repository for ELEC 5660 code setup:
+
+https://github.com/gaowenliang/ELEC5660_lab_code
