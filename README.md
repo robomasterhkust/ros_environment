@@ -20,12 +20,7 @@ http://wiki.ros.org/ROS/Installation
 
 2. install pixhawk toolchain
 To install the development toolchain:
-
-Download ubuntu_sim_nuttx.sh.
-  Run the script in a bash shell:
-  source ubuntu_sim_nuttx.sh
-  You may need to acknowledge some prompts as the script progresses.
-  Restart the computer on completion.
+https://dev.px4.io/en/setup/dev_env_linux.html
 
 ## Start the program
 1. roscore
