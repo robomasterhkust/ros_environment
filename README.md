@@ -1,6 +1,8 @@
 # ros_environment
 ROS src packages that support the computer vision team's result
 
+System: Ubuntu 16.04 LTS
+
 ## Get started
 1. install Robotics Operating System Kinetic in your Ubuntu computer
 http://wiki.ros.org/ROS/Installation
@@ -13,12 +15,24 @@ http://wiki.ros.org/ROS/Installation
 
 5. catkin_make
 
+## Toolchain
+1. sudo apt-get install openocd minicom -y
+
+2. install pixhawk toolchain
+To install the development toolchain:
+
+Download ubuntu_sim_nuttx.sh.
+  Run the script in a bash shell:
+  source ubuntu_sim_nuttx.sh
+  You may need to acknowledge some prompts as the script progresses.
+  Restart the computer on completion.
+
 ## Start the program
-6. roscore
+1. roscore
 
-7. cd src/armor_recognition_publisher/launch
+2. cd src/armor_recognition_publisher/launch
 
-8. roslaunch armor_recognition.launch
+3. roslaunch armor_recognition.launch
 
 
 ## Reference
