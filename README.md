@@ -40,14 +40,21 @@ and add the following:
 `alias cmk='cd ~/ws && catkin_make -j4 -l4 && source devel/setup.bash && cd -'`
 
 `alias ll='ls -alF'`
+
 `alias la='ls -A'`
+
 `alias l='ls -cF'`
+
 `source ~/ws/devel/setup.bash`
 
 and `source ~/.bashrc` after saving the vim file.
 
 4. install CV related dependences
+
 openCV, Eigen, PCL, Ceres
+
+5. install RMOC open sourced dependency
+https://github.com/robomasterhkust/RoboRTS
 
 ## Start the program
 1. roscore
