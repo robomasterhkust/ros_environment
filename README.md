@@ -16,7 +16,15 @@ http://wiki.ros.org/ROS/Installation
 5. catkin_make
 
 ## Toolchain
-1. sudo apt-get install openocd minicom -y
+`sudo apt-get install openocd minicom -y`
+
+`sudo apt-get install terminator -y`
+
+`sudo apt-get install cmake -y`
+
+`sudo apt-get install vim -y`
+
+`sudo apt-get install htop`
 
 2. install pixhawk toolchain
 To install the development toolchain:
