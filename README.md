@@ -5,6 +5,19 @@ System: Ubuntu 16.04 LTS
 
 ROS Version: Kinetic
 
+## Software architecture
+
+- docs
+- modules
+  - driver
+  - control
+  - planning
+  - estimator
+  - perception_others
+- perception_cv
+- tools
+- history
+
 ## Get started
 1. install Robotics Operating System Kinetic in your Ubuntu computer
 http://wiki.ros.org/ROS/Installation
@@ -57,13 +70,6 @@ openCV, Eigen, PCL, Ceres
 
 5. install RMOC open sourced dependency
 https://github.com/robomasterhkust/RoboRTS
-
-## Start the program
-1. roscore
-
-2. cd src/armor_recognition_publisher/launch
-
-3. roslaunch armor_recognition.launch
 
 
 ## Reference
