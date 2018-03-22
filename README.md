@@ -13,7 +13,7 @@ http://wiki.ros.org/ROS/Installation
 
 3. `git clone --recursive git@github.com:robomasterhkust/ros_environment.git src`
 
-4. `cd cv_camera && git clone git@github.com:OTL/cv_camera.git`
+4. `cd perception_cv/lib && sudo cp libMVSDK.so /usr/lib`
 
 5. `cd ~/ws && catkin_make`
 
