@@ -1,5 +1,7 @@
 # MAVMaster
-MAVLink communication for ENTERPRIZE. Writen by Edward Zhang, integrated by Beck Pang on March 23rd.
+MAVLink communication for ENTERPRIZE. Reference: https://github.com/KyleLEI/mavmaster
+
+Writen by Kyle Lei, integrated by Beck Pang on March 23rd.
 
 ## Software Requirements
 
