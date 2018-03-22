@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<CameraBase>
+  <haveROI>0</haveROI>
+  <capture_width>37752672</capture_width>
+  <capture_height>0</capture_height>
+  <cameraMatrix type_id="opencv-matrix">
+    <rows>0</rows>
+    <cols>0</cols>
+    <dt>u</dt>
+    <data></data></cameraMatrix>
+  <distCoeffs type_id="opencv-matrix">
+    <rows>0</rows>
+    <cols>0</cols>
+    <dt>u</dt>
+    <data></data></distCoeffs>
+  <rotationVec>
+    0. 0. 0.</rotationVec>
+  <translationVec>
+    0. 0. 0.</translationVec>
+  <minReadDelay_ms>5</minReadDelay_ms>
+  <maxReadDelay_ms>100</maxReadDelay_ms></CameraBase>
+<mvCamera>
+  <auto_exp>0</auto_exp>
+  <exposure_time>3000.</exposure_time>
+  <analogGain>0</analogGain>
+  <iGamma>100</iGamma>
+  <iContrast>100</iContrast>
+  <iSaturation>100</iSaturation>
+  <iFrameSpeed>0</iFrameSpeed></mvCamera>
+</opencv_storage>

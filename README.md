@@ -3,6 +3,8 @@ ROS src packages that support the computer vision team's result
 
 System: Ubuntu 16.04 LTS
 
+ROS Version: Kinetic
+
 ## Get started
 1. install Robotics Operating System Kinetic in your Ubuntu computer
 http://wiki.ros.org/ROS/Installation

@@ -8,6 +8,6 @@
     </node>
 
     <node pkg="armor_recognition_publisher" type="armor_recognition_publisher_node" name="armor" output="screen">
-        
+
     </node>
 </launch>

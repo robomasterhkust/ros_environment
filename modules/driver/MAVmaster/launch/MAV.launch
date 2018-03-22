@@ -1,0 +1,7 @@
+<launch>
+  <node name="mavmaster"     pkg="mavmaster"  type="mavmaster" output="screen">
+  <param name="serial_port"  type="string" value="serial:///dev/ttyUSB0"/>
+  <param name="sysID"   type="int" value="21" />
+  <param name="compID"  type="int" value="78" />
+  </node>
+</launch>
