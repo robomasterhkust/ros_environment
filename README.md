@@ -7,15 +7,16 @@ ROS Version: Kinetic
 
 ## Software architecture
 
-- docs
 - modules
-  - driver
-  - control
-  - planning
-  - estimator
-  - perception_others
-- perception_cv
+  - 0_driver
+  - 1_perception_cv
+  - 2_perception_others
+  - 3_estimator
+  - 4_control
+  - 5_planning
+  - 6_decision
 - tools
+- library_external
 - history
 
 ## Get started
