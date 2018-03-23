@@ -9,6 +9,7 @@ ROS Version: Kinetic
 
 - modules
   - 0_driver
+    - external library
   - 1_perception_cv
   - 2_perception_others
   - 3_estimator
@@ -16,8 +17,6 @@ ROS Version: Kinetic
   - 5_planning
   - 6_decision
 - tools
-- library_external
-- history
 
 ## Get started
 1. install Robotics Operating System Kinetic in your Ubuntu computer
