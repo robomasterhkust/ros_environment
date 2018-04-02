@@ -4,10 +4,10 @@ from geometry_msgs.msg import Point
 from geometry_msgs.msg import Vector3
 
 def armor_callback(data):
-	rospy.loginfo("Turning gimbal to {}, {}, {}".format(data.x,data.y,data.z))
+	rospy.loginfo("Turning gimbal to {}, {:.3f}, {:.3f}".format(data.x,data.y,data.z))
 
 def rune_callback(data):
-	rospy.loginfo("Rune Detected @ {}, {}, {}".format(data.x,data.y,data.z))
+	rospy.loginfo("Rune Detected @ {}, {:.3f}, {:.3f}".format(data.x,data.y,data.z))
 
 def listener():
 	rospy.init_node("listener",anonymous=True)

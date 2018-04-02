@@ -8,9 +8,9 @@ def armor():
 	rospy.init_node('armor',anonymous=True)
 	rate = rospy.Rate(2)
 	while not rospy.is_shutdown():
-			x = random.random()
-			y = random.random()
-			z = random.random()
+			x = random.randrange(-5000,5000)
+			y = random.randrange(-5000,5000)
+			z = random.randrange(-5000,5000)
 			st = "Publishing armor {:.3f}, {:.3f}, {:.3f}".format(x,y,z)
 			rospy.loginfo(st)
 			p = Point(x,y,z)

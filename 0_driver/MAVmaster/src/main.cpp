@@ -38,12 +38,11 @@ void myCB(const mavlink_message_t *message, const mavconn::Framing framing){
 	}
 }
 
-void cvCallback(const geometry_msgs::Twist& cv_msg){
+void autoAimCallback(const geometry_msgs::Vector3& am_msg){
 	static mavlink_message_t mav_msg;
 	mavlink_msg_attitude_pack(21,78,&mav_msg,ros::Time::now().toSec(),
-		cv_msg.linear.x,cv_msg.linear.y,cv_msg.linear.z,
-		cv_msg.angular.x,cv_msg.angular.y,cv_msg.angular.z);
-	mav_msg.magic = MAVLINK_STX_MAVLINK1;
+		0,0,0,0,am_msg.y,am_msg.z);
+	//mav_msg.magic = MAVLINK_STX_MAVLINK1;
 	fcu_link->send_message(&mav_msg);
 }
 
@@ -61,8 +60,10 @@ int main(int argc, char* argv[]){
 	n.param<int>("compID", compID, 78);
 
 	fcu_link=mavconn::MAVConnInterface::open_url(serial_port,sysID,compID);
+	fcu_link->set_protocol_version(mavconn::Protocol::V10);
+	ROS_INFO("MAVLink Protocol Version: %d",fcu_link->get_protocol_version());
 	fcu_link->message_received_cb = myCB;
 
-	cv_sub = n.subscribe("cv_result",100,cvCallback);
+	cv_sub = n.subscribe("gimbal_ang_vel",100,autoAimCallback);
     ros::spin();
 }
