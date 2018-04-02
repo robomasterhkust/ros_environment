@@ -1,8 +1,5 @@
 # MAVMaster
 MAVLink communication for ENTERPRIZE.
-
-Writen by Kyle Lei and Edward Zhang, integrated by Beck Pang on March 23rd.
-
 ## Software Requirements
 
  - [boost](http://www.boost.org/)

@@ -11,7 +11,7 @@ def armor():
 			x = random.random()
 			y = random.random()
 			z = random.random()
-			st = "Publishing armor x = {}, y = {}, z = {}".format(x,y,z)
+			st = "Publishing armor {:.3f}, {:.3f}, {:.3f}".format(x,y,z)
 			rospy.loginfo(st)
 			p = Point(x,y,z)
 			pub.publish(p)

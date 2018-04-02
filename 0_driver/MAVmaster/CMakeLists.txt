@@ -145,9 +145,18 @@ add_executable(mavmaster
   src/serial.cpp
 )
 
+add_executable(autoaim
+  src/autoaim.cpp
+  src/autoaim_main.cpp
+)
+
 target_link_libraries(mavmaster 
   ${catkin_LIBRARIES}
   ${Boost_SYSTEM_LIBRARY}
+)
+
+target_link_libraries(autoaim
+  ${catkin_LIBRARIES}
 )
 
 ## Rename C++ executable without prefix
