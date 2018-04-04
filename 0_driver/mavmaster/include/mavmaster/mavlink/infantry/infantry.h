@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #ifndef MAVLINK_MESSAGE_CRCS
-#define MAVLINK_MESSAGE_CRCS {{0, 138, 8, 0, 0, 0}, {30, 39, 28, 0, 0, 0}, {31, 246, 32, 0, 0, 0}, {32, 185, 28, 0, 0, 0}, {82, 49, 39, 3, 36, 37}}
+#define MAVLINK_MESSAGE_CRCS {{0, 138, 8, 0, 0, 0}, {30, 39, 28, 0, 0, 0}, {31, 246, 32, 0, 0, 0}, {32, 185, 28, 0, 0, 0}, {33, 61, 12, 0, 0, 0}, {34, 138, 8, 0, 0, 0}, {82, 49, 39, 3, 36, 37}}
 #endif
 
 #include "../protocol.h"
@@ -108,6 +108,8 @@ typedef enum ROBO_STATE
 #include "./mavlink_msg_attitude_quaternion.h"
 #include "./mavlink_msg_local_position_ned.h"
 #include "./mavlink_msg_set_attitude_target.h"
+#include "./mavlink_msg_gimbal_coordinate_target.h"
+#include "./mavlink_msg_gimbal_speed_target.h"
 
 // base include
 
@@ -116,8 +118,8 @@ typedef enum ROBO_STATE
 #define MAVLINK_THIS_XML_IDX 0
 
 #if MAVLINK_THIS_XML_IDX == MAVLINK_PRIMARY_XML_IDX
-# define MAVLINK_MESSAGE_INFO {MAVLINK_MESSAGE_INFO_HEARTBEAT, MAVLINK_MESSAGE_INFO_ATTITUDE, MAVLINK_MESSAGE_INFO_ATTITUDE_QUATERNION, MAVLINK_MESSAGE_INFO_LOCAL_POSITION_NED, MAVLINK_MESSAGE_INFO_SET_ATTITUDE_TARGET}
-# define MAVLINK_MESSAGE_NAMES {{ "ATTITUDE", 30 }, { "ATTITUDE_QUATERNION", 31 }, { "HEARTBEAT", 0 }, { "LOCAL_POSITION_NED", 32 }, { "SET_ATTITUDE_TARGET", 82 }}
+# define MAVLINK_MESSAGE_INFO {MAVLINK_MESSAGE_INFO_HEARTBEAT, MAVLINK_MESSAGE_INFO_ATTITUDE, MAVLINK_MESSAGE_INFO_ATTITUDE_QUATERNION, MAVLINK_MESSAGE_INFO_LOCAL_POSITION_NED, MAVLINK_MESSAGE_INFO_GIMBAL_COORDINATE_TARGET, MAVLINK_MESSAGE_INFO_GIMBAL_SPEED_TARGET, MAVLINK_MESSAGE_INFO_SET_ATTITUDE_TARGET}
+# define MAVLINK_MESSAGE_NAMES {{ "ATTITUDE", 30 }, { "ATTITUDE_QUATERNION", 31 }, { "GIMBAL_COORDINATE_TARGET", 33 }, { "GIMBAL_SPEED_TARGET", 34 }, { "HEARTBEAT", 0 }, { "LOCAL_POSITION_NED", 32 }, { "SET_ATTITUDE_TARGET", 82 }}
 # if MAVLINK_COMMAND_24BIT
 #  include "../mavlink_get_info.h"
 # endif

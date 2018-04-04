@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>mavmaster</name>
-  <version>0.0.1</version>
+  <version>0.1.1</version>
   <description>The mavmaster package, MAVLink communication through serial</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
@@ -32,6 +32,7 @@
   <!-- Dependencies can be catkin packages or system dependencies -->
   <!-- Examples: -->
   <!-- Use depend as a shortcut for packages that are both build and exec dependencies -->
+  <depend>rospy</depend>
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>

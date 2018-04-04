@@ -9,7 +9,7 @@ namespace msg {
 /**
  * @brief ATTITUDE message
  *
- * The attitude in the aeronautical frame (right-handed, Z-down, X-front, Y-right).
+ * The attitude in the gimbal frame (right-handed, Z-down, X-front, Y-right).
  */
 struct ATTITUDE : mavlink::Message {
     static constexpr msgid_t MSG_ID = 30;

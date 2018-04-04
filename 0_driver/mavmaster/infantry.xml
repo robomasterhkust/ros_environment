@@ -86,7 +86,7 @@
       <field type="uint8_t_mavlink_version" name="mavlink_version">MAVLink version</field>
     </message>
     <message id="30" name="ATTITUDE">
-      <description>The attitude in the aeronautical frame (right-handed, Z-down, X-front, Y-right).</description>
+      <description>The attitude in the gimbal frame (right-handed, Z-down, X-front, Y-right).</description>
       <field type="uint32_t" name="time_boot_ms" units="ms">Timestamp (milliseconds since system boot)</field>
       <field type="float" name="roll" units="rad">Roll angle (rad, -pi..+pi)</field>
       <field type="float" name="pitch" units="rad">Pitch angle (rad, -pi..+pi)</field>
@@ -128,5 +128,16 @@
       <field type="float" name="body_yaw_rate" units="rad/s">Body yaw rate in radians per second</field>
       <field type="float" name="thrust">Collective thrust, normalized to 0 .. 1 (-1 .. 1 for vehicles capable of reverse trust)</field>
     </message>
+	<message id="33" name="GIMBAL_COORDINATE_TARGET">
+		<description>The target to hit in the camera frame.</description>
+		<field type="float" name="x" units="mm">Target coordinate, x</field>
+		<field type="float" name="y" units="mm">Target coordinate, y</field>
+		<field type="float" name="z" units="mm">Target coordinate, z</field>
+	</message>
+	<message id="34" name="GIMBAL_SPEED_TARGET">
+		<description>The angular speed target gimbal is expected to rotate at.</description>
+		<field type="float" name="yawspeed" units="rad/s">Yaw angular speed (rad/s)</field>
+		<field type="float" name="pitchspeed" units="rad/s">Pitch angular speed (rad/s)</field>
+	</message>
   </messages>
 </mavlink>

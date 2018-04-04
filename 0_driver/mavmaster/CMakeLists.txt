@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   std_msgs
   geometry_msgs
   genmsg
@@ -144,8 +145,9 @@ add_executable(mavmaster
   src/serial.cpp
 )
 
-add_executable(fakecv
-  src/fakecv.cpp
+add_executable(autoaim
+  src/autoaim.cpp
+  src/autoaim_main.cpp
 )
 
 target_link_libraries(mavmaster 
@@ -153,7 +155,7 @@ target_link_libraries(mavmaster
   ${Boost_SYSTEM_LIBRARY}
 )
 
-target_link_libraries(fakecv
+target_link_libraries(autoaim
   ${catkin_LIBRARIES}
 )
 

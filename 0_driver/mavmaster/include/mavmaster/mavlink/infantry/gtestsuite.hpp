@@ -433,3 +433,133 @@ TEST(infantry_interop, SET_ATTITUDE_TARGET)
 #endif
 }
 #endif
+
+TEST(infantry, GIMBAL_COORDINATE_TARGET)
+{
+    mavlink::mavlink_message_t msg;
+    mavlink::MsgMap map1(msg);
+    mavlink::MsgMap map2(msg);
+
+    mavlink::infantry::msg::GIMBAL_COORDINATE_TARGET packet_in{};
+    packet_in.x = 17.0;
+    packet_in.y = 45.0;
+    packet_in.z = 73.0;
+
+    mavlink::infantry::msg::GIMBAL_COORDINATE_TARGET packet1{};
+    mavlink::infantry::msg::GIMBAL_COORDINATE_TARGET packet2{};
+
+    packet1 = packet_in;
+
+    //std::cout << packet1.to_yaml() << std::endl;
+
+    packet1.serialize(map1);
+
+    mavlink::mavlink_finalize_message(&msg, 1, 1, packet1.MIN_LENGTH, packet1.LENGTH, packet1.CRC_EXTRA);
+
+    packet2.deserialize(map2);
+
+    EXPECT_EQ(packet1.x, packet2.x);
+    EXPECT_EQ(packet1.y, packet2.y);
+    EXPECT_EQ(packet1.z, packet2.z);
+}
+
+#ifdef TEST_INTEROP
+TEST(infantry_interop, GIMBAL_COORDINATE_TARGET)
+{
+    mavlink_message_t msg;
+
+    // to get nice print
+    memset(&msg, 0, sizeof(msg));
+
+    mavlink_gimbal_coordinate_target_t packet_c {
+         17.0, 45.0, 73.0
+    };
+
+    mavlink::infantry::msg::GIMBAL_COORDINATE_TARGET packet_in{};
+    packet_in.x = 17.0;
+    packet_in.y = 45.0;
+    packet_in.z = 73.0;
+
+    mavlink::infantry::msg::GIMBAL_COORDINATE_TARGET packet2{};
+
+    mavlink_msg_gimbal_coordinate_target_encode(1, 1, &msg, &packet_c);
+
+    // simulate message-handling callback
+    [&packet2](const mavlink_message_t *cmsg) {
+        MsgMap map2(cmsg);
+
+        packet2.deserialize(map2);
+    } (&msg);
+
+    EXPECT_EQ(packet_in.x, packet2.x);
+    EXPECT_EQ(packet_in.y, packet2.y);
+    EXPECT_EQ(packet_in.z, packet2.z);
+
+#ifdef PRINT_MSG
+    PRINT_MSG(msg);
+#endif
+}
+#endif
+
+TEST(infantry, GIMBAL_SPEED_TARGET)
+{
+    mavlink::mavlink_message_t msg;
+    mavlink::MsgMap map1(msg);
+    mavlink::MsgMap map2(msg);
+
+    mavlink::infantry::msg::GIMBAL_SPEED_TARGET packet_in{};
+    packet_in.yawspeed = 17.0;
+    packet_in.pitchspeed = 45.0;
+
+    mavlink::infantry::msg::GIMBAL_SPEED_TARGET packet1{};
+    mavlink::infantry::msg::GIMBAL_SPEED_TARGET packet2{};
+
+    packet1 = packet_in;
+
+    //std::cout << packet1.to_yaml() << std::endl;
+
+    packet1.serialize(map1);
+
+    mavlink::mavlink_finalize_message(&msg, 1, 1, packet1.MIN_LENGTH, packet1.LENGTH, packet1.CRC_EXTRA);
+
+    packet2.deserialize(map2);
+
+    EXPECT_EQ(packet1.yawspeed, packet2.yawspeed);
+    EXPECT_EQ(packet1.pitchspeed, packet2.pitchspeed);
+}
+
+#ifdef TEST_INTEROP
+TEST(infantry_interop, GIMBAL_SPEED_TARGET)
+{
+    mavlink_message_t msg;
+
+    // to get nice print
+    memset(&msg, 0, sizeof(msg));
+
+    mavlink_gimbal_speed_target_t packet_c {
+         17.0, 45.0
+    };
+
+    mavlink::infantry::msg::GIMBAL_SPEED_TARGET packet_in{};
+    packet_in.yawspeed = 17.0;
+    packet_in.pitchspeed = 45.0;
+
+    mavlink::infantry::msg::GIMBAL_SPEED_TARGET packet2{};
+
+    mavlink_msg_gimbal_speed_target_encode(1, 1, &msg, &packet_c);
+
+    // simulate message-handling callback
+    [&packet2](const mavlink_message_t *cmsg) {
+        MsgMap map2(cmsg);
+
+        packet2.deserialize(map2);
+    } (&msg);
+
+    EXPECT_EQ(packet_in.yawspeed, packet2.yawspeed);
+    EXPECT_EQ(packet_in.pitchspeed, packet2.pitchspeed);
+
+#ifdef PRINT_MSG
+    PRINT_MSG(msg);
+#endif
+}
+#endif

@@ -21,7 +21,7 @@ namespace infantry {
 /**
  * Array of msg_entry needed for @p mavlink_parse_char() (trought @p mavlink_get_msg_entry())
  */
-constexpr std::array<mavlink_msg_entry_t, 5> MESSAGE_ENTRIES {{ {0, 138, 8, 0, 0, 0}, {30, 39, 28, 0, 0, 0}, {31, 246, 32, 0, 0, 0}, {32, 185, 28, 0, 0, 0}, {82, 49, 39, 3, 36, 37} }};
+constexpr std::array<mavlink_msg_entry_t, 7> MESSAGE_ENTRIES {{ {0, 138, 8, 0, 0, 0}, {30, 39, 28, 0, 0, 0}, {31, 246, 32, 0, 0, 0}, {32, 185, 28, 0, 0, 0}, {33, 61, 12, 0, 0, 0}, {34, 138, 8, 0, 0, 0}, {82, 49, 39, 3, 36, 37} }};
 
 //! MAVLINK VERSION
 constexpr auto MAVLINK_VERSION = 2;
@@ -93,6 +93,8 @@ constexpr auto ROBO_STATE_ENUM_END = 8;
 #include "./mavlink_msg_attitude_quaternion.hpp"
 #include "./mavlink_msg_local_position_ned.hpp"
 #include "./mavlink_msg_set_attitude_target.hpp"
+#include "./mavlink_msg_gimbal_coordinate_target.hpp"
+#include "./mavlink_msg_gimbal_speed_target.hpp"
 
 // base include
 

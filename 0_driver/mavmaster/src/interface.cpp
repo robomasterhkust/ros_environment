@@ -147,18 +147,24 @@ void MAVConnInterface::log_send(const char *pfx, const mavlink_message_t *msg)
 }
 void MAVConnInterface::set_protocol_version(Protocol pver)
 {
-	if (pver == Protocol::V10)
+	if (pver == Protocol::V10){
 		m_status.flags |= MAVLINK_STATUS_FLAG_OUT_MAVLINK1;
-	else
+		mavlink_set_proto_version(MAVLINK_COMM_0,1);
+	}
+	else{
 		m_status.flags &= ~(MAVLINK_STATUS_FLAG_OUT_MAVLINK1);
+		mavlink_set_proto_version(MAVLINK_COMM_0,2);
+	}
 }
 
 Protocol MAVConnInterface::get_protocol_version()
-{
+{/*
 	if (m_status.flags & MAVLINK_STATUS_FLAG_OUT_MAVLINK1)
 		return Protocol::V10;
 	else
 		return Protocol::V20;
+  */
+  return static_cast<Protocol>(mavlink_get_proto_version(MAVLINK_COMM_0));
 }
 
 /**
