@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/jimmy/catkin_ws/src/rune/devel/setup.sh

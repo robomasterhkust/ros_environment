@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<cameraSetting>
+<exposureTime>179</exposureTime>
+<width>640</width>
+<height>480</height>
+<fps>30</fps>
+</cameraSetting>
+<smallRuneSetting>
+<width>280</width>
+<height>160</height>
+</smallRuneSetting>
+<shooterSetting>
+<speed>1</speed>
+<Xoffset>0</Xoffset>
+<Yoffset>0</Yoffset>
+<Zoffset>0</Zoffset>
+</shooterSetting>
+</opencv_storage>
