@@ -290,14 +290,19 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
     }
 }
 
-// TODO: link the UWB and IMU reading into the ROS system
+String imu_topic, uwb_topic, publiser_topic;
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ekf_8states");
     ros::NodeHandle n("~");
-    ros::Subscriber s1 = n.subscribe("imu", 100, imu_callback);
-    ros::Subscriber s2 = n.subscribe("uwb", 100, odom_callback);
-    odom_pub = n.advertise<nav_msgs::Odometry>("ekf_odom", 100);
+
+    n.param("imu_topic", imu_topic, "/dji_sdk/imu");
+    n.param("uwb_topic", uwb_topic, "/uwb");
+    n.param("publiser_topic", publiser_topic, "/ekf_odom");
+    ros::Subscriber s1 = n.subscribe(imu_topic, 100, imu_callback);
+    ros::Subscriber s2 = n.subscribe(uwb_topic, 10, odom_callback);
+    odom_pub = n.advertise<nav_msgs::Odometry>(publiser_topic, 100);
     ros::Rate r(100);
 
     odom_initialized = true;
