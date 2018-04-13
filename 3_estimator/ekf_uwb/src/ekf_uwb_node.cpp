@@ -8,6 +8,7 @@
 #include <ros/console.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/Range.h>
+#include <std_msgs/String.h>
 #include <nav_msgs/Odometry.h>
 #include <Eigen/Eigen>
 #include <queue>
@@ -290,16 +291,16 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
     }
 }
 
-String imu_topic, uwb_topic, publiser_topic;
+string imu_topic, uwb_topic, publiser_topic;
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "ekf_8states");
     ros::NodeHandle n("~");
 
-    n.param("imu_topic", imu_topic, "/dji_sdk/imu");
-    n.param("uwb_topic", uwb_topic, "/uwb");
-    n.param("publiser_topic", publiser_topic, "/ekf_odom");
+    n.param("imu_topic", imu_topic, string("/dji_sdk/imu"));
+    n.param("uwb_topic", uwb_topic, string("/uwb"));
+    n.param("publiser_topic", publiser_topic, string("/ekf_odom"));
     ros::Subscriber s1 = n.subscribe(imu_topic, 100, imu_callback);
     ros::Subscriber s2 = n.subscribe(uwb_topic, 10, odom_callback);
     odom_pub = n.advertise<nav_msgs::Odometry>(publiser_topic, 100);
