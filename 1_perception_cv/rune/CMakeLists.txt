@@ -22,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 include_directories("${PROJECT_SOURCE_DIR}")
+include_directories(${catkin_INCLUDE_DIRS})
 AUX_SOURCE_DIRECTORY(${PROJECT_SOURCE_DIR}/src SRC) 
 
 find_package(OpenCV REQUIRED)

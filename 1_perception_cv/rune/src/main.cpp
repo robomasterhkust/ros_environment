@@ -97,7 +97,13 @@ int main(int argc, char** arg)
                 {
                     putText(img,to_string(i),rects[MR.mnistLabels[i]].center, FONT_HERSHEY_SIMPLEX, 1 , Scalar(0,255,255),3);
                     AngleSolver ag;
-                    ag.calculateFromImg(rects[MR.mnistLabels[i]],s,ps[i].x,ps[i].y,ps[i].z);
+		    double x, y,z;
+                    if(ag.calculateFromImg(rects[MR.mnistLabels[i]].boundingRect(),s,x,y,z))
+		    {
+			ps[i].z = z;
+		    	ps[i].y = y;
+		    	ps[i].x = x;
+		    }
                 }
                 imshow("a",img);
                 
