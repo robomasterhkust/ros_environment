@@ -34,13 +34,7 @@ http://wiki.ros.org/ROS/Installation
 1. install the following dependency for fast development
 `sudo apt-get install openocd minicom -y`
 
-`sudo apt-get install terminator -y`
-
-`sudo apt-get install cmake -y`
-
-`sudo apt-get install vim -y`
-
-`sudo apt-get install htop`
+`sudo apt-get install terminator cmake vim htop -y`
 
 2. install pixhawk toolchain
 To install the development toolchain:
@@ -71,8 +65,36 @@ openCV, Eigen, PCL, Ceres
 5. install RMOC open sourced dependency
 https://github.com/robomasterhkust/RoboRTS
 
-
-## Reference
-My TA GAO Wenliang's repository for ELEC 5660 code setup:
+Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
 
 https://github.com/gaowenliang/ELEC5660_lab_code
+
+## Multimachine debugging
+To debug using another ROS machine, using multimachine by modifying the `/etc/hosts` abd setting three environment variables in the `~/.bashrc`
+
+For the master node, add the ip address of the itself and the slave in the `/etc/hosts`, for instance, like this:
+
+`
+127.0.0.1       localhost
+127.0.1.1       desktop
+192.168.1.237   master
+192.168.1.123   desktop
+`
+
+Then add threee environment variables in the `~/.bashrc`:
+
+`
+export ROS_HOSTNAME=master
+export ROS_MASTER_URI=http://master:11311
+export ROS_IP=master
+`
+
+In the slave machine, do all the same thing except for ROS_IP:
+
+`
+export ROS_HOSTNAME=master
+export ROS_MASTER_URI=http://master:11311
+export ROS_IP=desktop
+`
+
+Then launch roscore in the master machine, and all nodes don't need to launch roscore and can recieve topics from each others.
