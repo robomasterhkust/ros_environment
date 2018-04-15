@@ -76,25 +76,35 @@ For the master node, add the ip address of the itself and the slave in the `/etc
 
 `
 127.0.0.1       localhost
+
 127.0.1.1       desktop
+
 192.168.1.237   master
+
 192.168.1.123   desktop
+
 `
 
 Then add threee environment variables in the `~/.bashrc`:
 
 `
 export ROS_HOSTNAME=master
+
 export ROS_MASTER_URI=http://master:11311
+
 export ROS_IP=master
+
 `
 
 In the slave machine, do all the same thing except for ROS_IP:
 
 `
 export ROS_HOSTNAME=master
+
 export ROS_MASTER_URI=http://master:11311
+
 export ROS_IP=desktop
+
 `
 
 Then launch roscore in the master machine, and all nodes don't need to launch roscore and can recieve topics from each others.
