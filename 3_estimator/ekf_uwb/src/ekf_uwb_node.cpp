@@ -162,7 +162,7 @@ void pub_odom(std_msgs::Header header)
 
 void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
 {
-    ROS_INFO("IMU callback, time: %f", imu_msg->header.stamp.toSec());
+//    ROS_INFO("IMU callback, time: %f", imu_msg->header.stamp.toSec());
 
     if (!imu_initialized && imu_count < IMU_INIT_COUNT)
     {
@@ -208,7 +208,7 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
 
 void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
 {
-    ROS_INFO("odom callback, time: %f", msg->header.stamp.toSec());
+//    ROS_INFO("UWB callback, time: %f", msg->header.stamp.toSec());
 
     if (!imu_initialized && !odom_initialized)
     {
@@ -252,7 +252,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
     else {
         while (!imu_buf.empty() && imu_buf.front()->header.stamp < msg->header.stamp)
         {
-            ROS_INFO("throw state with time: %f", imu_buf.front()->header.stamp.toSec());
+//            ROS_INFO("throw state with time: %f", imu_buf.front()->header.stamp.toSec());
             // trace the time backwards to imu time
             t = imu_buf.front()->header.stamp.toSec();
             imu_buf.pop();
@@ -270,7 +270,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
             x_history.pop();
             P_history.pop();
         }
-        ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
+//        ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
         update(msg);
 
         // clean the x and P history before new propagate
@@ -280,7 +280,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
         queue<sensor_msgs::Imu::ConstPtr> temp_imu_buf;
         while (!imu_buf.empty())
         {
-            ROS_INFO("propagate state with time: %f", imu_buf.front()->header.stamp.toSec());
+//            ROS_INFO("propagate state with time: %f", imu_buf.front()->header.stamp.toSec());
             propagate(imu_buf.front());
             temp_imu_buf.push(imu_buf.front());
             x_history.push(x);
@@ -290,7 +290,8 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
         std::swap(imu_buf, temp_imu_buf);
     }
 }
-
+// Rotation from the camera frame to the IMU frame
+Eigen::Matrix3d Rcam;
 string imu_topic, uwb_topic, publiser_topic;
 
 int main(int argc, char **argv)
@@ -298,13 +299,19 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "ekf_8states");
     ros::NodeHandle n("~");
 
+    ros::Duration(10).sleep(); // sleep for 10 seconds in order to launch both topics
+
+
     n.param("imu_topic", imu_topic, string("/dji_sdk/imu"));
-    n.param("uwb_topic", uwb_topic, string("/uwb"));
+    n.param("uwb_topic", uwb_topic, string("/uwb_odom"));
     n.param("publiser_topic", publiser_topic, string("/ekf_odom"));
     ros::Subscriber s1 = n.subscribe(imu_topic, 100, imu_callback);
     ros::Subscriber s2 = n.subscribe(uwb_topic, 10, odom_callback);
     odom_pub = n.advertise<nav_msgs::Odometry>(publiser_topic, 100);
     ros::Rate r(100);
+
+    Rcam = Quaterniond( 0, 1, 0, 0 ).toRotationMatrix( );
+    cout << "R_cam" << endl << Rcam << endl;
 
     odom_initialized = true;
 
