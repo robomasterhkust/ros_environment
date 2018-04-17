@@ -1,2 +1,2 @@
 # Driver
-The modules for all drivers of the camera, lidar, sensors, serial, and CAN.
+The modules for all external drivers of the camera, lidar, sensors, serial, and CAN.

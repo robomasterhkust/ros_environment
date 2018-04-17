@@ -26,9 +26,11 @@ http://wiki.ros.org/ROS/Installation
 
 3. `git clone --recursive git@github.com:robomasterhkust/ros_environment.git src`
 
-4. `cd perception_cv/lib && sudo cp libMVSDK.so /usr/lib`
+4. `git submodule update`
 
-5. `cd ~/ws && catkin_make`
+5. `cd 1_perception_cv/lib && sudo cp libMVSDK.so /usr/lib`
+
+6. `cd ~/ws && catkin_make`
 
 ## Toolchain
 1. install the following dependency for fast development
@@ -36,11 +38,7 @@ http://wiki.ros.org/ROS/Installation
 
 `sudo apt-get install terminator cmake vim htop -y`
 
-2. install pixhawk toolchain
-To install the development toolchain:
-https://dev.px4.io/en/setup/dev_env_linux.html
-
-3. set up the .bashrc for speed up the development process
+2. set up the .bashrc for speed up the development process
 
 `vim ~/.bashrc`
 
@@ -58,11 +56,11 @@ and add the following:
 
 and `source ~/.bashrc` after saving the vim file.
 
-4. install CV related dependences
+3. install CV related dependences
 
 openCV, Eigen, PCL, Ceres
 
-5. install RMOC open sourced dependency
+4. install RMOC open sourced dependency
 https://github.com/robomasterhkust/RoboRTS
 
 Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
