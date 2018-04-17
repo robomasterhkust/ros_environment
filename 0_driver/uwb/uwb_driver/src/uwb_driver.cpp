@@ -1,4 +1,5 @@
 #include <uwb_msgs/uwb.h>
+#include <can_msgs/Frame.h>
 #include <string>
 #include <ros/ros.h>
 #include <math.h>
@@ -40,23 +41,22 @@ void msgCallback(const can_msgs::Frame &f) {
             temp_distance[5] = ((int16_t)((uint16_t) f.data[1] << 8 | (uint16_t) f.data[0])) / 100.0; // in meter
             temp_error = (uint16_t)((uint16_t) f.data[2] << 8 | (uint16_t) f.data[1]);
 
-            1 == ((num >> bit) & 1);
-
             uwb_msgs::uwb uwb_msg;
             uwb_msg.header.stamp = f.header.stamp;
             uwb_msg.header.frame_id = "world";
             uwb_msg.pos_x = temp_pos_x;
             uwb_msg.pos_y = temp_pos_y;
             uwb_msg.pos_theta = temp_pos_theta;
-            uwb_msg.distance = temp_distance;
             uwb_msg.num = 0;
+
             for (int i = 0; i < MAX_STATION_NUM; i++) {
+                uwb_msg.distance[i] = temp_distance[i];
                 if (temp_distance[i] > EPSILON)
                     uwb_msg.num++;
             }
             uwb_msg.check_failed = ((temp_error >> 3) & 1);
             uwb_msg.need_calibrated = ((temp_error >> 2) & 1);
-            uwb_msg.level = (uint8_t)()
+            uwb_msg.level = (uint8_t)(temp_error >> 14);
         }
     }
     if (f.dlc == 6 && !uwb_start) {
@@ -67,7 +67,7 @@ void msgCallback(const can_msgs::Frame &f) {
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "uwb_driver_node");
     ros::NodeHandle nh("~");
-    uwb_publisher = nh.advertise<nav_msgs::Odometry>("/uwb_odom", 100);
+    uwb_publisher = nh.advertise<uwb_msgs::uwb>("/uwb_info", 100);
     ros::Subscriber can_subscriber = nh.subscribe("/received_messages", 100, msgCallback);
 
     ros::spin();
