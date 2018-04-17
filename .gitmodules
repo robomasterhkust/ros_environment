@@ -1,0 +1,9 @@
+[submodule "0_driver/ext/realtime_tools"]
+	path = 0_driver/ext/realtime_tools
+	url = git@github.com:ros-controls/realtime_tools.git
+[submodule "0_driver/ext/ros_control"]
+	path = 0_driver/ext/ros_control
+	url = git@github.com:ros-controls/ros_control.git
+[submodule "0_driver/ext/ros_canopen"]
+	path = 0_driver/ext/ros_canopen
+	url = git@github.com:ros-industrial/ros_canopen.git
