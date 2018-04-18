@@ -10,6 +10,7 @@
 #include <sensor_msgs/Range.h>
 #include <std_msgs/String.h>
 #include <nav_msgs/Odometry.h>
+#include <uwb_msgs/uwb.h>
 #include <Eigen/Eigen>
 #include <queue>
 #include <vector>
@@ -125,14 +126,14 @@ void propagate(const sensor_msgs::ImuConstPtr &imu_msg)
  * linear update for EKF
  * @param msg
  */
-void update(const nav_msgs::Odometry::ConstPtr &msg)
+void update(const uwb_msgs::uwb &msg)
 {
     MatrixXd C = MatrixXd::Zero(3, 8);
     C.block<3, 3>(0, 0) = Matrix3d::Identity();
 
-    double pos_x = msg->pose.pose.position.x;
-    double pos_y = msg->pose.pose.position.y;
-    double angle_yaw = msg->pose.pose.orientation.z;
+    double pos_x = msg.pos_x;
+    double pos_y = msg.pos_y;
+    double angle_yaw = msg.pos_theta;
     Vector3d y(pos_x, pos_y, angle_yaw);
 
     MatrixXd K(8, 3);
@@ -206,16 +207,16 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
     }
 }
 
-void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
+void odom_callback(const uwb_msgs::uwb &msg)
 {
 //    ROS_INFO("UWB callback, time: %f", msg->header.stamp.toSec());
 
     if (!imu_initialized && !odom_initialized)
     {
         // calculate the uwb covariance and mean
-        odom_mean_buf_x.push(msg->pose.pose.position.x);
-        odom_mean_buf_y.push(msg->pose.pose.position.y);
-        odom_mean_buf_theta.push(msg->pose.pose.orientation.z);
+        odom_mean_buf_x.push(msg.pos_x);
+        odom_mean_buf_y.push(msg.pos_y);
+        odom_mean_buf_theta.push(msg.pos_theta);
     }
     else if (imu_initialized && !odom_initialized)
     {
@@ -250,7 +251,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr &msg)
         odom_initialized = true;
     }
     else {
-        while (!imu_buf.empty() && imu_buf.front()->header.stamp < msg->header.stamp)
+        while (!imu_buf.empty() && imu_buf.front()->header.stamp < msg.header.stamp)
         {
 //            ROS_INFO("throw state with time: %f", imu_buf.front()->header.stamp.toSec());
             // trace the time backwards to imu time
@@ -303,7 +304,7 @@ int main(int argc, char **argv)
 
 
     n.param("imu_topic", imu_topic, string("/dji_sdk/imu"));
-    n.param("uwb_topic", uwb_topic, string("/uwb_odom"));
+    n.param("uwb_topic", uwb_topic, string("/uwb_info"));
     n.param("publiser_topic", publiser_topic, string("/ekf_odom"));
     ros::Subscriber s1 = n.subscribe(imu_topic, 100, imu_callback);
     ros::Subscriber s2 = n.subscribe(uwb_topic, 10, odom_callback);
