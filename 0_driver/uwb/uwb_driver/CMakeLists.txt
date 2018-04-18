@@ -14,7 +14,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Wall")
 find_package(catkin REQUIRED COMPONENTS
         can_msgs
         geometry_msgs
-        nav_msgs
         roscpp
         )
 
