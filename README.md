@@ -36,7 +36,7 @@ http://wiki.ros.org/ROS/Installation
 1. install the following dependency for fast development
 `sudo apt-get install openocd minicom -y`
 
-`sudo apt-get install terminator cmake vim htop -y`
+`sudo apt-get install terminator cmake vim htop libmuparser-dev -y`
 
 2. set up the .bashrc for speed up the development process
 
@@ -67,7 +67,7 @@ Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
 
 https://github.com/gaowenliang/ELEC5660_lab_code
 
-## Multimachine debugging
+## Multi-machine debugging
 To debug using another ROS machine, using multimachine by modifying the `/etc/hosts` abd setting three environment variables in the `~/.bashrc`
 
 For the master node, add the ip address of the itself and the slave in the `/etc/hosts`, for instance, like this:
@@ -79,7 +79,7 @@ For the master node, add the ip address of the itself and the slave in the `/etc
 192.168.1.123   desktop
 ```
 
-Then add threee environment variables in the `~/.bashrc`:
+Then add three environment variables in the `~/.bashrc`:
 
 ```
 export ROS_HOSTNAME=master
@@ -95,4 +95,4 @@ export ROS_MASTER_URI=http://master:11311
 export ROS_IP=desktop
 ```
 
-Then launch roscore in the master machine, and all nodes don't need to launch roscore and can recieve topics from each others.
+Then launch roscore in the master machine, and all nodes don't need to launch roscore and can receive topics from each others.
