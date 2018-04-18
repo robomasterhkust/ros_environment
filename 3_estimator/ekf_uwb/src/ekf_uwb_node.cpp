@@ -54,6 +54,9 @@ queue<double> odom_mean_buf_theta;
 bool imu_initialized = false;
 bool odom_initialized= false;
 
+// Rotation from the IMU frame to the global frame
+Eigen::Matrix3d Rimu;
+
 /**
  * non-linear propagate for EKF
  * with linearization around the current state
@@ -62,9 +65,12 @@ bool odom_initialized= false;
 void propagate(const sensor_msgs::ImuConstPtr &imu_msg)
 {
     double cur_t = imu_msg->header.stamp.toSec();
-    double w    = imu_msg->angular_velocity.z;
-    double ax   = imu_msg->linear_acceleration.x;
-    double ay   = imu_msg->linear_acceleration.y;
+    double w     = imu_msg->angular_velocity.z;
+    double ax_raw   = imu_msg->linear_acceleration.x;
+    double ay_raw   = imu_msg->linear_acceleration.y;
+    Vector3d a_rotate = Rimu * Vector3d(ax_raw, ay_raw, 0);
+    double ax = a_rotate(0);
+    double ay = a_rotate(1);
 
     double dt   = cur_t - t;
 //    if (dt <= 0) {  ROS_BREAK; }
@@ -291,8 +297,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
         std::swap(imu_buf, temp_imu_buf);
     }
 }
-// Rotation from the camera frame to the IMU frame
-Eigen::Matrix3d Rcam;
+
 string imu_topic, uwb_topic, publiser_topic;
 
 int main(int argc, char **argv)
@@ -311,8 +316,8 @@ int main(int argc, char **argv)
     odom_pub = n.advertise<nav_msgs::Odometry>(publiser_topic, 100);
     ros::Rate r(100);
 
-    Rcam = Quaterniond( 0, 1, 0, 0 ).toRotationMatrix( );
-    cout << "R_cam" << endl << Rcam << endl;
+    Rimu = Quaterniond( 0.7071, 0, 0, -0.7071 ).toRotationMatrix( );
+    cout << "R_cam" << endl << Rimu << endl;
 
     odom_initialized = true;
 
