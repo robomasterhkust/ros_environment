@@ -57,6 +57,8 @@ void msgCallback(const can_msgs::Frame &f) {
             uwb_msg.check_failed = ((temp_error >> 3) & 1);
             uwb_msg.need_calibrated = ((temp_error >> 2) & 1);
             uwb_msg.level = (uint8_t)(temp_error >> 14);
+
+            uwb_publisher.publish(uwb_msg);
         }
     }
     if (f.dlc == 6 && !uwb_start) {
