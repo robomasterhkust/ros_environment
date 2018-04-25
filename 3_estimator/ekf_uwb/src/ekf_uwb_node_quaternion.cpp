@@ -14,7 +14,7 @@
 #include <Eigen/Eigen>
 #include <queue>
 
-//#define INIT_Q_R_BY_MEASUREMENT
+#define INIT_Q_R_BY_MEASUREMENT
 
 using namespace std;
 using namespace Eigen;
@@ -59,6 +59,7 @@ bool odom_initialized= false;
 // TODO: Calibrate sensor position
 // imu frame in uwb frame
 Matrix3d imu_R_uwb = Quaterniond(0.7071, 0, 0, -0.7071).toRotationMatrix();
+Matrix3d initial_robot_pose = Quaterniond(1, 0, 0, 0).toRotationMatrix();
 
 void pub_odom_ekf(std_msgs::Header header)
 {
@@ -204,7 +205,15 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
 #endif
         g_init /= IMU_INIT_COUNT;
 
-        // TODO: replace this hardcoded initial value
+        // Initialize the state and the gravity
+        // TODO: add new global sensor replace this hardcoded initial value
+        x.setZero();
+        Quaterniond init_pose(imu_R_uwb * initial_robot_pose);
+        x(0) = init_pose.w();
+        x(1) = init_pose.x();
+        x(2) = init_pose.y();
+        x(3) = init_pose.z();
+
         G = imu_R_uwb * g_init;
         imu_initialized = true;
     }
@@ -320,10 +329,12 @@ int main(int argc, char **argv)
     cout << "imu_R_uwb" << endl << imu_R_uwb << endl;
 //    G << 0, 0, -9.8;
 
+#ifndef INIT_Q_R_BY_MEASUREMENT
     // Initialize the covariance
     Q.topLeftCorner(6, 6) = 0.01 * Q.topLeftCorner(6, 6);     // IMU omg, accel
     Q.bottomRightCorner(6, 6) = 0.01 * Q.bottomRightCorner(6, 6); // IMU bias_a, bias_g
     R.bottomRightCorner(2, 2) = 0.01 * R.bottomRightCorner(2, 2); // Measure x, y
+#endif
 
     ros::spin();
 }
