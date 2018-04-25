@@ -14,6 +14,8 @@
 #include <Eigen/Eigen>
 #include <queue>
 
+//#define INIT_Q_R_BY_MEASUREMENT
+
 using namespace std;
 using namespace Eigen;
 ros::Publisher odom_pub;
@@ -34,15 +36,25 @@ MatrixXd R = MatrixXd::Identity(5, 5);      // observation noise covariance
 
 // buffers to save imu and uwb reading for time synchronization
 queue<sensor_msgs::Imu::ConstPtr> imu_buf;
+queue<nav_msgs::Odometry::ConstPtr> odom_buf;
 queue<Matrix<double, 16, 1>> x_history;
 queue<Matrix<double, 16, 16>> P_history;
 
 // previous propagated time
 double t_prev;
 
-// TODO: Add the initialization sequence
+// Initialization and covariance estimation
+// UWB wait until imu is initialized
+const int IMU_INIT_COUNT = 40;
+int imu_count = 0;
 Vector3d g_init = Vector3d::Zero();
 Vector3d G = Vector3d::Zero();
+Vector3d accl_init_buf[IMU_INIT_COUNT];
+Vector3d gyro_init_buf[IMU_INIT_COUNT];
+queue<double> uwb_init_buf_x;
+queue<double> uwb_init_buf_y;
+bool imu_initialized = false;
+bool odom_initialized= false;
 
 // TODO: Calibrate sensor position
 // imu frame in uwb frame
@@ -126,14 +138,14 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg)
 }
 
 // Loosely coupled update using only the fused global position of UWB
-void update_loosely(double pos_x, double pos_y)
+void update_loosely(const uwb_msgs::uwb &msg)
 {
     VectorXd T(5);
     T(0) = 0;
     T(1) = 0;
     T(2) = 0;
-    T(3) = pos_x;
-    T(4) = pos_y;
+    T(3) = msg.pos_x;
+    T(4) = msg.pos_y;
 
     MatrixXd C = MatrixXd::Zero(5, 15);
     C.block<2, 2>(3, 0) = Matrix2d::Identity();
@@ -146,27 +158,98 @@ void update_loosely(double pos_x, double pos_y)
     P = P - K * C * P;
 }
 
+/**
+ * Initialize, handle and save imu messages
+ * @param imu_msg
+ */
 void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
 {
-    if (false) {
+    if (!imu_initialized && imu_count < IMU_INIT_COUNT) {
+        accl_init_buf[imu_count](0) = imu_msg->linear_acceleration.x;
+        accl_init_buf[imu_count](1) = imu_msg->linear_acceleration.y;
+        accl_init_buf[imu_count](2) = imu_msg->linear_acceleration.z;
+        gyro_init_buf[imu_count](0) = imu_msg->angular_velocity.x;
+        gyro_init_buf[imu_count](1) = imu_msg->angular_velocity.y;
+        gyro_init_buf[imu_count](2) = imu_msg->angular_velocity.z;
+        g_init(0) += accl_init_buf[imu_count](0);
+        g_init(1) += accl_init_buf[imu_count](1);
+        g_init(2) += accl_init_buf[imu_count](2);
+        imu_count++;
+    }
+    else if (!imu_initialized && imu_count == IMU_INIT_COUNT) {
+#ifdef INIT_Q_R_BY_MEASUREMENT
+        double accl_mean[3] = {0};
+        double gyro_mean[3] = {0};
+        double accl_cova[3] = {0};
+        double gyro_cova[3] = {0};
+        for (int i = 0; i < IMU_INIT_COUNT; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                accl_mean[j] += accl_init_buf[i](j);
+                gyro_mean[j] += gyro_init_buf[i](j);
+                accl_cova[j] += pow(accl_init_buf[i](j), 2);
+                gyro_cova[j] += pow(gyro_init_buf[i](j), 2);
+            }
+        }
+        for (int j = 0; j < 3; ++j) {
+            accl_mean[j] /= IMU_INIT_COUNT;
+            gyro_mean[j] /= IMU_INIT_COUNT;
+            accl_cova[j] /= IMU_INIT_COUNT;
+            gyro_cova[j] /= IMU_INIT_COUNT;
 
-    } else {
-        imu_buf.push(imu_msg);
+            // Q omg first, Q acceleration second
+            Q(j, j)     = gyro_cova[j] - pow(gyro_mean[j], 2);
+            Q(j+3, j+3) = accl_cova[j] - pow(accl_mean[j], 2);
+        }
+        cout << "DEBUG: measured Q" << endl << Q << endl;
+#endif
+        g_init /= IMU_INIT_COUNT;
+
+        // TODO: replace this hardcoded initial value
+        G = imu_R_uwb * g_init;
+        imu_initialized = true;
+    }
+    else {
         propagate(imu_msg);
+        pub_odom_ekf(imu_msg->header);
+
+        imu_buf.push(imu_msg);
         x_history.push(x);
         P_history.push(P);
-        pub_odom_ekf(imu_msg->header);
     }
 }
 
 /**
- * initialize and time sychronize the time stamp for IMU and UWB
+ * initialize, handle and save uwb messages
+ * Also doing time synchronization
  * @param uwb msg
  */
 void odom_callback(const uwb_msgs::uwb &msg)
 {
-    if (false) {
-
+    if (!imu_initialized && !odom_initialized) {
+        uwb_init_buf_x.push(msg.pos_x);
+        uwb_init_buf_y.push(msg.pos_y);
+    }
+    else if (imu_initialized && !odom_initialized) {
+#ifdef INIT_Q_R_BY_MEASUREMENT
+        double uwb_mean[2] = {0, 0};
+        double uwb_cova[2] = {0, 0};
+        int uwb_count = (int)uwb_init_buf_x.size();
+        for (int i = 0; i < uwb_count; ++i) {
+            uwb_mean[0] += uwb_init_buf_x.front();
+            uwb_mean[1] += uwb_init_buf_y.front();
+            uwb_cova[0] += pow(uwb_init_buf_x.front(), 2);
+            uwb_cova[1] += pow(uwb_init_buf_y.front(), 2);
+            uwb_init_buf_x.pop();
+            uwb_init_buf_y.pop();
+        }
+        uwb_mean[0] /= uwb_count;
+        uwb_mean[1] /= uwb_count;
+        uwb_cova[0] /= uwb_count;
+        uwb_cova[1] /= uwb_count;
+        R(0, 0) = uwb_cova[0] - pow(uwb_mean[0], 2);
+        R(1, 1) = uwb_cova[1] - pow(uwb_mean[1], 2);
+#endif
+        odom_initialized = true;
     }
     else
     {
@@ -194,7 +277,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
         }
 
         ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
-        update_loosely(msg.pos_x, msg.pos_y);
+        update_loosely(msg);
 
         // clean the x and P history since the new update corrects the previous propagate
         while(!x_history.empty()) x_history.pop();
@@ -235,7 +318,7 @@ int main(int argc, char **argv)
 
 //    Rimu = Quaterniond(0.7071, 0, 0, -0.7071).toRotationMatrix();
     cout << "imu_R_uwb" << endl << imu_R_uwb << endl;
-    G << 0, 0, -9.8;
+//    G << 0, 0, -9.8;
 
     // Initialize the covariance
     Q.topLeftCorner(6, 6) = 0.01 * Q.topLeftCorner(6, 6);     // IMU omg, accel
