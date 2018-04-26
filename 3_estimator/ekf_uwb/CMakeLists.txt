@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ekf_uwb)
 
+IF(APPLE)
+    set(CMAKE_MODULE_PATH /usr/local/share/cmake/Modules)
+    find_package(Eigen3  REQUIRED)
+    include_directories(${EIGEN3_INCLUDE_DIR})
+
+    set(CMAKE_CXX_STANDARD 11)
+
+    set(SOURCE_FILES
+            src/ekf_uwb_node_2D.cpp
+            src/ekf_uwb_node_quaternion.cpp)
+
+    add_executable(ekf ${SOURCE_FILES})
+ELSE()
+
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -DEIGEN_DONT_PARALLELIZE")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall")
@@ -50,7 +64,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/ekf_uwb_node.cpp)
+add_executable(${PROJECT_NAME}_node src/ekf_uwb_node_quaternion.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -66,3 +80,4 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 target_link_libraries(${PROJECT_NAME}_node
         ${catkin_LIBRARIES}
         )
+ENDIF(APPLE)

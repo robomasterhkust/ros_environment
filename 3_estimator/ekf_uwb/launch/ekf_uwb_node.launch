@@ -19,9 +19,9 @@
     </node>
 
 
-    <node pkg="ekf_uwb" type="ekf_uwb_node" name="ekf_uwb_node" output="screen">
+    <node pkg="ekf_uwb" type="ekf_uwb_node" name="ekf_uwb_node_quaternion" output="screen">
         <param name="imu_topic" type="string" value="/dji_sdk/imu"/>
         <param name="uwb_topic" type="string" value="/uwb_info"/>
-        <param name="publiser_topic" type="string" value="/ekf_odom"/>
+        <param name="publisher_topic" type="string" value="/ekf_odom"/>
     </node>
 </launch>

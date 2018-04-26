@@ -1,4 +1,5 @@
 /**
+ * Beck Pang 20180424, depreciated
  * Practice Extended Kalman Filter for eight states
  * Fusing an high precision gyroscope and a MPU6500 IMU as the process model,
  *   with an UWB and a magnetometer as the observation model.
@@ -259,7 +260,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
     else {
         while (!imu_buf.empty() && imu_buf.front()->header.stamp < msg.header.stamp)
         {
-//            ROS_INFO("throw state with time: %f", imu_buf.front()->header.stamp.toSec());
+            ROS_INFO("throw state with time: %f", imu_buf.front()->header.stamp.toSec());
             // trace the time backwards to imu time
             t = imu_buf.front()->header.stamp.toSec();
             imu_buf.pop();
@@ -277,7 +278,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
             x_history.pop();
             P_history.pop();
         }
-//        ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
+        ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
         update(msg);
 
         // clean the x and P history before new propagate
@@ -287,7 +288,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
         queue<sensor_msgs::Imu::ConstPtr> temp_imu_buf;
         while (!imu_buf.empty())
         {
-//            ROS_INFO("propagate state with time: %f", imu_buf.front()->header.stamp.toSec());
+            ROS_INFO("propagate state with time: %f", imu_buf.front()->header.stamp.toSec());
             propagate(imu_buf.front());
             temp_imu_buf.push(imu_buf.front());
             x_history.push(x);
