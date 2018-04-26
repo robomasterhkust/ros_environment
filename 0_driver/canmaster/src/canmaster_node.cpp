@@ -11,8 +11,12 @@ void cmd_cb(const geometry_msgs::Twist &t){
 	static can_msgs::Frame f;
 
 	ROS_INFO("Received cmd_vel vx=%f vy=%f vw=%f",t.linear.x,t.linear.y,t.angular.z);
+	//f.header.frame_id="0";
+	f.header.stamp = ros::Time::now();
+
 	f.id = CAN_NVIDIA_TX2_BOARD_ID;
 	f.dlc = (16 / 8) * 3;
+
 
 	int16_t vx = (int16_t) (t.linear.x * 1000); // convert to mm/s
 	f.data[0] = (uint8_t) (vx >> 8) & 0xff;
