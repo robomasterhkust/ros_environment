@@ -1,7 +1,8 @@
 <launch>
     <node pkg="socketcan_bridge" type="socketcan_to_topic_node" name="socketcan_to_topic_node" output="screen">
-        <param name="can_device" value="can0" />
+        <param name="can_device" value="can0"/>
     </node>
-    <node pkg="uwb_driver" type="uwb_driver_node" name="uwb_haha" output="screen">
+    <node pkg="uwb_driver" type="uwb_driver_node" name="uwb_1" output="screen">
+        <param name="can_device" value="can0"/>
     </node>
 </launch>

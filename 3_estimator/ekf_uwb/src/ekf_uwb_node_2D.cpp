@@ -278,7 +278,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
             x_history.pop();
             P_history.pop();
         }
-        ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
+        ROS_INFO("update state with time: %f", msg.header.stamp.toSec());
         update(msg);
 
         // clean the x and P history before new propagate
