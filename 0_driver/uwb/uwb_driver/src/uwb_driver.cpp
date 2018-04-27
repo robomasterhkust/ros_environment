@@ -4,6 +4,9 @@
 #include <string>
 #include <ros/ros.h>
 #include <math.h>
+#include <Eigen/Eigen>
+
+using namespace Eigen;
 
 #define MAX_STATION_NUM     6
 #define EPSILON             std::numeric_limits<double>::epsilon()
@@ -18,6 +21,12 @@ double temp_pos_theta = 0;
 double temp_distance[MAX_STATION_NUM];
 
 uint16_t temp_error = 0;
+const Eigen::MatrixXd P = (Eigen::MatrixXd(4, 3)
+        <<
+        0.0, 0.0, 2.0,
+        5.0, 0.0, 2.0,
+        0.0, 8.0, 2.03,
+        5.0, 8.0, 2.03).finished();
 
 void msgCallback(const can_msgs::Frame &f) {
     if (uwb_start) {
@@ -59,6 +68,14 @@ void msgCallback(const can_msgs::Frame &f) {
             uwb_msg.check_failed = ((temp_error >> 3) & 1);
             uwb_msg.need_calibrated = ((temp_error >> 2) & 1);
             uwb_msg.level = (uint8_t)(temp_error >> 14);
+
+            Vector4d d(temp_distance[0], temp_distance[1], temp_distance[2], temp_distance[3]);
+            Vector3d x = ((P.transpose() * P).inverse()) * P.transpose() * d;
+
+            uwb_msg.pos_x_self = x(0);
+            uwb_msg.pos_y_self = x(1);
+            uwb_msg.pos_z_self = x(2);
+            uwb_msg.pos_theta_self = 0;
 
             uwb_publisher.publish(uwb_msg);
 

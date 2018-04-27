@@ -3,6 +3,7 @@ project(uwb_driver)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -DESIGN_DONTPARALLELIZE")
+set(CMAKE_CXX_FLAGS "-std=c++11 -march=native -DEIGEN_DONT_PARALLELIZE")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wall")
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -16,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         roscpp
         )
+
+find_package(Eigen3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -122,6 +125,7 @@ catkin_package(
 include_directories(
         # include
         ${catkin_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a C++ library

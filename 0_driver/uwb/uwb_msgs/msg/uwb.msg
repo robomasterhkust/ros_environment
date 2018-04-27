@@ -1,6 +1,10 @@
 Header header
 float64 pos_x # meters
 float64 pos_y # meters
+float64 pos_x_self
+float64 pos_y_self
+float64 pos_z_self
+float64 pos_theta_self
 float64 pos_theta # rads
 float64[6] distance # meters
 uint8 num
