@@ -49,7 +49,7 @@ namespace socketcan_bridge {
                                        boost::shared_ptr <can::DriverInterface> driver) {
         std::string can_device;
         nh_param->getParam("can_device", can_device);
-        can_topic_ = nh->advertise<can_msgs::Frame>(can_device + "_received_messages_raw", 10);
+        can_topic_ = nh->advertise<can_msgs::Frame>(can_device + "_raw", 10);
         driver_ = driver;
     };
 

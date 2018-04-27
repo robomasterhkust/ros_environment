@@ -84,9 +84,9 @@ int main(int argc, char *argv[]) {
     std::string can_device;
     nh_param.param<std::string>("can_device", can_device, "can0");
 
-    uwb_publisher = nh.advertise<uwb_msgs::uwb>(can_device + "_uwb_info", 100);
-    uwb_pub_odom = nh.advertise<nav_msgs::Odometry>(can_device + "_uwb_odom", 100);
-    ros::Subscriber can_subscriber = nh.subscribe("/" + can_device + "_received_messages_raw", 100, msgCallback);
+    uwb_publisher = nh.advertise<uwb_msgs::uwb>("info", 100);
+    uwb_pub_odom = nh.advertise<nav_msgs::Odometry>("odom", 100);
+    ros::Subscriber can_subscriber = nh.subscribe("/" + can_device + "_raw", 100, msgCallback);
 
     ros::spin();
 }
