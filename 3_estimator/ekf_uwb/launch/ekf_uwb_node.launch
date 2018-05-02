@@ -13,15 +13,15 @@
 
     <!--<include file="$(find uwb_driver)/launch/uwb_driver.launch"/>-->
     <node pkg="socketcan_bridge" type="socketcan_to_topic_node" name="socketcan_to_topic_node" output="screen">
-        <param name="can_device" value="can1" />
+        <param name="can_device" value="can0" />
     </node>
-    <node pkg="uwb_driver" type="uwb_driver_node" name="uwb_hehe" output="screen">
+    <node pkg="uwb_driver" type="uwb_driver_node" name="uwb_driver" output="screen">
     </node>
 
 
     <node pkg="ekf_uwb" type="ekf_uwb_node" name="ekf_uwb_node_quaternion" output="screen">
         <param name="imu_topic" type="string" value="/dji_sdk/imu"/>
-        <param name="uwb_topic" type="string" value="/uwb_info"/>
+        <param name="uwb_topic" type="string" value="/uwb_driver/info"/>
         <param name="publisher_topic" type="string" value="/ekf_odom"/>
     </node>
 </launch>
