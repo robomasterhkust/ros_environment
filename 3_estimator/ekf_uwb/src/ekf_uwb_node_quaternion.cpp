@@ -100,7 +100,7 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg)
     // propagate the state with quaternion calculus
     Quaterniond dR(sqrt(1 - domg.squaredNorm()), domg(0), domg(1), domg(2));
     Quaterniond Rt(x(0), x(1), x(2), x(3));
-    Quaterniond R_t = (Rt * dR).normalized;
+    Quaterniond R_t = (Rt * dR).normalized();
 
     x.segment<4>(0) << R_t.w(), R_t.x(), R_t.y(), R_t.z();
     x.segment<3>(4) += x.segment<3>(7) * dt + (Rt * (a - G)) * 0.5 * dt * dt;
@@ -116,7 +116,7 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg)
              a(2),     0 , -a(0),
             -a(1),   a(0),    0;
 
-    Matrix A = MatrixXd::Zero(15, 15);
+    MatrixXd A = MatrixXd::Zero(15, 15);
     A.block<3, 3>( 0, 0) = -R_omg;
     A.block<3, 3>(12, 0) = -1 * I;
     A.block<3, 3>( 3, 6) = I;
@@ -124,7 +124,7 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg)
     A.block<3, 3>( 6, 9) = (-1 * Rt.toRotationMatrix());
     cout << "DEBUG:: propagate A" << endl << A << endl;
 
-    Matrix U = Matrix::Zero(15, 12);
+    MatrixXd U = MatrixXd::Zero(15, 12);
     U.block<3, 3>(0, 0) = -1 * I;
     U.block<3, 3>(6, 3) = -1 * Rt.toRotationMatrix();
     U.block<3, 3>(9, 6) = I;
@@ -285,7 +285,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
             P_history.pop();
         }
 
-        ROS_INFO("update state with time: %f", msg->header.stamp.toSec());
+        ROS_INFO("update state with time: %f", msg.header.stamp.toSec());
         update_loosely(msg);
 
         // clean the x and P history since the new update corrects the previous propagate
