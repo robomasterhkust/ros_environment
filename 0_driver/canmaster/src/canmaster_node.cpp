@@ -18,14 +18,14 @@ void cmd_cb(const geometry_msgs::Twist &t){
 	f.dlc = (16 / 8) * 3;
 
 	int16_t vx = (int16_t) (t.linear.x * 1000); // convert to mm/s
-	f.data[1] = (uint8_t) (vx >> 8) & 0xff;
-	f.data[0] = (uint8_t) vx & 0xff;
+	f.data[3] = (uint8_t) (vx >> 8) & 0xff;
+	f.data[2] = (uint8_t) vx & 0xff;
 	
-	int16_t vy = (int16_t) (t.linear.y * 1000); // convert to mm/s
-	f.data[3] = (uint8_t) (vy >> 8) & 0xff;
-	f.data[2] = (uint8_t) vy & 0xff;
+	int16_t vy = (int16_t) (-t.linear.y * 1000); // convert to mm/s
+	f.data[1] = (uint8_t) (vy >> 8) & 0xff;
+	f.data[0] = (uint8_t) vy & 0xff;
 
-	int16_t vw = (int16_t) t.angular.z;
+	int16_t vw = (int16_t) -t.angular.z*90;
 	f.data[5] = (uint8_t) (vw >> 8) & 0xff;
 	f.data[4] = (uint8_t) vw & 0xff;
 
