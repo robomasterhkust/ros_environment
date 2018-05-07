@@ -85,8 +85,8 @@ void pub_odom_ekf(std_msgs::Header header) {
 void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     double cur_t = imu_msg->header.stamp.toSec();
     double dt = cur_t - t_prev;
-    VectorXd w_raw(3);
-    VectorXd a_raw(3);
+    Vector3d w_raw;
+    Vector3d a_raw;
     a_raw(0) = imu_msg->linear_acceleration.x;
     a_raw(1) = imu_msg->linear_acceleration.y;
     a_raw(2) = imu_msg->linear_acceleration.z;
@@ -143,50 +143,60 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
 }
 
 // Loosely coupled update in world frame, fusing the global position of UWB and angle
-void update_loosely(const uwb_msgs::uwb &msg) {
-    VectorXd T(6);
-    T(0) = 0;
-    T(1) = 0;
-    T(2) = msg.pos_theta - theta_bias;
-    T(3) = msg.pos_x;
-    T(4) = msg.pos_y;
-    T(5) = 0;
+void update_loosely(const uwb_msgs::uwb &msg, const sensor_msgs::Imu::ConstPtr &imu_msg) {
+    Quaterniond q_g(1, 0, 0, 0);
+/*
+    if (imu_msg != nullptr && &imu_msg != NULL) {
+        Vector3d a_raw(imu_msg->linear_acceleration.x,
+                       imu_msg->linear_acceleration.y,
+                       imu_msg->linear_acceleration.z);
+        Vector3d a_norm = a_raw.normalized();
+        // cout << "DEBUG:: raw accel" << endl << a_norm << endl;
+        Vector3d q_vec(a_norm(1), -a_norm(0), 0);
+        Vector3d q_norm = q_vec.normalized();
+        q_g.w() = acos(a_norm(2));
+        q_g.x() = q_norm(0);
+        q_g.y() = q_norm(1);
+        q_g.z() = q_norm(2);
+    }
+*/
+
+    double theta_z = msg.pos_theta - theta_bias;
+    VectorXd T(3);
+    T(0) = msg.pos_x;
+    T(1) = msg.pos_y;
+    T(2) = 0;
 
     MatrixXd C = MatrixXd::Zero(6, 15);
     C.block<3, 3>(0, 0) = Matrix3d::Identity();
+//    C(2, 2) = 1;
     C.block<3, 3>(3, 3) = Matrix3d::Identity();
 
     MatrixXd K(15, 6);
     K = P * C.transpose() * (C * P * C.transpose() + R).inverse();
-    cout << "DEBUG:: update K" << endl << K << endl;
+//    cout << "DEBUG:: update K" << endl << K << endl;
 
-    Matrix3d uwb_R_world = AngleAxisd(T(2), Vector3d::UnitZ()) * imu_R_world;
+    Matrix3d uwb_R_world = AngleAxisd(theta_z, Vector3d::UnitZ()) * imu_R_world * q_g.toRotationMatrix();
     cout << "DEBUG:: measured angle" << endl << uwb_R_world << endl;
 
     VectorXd r(6);
     Quaterniond qm(uwb_R_world);
     Quaterniond q = Quaterniond(x(0), x(1), x(2), x(3));
     Quaterniond dq = q.conjugate() * qm; // Hamilton style
-//    cout << "DEBUG:: dq" << endl << dq << endl;
     r.head(3) = 2 * dq.vec();
-    r.tail(3) = T.tail(3) - x.segment<3>(4);
+    r.tail(3) = T - x.segment<3>(4);
     VectorXd _r = K * r;
     Vector3d dw(0.5 * _r(0), 0.5 * _r(1), 0.5 * _r(2));
     Quaterniond _dq = Quaterniond(1, dw(0), dw(1), dw(2)).normalized();
     q = q * _dq;
 
-//    // remove unobservable quaternion
-//    VectorXd x_ori(15);
-//    x_ori.segment<12>(3) = x.segment<12>(4);
-//    x_ori = x_ori + K * (T - C * x_ori);
-//    cout << "DEBUG:: x 15 states after update" << endl << x_ori << endl;
     x(0) = q.w();
     x(1) = q.x();
     x(2) = q.y();
     x(3) = q.z();
     x.segment<12>(4) += _r.segment<12>(3);
     P = P - K * C * P;
-    cout << "DEBUG:: P after update" << endl << P << endl;
+//    cout << "DEBUG:: P after update" << endl << P << endl;
 }
 
 /**
@@ -341,7 +351,12 @@ void odom_callback(const uwb_msgs::uwb &msg) {
         }
 
         ROS_INFO("update state with time: %f", msg.header.stamp.toSec());
-        update_loosely(msg);
+        if (imu_buf.empty()){
+            update_loosely(msg, NULL);
+        } else {
+            update_loosely(msg, imu_buf.front());
+        }
+
 
         // clean the x and P history since the new update corrects the previous propagate
         while (!x_history.empty()) x_history.pop();
