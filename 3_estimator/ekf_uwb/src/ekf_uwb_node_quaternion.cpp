@@ -32,7 +32,7 @@ string imu_topic, uwb_topic, publisher_topic;
 VectorXd x(16);                             // state
 MatrixXd P = MatrixXd::Zero(15, 15);        // covariance
 MatrixXd Q = MatrixXd::Identity(12, 12);    // prediction noise covariance
-MatrixXd R = MatrixXd::Identity(5, 5);      // observation noise covariance
+MatrixXd R = MatrixXd::Identity(6, 6);      // observation noise covariance
 
 // buffers to save imu and uwb reading for time synchronization
 queue <sensor_msgs::Imu::ConstPtr> imu_buf;
@@ -51,15 +51,17 @@ Vector3d g_init = Vector3d::Zero();
 Vector3d G = Vector3d::Zero();
 Vector3d accl_init_buf[IMU_INIT_COUNT];
 Vector3d gyro_init_buf[IMU_INIT_COUNT];
+queue<double> uwb_init_buf_w;
 queue<double> uwb_init_buf_x;
 queue<double> uwb_init_buf_y;
+double theta_bias = 0;
 bool imu_initialized = false;
 bool odom_initialized = false;
 
 // TODO: Calibrate sensor position
-// imu frame in uwb frame
-Matrix3d imu_R_uwb = Quaterniond(0.7071, 0, 0, -0.7071).toRotationMatrix();
-Matrix3d initial_robot_pose = Quaterniond(1, 0, 0, 0).toRotationMatrix();
+// imu frame to world frame rotation matrix, {[0, 0, -1], pi/2}
+Matrix3d imu_R_world = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
+Matrix3d init_robot_pose = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
 
 void pub_odom_ekf(std_msgs::Header header) {
     nav_msgs::Odometry odom;
@@ -79,6 +81,7 @@ void pub_odom_ekf(std_msgs::Header header) {
     odom_pub.publish(odom);
 }
 
+// imu propagate in the world frame
 void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     double cur_t = imu_msg->header.stamp.toSec();
     double dt = cur_t - t_prev;
@@ -139,29 +142,49 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     t_prev = cur_t;
 }
 
-// Loosely coupled update using only the fused global position of UWB
+// Loosely coupled update in world frame, fusing the global position of UWB and angle
 void update_loosely(const uwb_msgs::uwb &msg) {
-    VectorXd T(5);
+    VectorXd T(6);
     T(0) = 0;
     T(1) = 0;
-    T(2) = 0;
+    T(2) = msg.pos_theta - theta_bias;
     T(3) = msg.pos_x;
     T(4) = msg.pos_y;
+    T(5) = 0;
 
-    MatrixXd C = MatrixXd::Zero(5, 15);
-    C.block<2, 2>(3, 3) = Matrix2d::Identity();
+    MatrixXd C = MatrixXd::Zero(6, 15);
+    C.block<3, 3>(0, 0) = Matrix3d::Identity();
+    C.block<3, 3>(3, 3) = Matrix3d::Identity();
 
-    MatrixXd K(15, 5);
+    MatrixXd K(15, 6);
     K = P * C.transpose() * (C * P * C.transpose() + R).inverse();
     cout << "DEBUG:: update K" << endl << K << endl;
 
-    // remove unobservable quaternion
-    VectorXd x_ori(15);
-    x_ori.segment<12>(3) = x.segment<12>(4);
-    x_ori = x_ori + K * (T - C * x_ori);
-    cout << "DEBUG:: x 15 states after update" << endl << x_ori << endl;
+    Matrix3d uwb_R_world = AngleAxisd(T(2), Vector3d::UnitZ()) * imu_R_world;
+    cout << "DEBUG:: measured angle" << endl << uwb_R_world << endl;
 
-    x.segment<12>(4) = x_ori.segment<12>(3);
+    VectorXd r(6);
+    Quaterniond qm(uwb_R_world);
+    Quaterniond q = Quaterniond(x(0), x(1), x(2), x(3));
+    Quaterniond dq = q.conjugate() * qm; // Hamilton style
+//    cout << "DEBUG:: dq" << endl << dq << endl;
+    r.head(3) = 2 * dq.vec();
+    r.tail(3) = T.tail(3) - x.segment<3>(4);
+    VectorXd _r = K * r;
+    Vector3d dw(0.5 * _r(0), 0.5 * _r(1), 0.5 * _r(2));
+    Quaterniond _dq = Quaterniond(1, dw(0), dw(1), dw(2)).normalized();
+    q = q * _dq;
+
+//    // remove unobservable quaternion
+//    VectorXd x_ori(15);
+//    x_ori.segment<12>(3) = x.segment<12>(4);
+//    x_ori = x_ori + K * (T - C * x_ori);
+//    cout << "DEBUG:: x 15 states after update" << endl << x_ori << endl;
+    x(0) = q.w();
+    x(1) = q.x();
+    x(2) = q.y();
+    x(3) = q.z();
+    x.segment<12>(4) += _r.segment<12>(3);
     P = P - K * C * P;
     cout << "DEBUG:: P after update" << endl << P << endl;
 }
@@ -210,19 +233,22 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
         // Hardcoded initial IMU bias_a, bias_g
         Q.bottomRightCorner(6, 6) = 0.01 * Q.bottomRightCorner(6, 6);
         cout << "DEBUG: measured Q" << endl << Q << endl;
+#else
+        // Initialize the covariance
+        Q.topLeftCorner(6, 6) = 0.001 * Q.topLeftCorner(6, 6);     // IMU omg, accel
+        Q.bottomRightCorner(6, 6) = 0.001 * Q.bottomRightCorner(6, 6); // IMU bias_a, bias_g
 #endif
         g_init /= IMU_INIT_COUNT;
 
         // Initialize the state and the gravity
-        // TODO: add new global sensor replace this hardcoded initial value
         x.setZero();
-        Quaterniond init_pose(imu_R_uwb * initial_robot_pose);
+        Quaterniond init_pose(init_robot_pose);
         x(0) = init_pose.w();
         x(1) = init_pose.x();
         x(2) = init_pose.y();
         x(3) = init_pose.z();
 
-        G = imu_R_uwb * g_init;
+        G = imu_R_world * g_init;
         cout << "DEBUG: measured G" << endl << G << endl;
         t_prev = imu_msg->header.stamp.toSec();
         imu_initialized = true;
@@ -245,29 +271,50 @@ void odom_callback(const uwb_msgs::uwb &msg) {
     if (!imu_initialized && !odom_initialized) {
         uwb_init_buf_x.push(msg.pos_x);
         uwb_init_buf_y.push(msg.pos_y);
+        uwb_init_buf_w.push(msg.pos_theta);
     } else if (imu_initialized && !odom_initialized) {
 #ifdef INIT_Q_R_BY_MEASUREMENT
-        double uwb_mean[2] = {0, 0};
-        double uwb_cova[2] = {0, 0};
+        double uwb_mean[3] = {0, 0, 0};
+        double uwb_cova[3] = {0, 0, 0};
         int uwb_count = (int) uwb_init_buf_x.size();
         for (int i = 0; i < uwb_count; ++i) {
             uwb_mean[0] += uwb_init_buf_x.front();
             uwb_mean[1] += uwb_init_buf_y.front();
+            uwb_mean[2] += uwb_init_buf_w.front();
             uwb_cova[0] += pow(uwb_init_buf_x.front(), 2);
             uwb_cova[1] += pow(uwb_init_buf_y.front(), 2);
+            uwb_cova[2] += pow(uwb_init_buf_w.front(), 2);
             uwb_init_buf_x.pop();
             uwb_init_buf_y.pop();
+            uwb_init_buf_w.pop();
         }
         uwb_mean[0] /= uwb_count;
         uwb_mean[1] /= uwb_count;
+        uwb_mean[2] /= uwb_count;
         uwb_cova[0] /= uwb_count;
         uwb_cova[1] /= uwb_count;
+        uwb_cova[2] /= uwb_count;
+
+        // Initialize the position and bias
+        x(4) = uwb_mean[0];
+        x(5) = uwb_mean[1];
+        x(6) = 0;
+        theta_bias = uwb_mean[2];
+
+        // Initialize the covariance R
+        R.topLeftCorner(2, 2) = 0.01 * R.topLeftCorner(2, 2);
+        R(2, 2) = uwb_cova[2] - pow(uwb_mean[2], 2);
         R(3, 3) = uwb_cova[0] - pow(uwb_mean[0], 2);
         R(4, 4) = uwb_cova[1] - pow(uwb_mean[1], 2);
-
-        // Hardcored estimation for pose
-        R.topLeftCorner(3, 3) = 0.01 * R.topLeftCorner(3, 3);
+        R(5, 5) = 0.01 * R(5, 5);
         cout << "DEBUG: measured R" << endl << R << endl;
+#else
+        x(4) = msg.pos_x;
+        x(5) = msg.pos_y;
+        x(6) = 0;
+        theta_bias = msg.pos_theta;
+        R.topLeftCorner(3, 3) = 0.01 * R.topLeftCorner(3, 3);
+        R.bottomRightCorner(3, 3) = 0.01 * R.bottomRightCorner(3, 3); // Measure x, y
 #endif
         t_prev = msg.header.stamp.toSec();
         odom_initialized = true;
@@ -332,19 +379,7 @@ int main(int argc, char **argv) {
     ros::Rate r(400);
 
 //    Rimu = Quaterniond(0.7071, 0, 0, -0.7071).toRotationMatrix();
-    cout << "imu_R_uwb" << endl << imu_R_uwb << endl;
-//    G << 0, 0, -9.8;
-
-    // DEBUG: singularity occur when P_0 is set to zero
-    // P = 0.00001 * P;
-
-#ifndef INIT_Q_R_BY_MEASUREMENT
-    // Initialize the covariance
-    Q.topLeftCorner(6, 6) = 0.001 * Q.topLeftCorner(6, 6);     // IMU omg, accel
-    Q.bottomRightCorner(6, 6) = 0.001 * Q.bottomRightCorner(6, 6); // IMU bias_a, bias_g
-    R.topLeftCorner(3, 3) = 0.01 * R.topLeftCorner(3, 3);
-    R.bottomRightCorner(2, 2) = 0.01 * R.bottomRightCorner(2, 2); // Measure x, y
-#endif
+    cout << "imu_R_world" << endl << imu_R_world << endl;
 
     ros::spin();
 }
