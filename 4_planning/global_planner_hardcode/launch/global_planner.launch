@@ -1,0 +1,7 @@
+<launch>
+    <include file="$(find ekf_uwb)/launch/ekf_uwb_node.launch"/>
+    <node pkg="global_planner_hardcode" type="global_planner_hardcode_node" name="hardcode_node" output="screen">
+         <param name="odom_topic" type="string" value="/ekf_odom"/>
+         <param name="publisher_topic" type="string" value="/global_path_hardcode"/>
+    </node>
+</launch>
