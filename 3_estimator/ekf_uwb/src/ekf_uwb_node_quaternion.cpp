@@ -20,6 +20,8 @@ using namespace std;
 using namespace Eigen;
 ros::Publisher odom_pub;
 string imu_topic, uwb_topic, publisher_topic;
+double uwb_weight, acc_angle_weight, mag_weight;
+double acc_weight, gyro_weight, acc_bias_weight, gyro_bias_weight;
 
 /**
  * Define states:
@@ -177,7 +179,7 @@ void update_loosely(const uwb_msgs::uwb &msg, const sensor_msgs::Imu::ConstPtr &
 //    cout << "DEBUG:: update K" << endl << K << endl;
 
     Matrix3d uwb_R_world = AngleAxisd(theta_z, Vector3d::UnitZ()) * imu_R_world * q_g.toRotationMatrix();
-    cout << "DEBUG:: measured angle" << endl << uwb_R_world << endl;
+//    cout << "DEBUG:: measured angle" << endl << uwb_R_world << endl;
 
     VectorXd r(6);
     Quaterniond qm(uwb_R_world);
@@ -236,17 +238,24 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
             gyro_cova[j] /= IMU_INIT_COUNT;
 
             // Q omg first, Q acceleration second
-            Q(j, j) = gyro_cova[j] - pow(gyro_mean[j], 2);
+            Q(j, j)         = gyro_cova[j] - pow(gyro_mean[j], 2);
             Q(j + 3, j + 3) = accl_cova[j] - pow(accl_mean[j], 2);
         }
+        // Add the ratio
+        Q.block<3, 3>(0, 0) = gyro_weight * Q.block<3, 3>(0, 0);
+        Q.block<3, 3>(3, 3) = acc_weight  * Q.block<3, 3>(3, 3);
 
         // Hardcoded initial IMU bias_a, bias_g
-        Q.bottomRightCorner(6, 6) = 0.01 * Q.bottomRightCorner(6, 6);
+        Q.block<3, 3>(6, 6) = acc_bias_weight  * Q.block<3, 3>(6, 6);     // IMU bias_a, bias_g
+        Q.block<3, 3>(9, 9) = gyro_bias_weight * Q.block<3, 3>(9, 9);     // IMU bias_a, bias_g
         cout << "DEBUG: measured Q" << endl << Q << endl;
 #else
         // Initialize the covariance
-        Q.topLeftCorner(6, 6) = 0.001 * Q.topLeftCorner(6, 6);     // IMU omg, accel
-        Q.bottomRightCorner(6, 6) = 0.001 * Q.bottomRightCorner(6, 6); // IMU bias_a, bias_g
+        Q.block<3, 3>(0, 0) = gyro_weight * Q.block<3, 3>(0, 0);     // IMU omg, accel
+        Q.block<3, 3>(3, 3) = acc_weight  * Q.block<3, 3>(3, 3);     // IMU omg, accel
+        Q.block<3, 3>(6, 6) = acc_bias_weight  * Q.block<3, 3>(6, 6);     // IMU bias_a, bias_g
+        Q.block<3, 3>(9, 9) = gyro_bias_weight * Q.block<3, 3>(9, 9);     // IMU bias_a, bias_g
+        cout << "DEBUG: hardcoded Q" << endl << Q << endl;
 #endif
         g_init /= IMU_INIT_COUNT;
 
@@ -312,19 +321,21 @@ void odom_callback(const uwb_msgs::uwb &msg) {
         theta_bias = uwb_mean[2];
 
         // Initialize the covariance R
-        R.topLeftCorner(2, 2) = 0.01 * R.topLeftCorner(2, 2);
-        R(2, 2) = uwb_cova[2] - pow(uwb_mean[2], 2);
-        R(3, 3) = uwb_cova[0] - pow(uwb_mean[0], 2);
-        R(4, 4) = uwb_cova[1] - pow(uwb_mean[1], 2);
-        R(5, 5) = 0.01 * R(5, 5);
+        R.topLeftCorner(2, 2) = acc_angle_weight * R.topLeftCorner(2, 2);
+        R(2, 2) = (uwb_cova[2] - pow(uwb_mean[2], 2)) * mag_weight;
+        R(3, 3) = (uwb_cova[0] - pow(uwb_mean[0], 2)) * uwb_weight;
+        R(4, 4) = (uwb_cova[1] - pow(uwb_mean[1], 2)) * uwb_weight;
+        R(5, 5) = 0.01 * R(5, 5) * uwb_weight;
         cout << "DEBUG: measured R" << endl << R << endl;
 #else
         x(4) = msg.pos_x;
         x(5) = msg.pos_y;
         x(6) = 0;
         theta_bias = msg.pos_theta;
-        R.topLeftCorner(3, 3) = 0.01 * R.topLeftCorner(3, 3);
-        R.bottomRightCorner(3, 3) = 0.01 * R.bottomRightCorner(3, 3); // Measure x, y
+        R.topLeftCorner(2, 2) = acc_angle_weight * R.topLeftCorner(2, 2);
+        R(2, 2) = mag_weight * R(2, 2);
+        R.bottomRightCorner(3, 3) = uwb_weight * R.bottomRightCorner(3, 3); // Measure x, y
+        cout << "DEBUG: hardcoded R" << endl << R << endl;
 #endif
         t_prev = msg.header.stamp.toSec();
         odom_initialized = true;
@@ -333,7 +344,7 @@ void odom_callback(const uwb_msgs::uwb &msg) {
         while (!imu_buf.empty() && imu_buf.front()->header.stamp < msg.header.stamp) {
             // trace the time backwards to imu time
             t_prev = imu_buf.front()->header.stamp.toSec();
-            ROS_INFO("throw state with time: %f", t_prev);
+//            ROS_INFO("throw state with time: %f", t_prev);
             imu_buf.pop();
             x_history.pop();
             P_history.pop();
@@ -350,13 +361,12 @@ void odom_callback(const uwb_msgs::uwb &msg) {
             P_history.pop();
         }
 
-        ROS_INFO("update state with time: %f", msg.header.stamp.toSec());
+//        ROS_INFO("update state with time: %f", msg.header.stamp.toSec());
         if (imu_buf.empty()){
             update_loosely(msg, NULL);
         } else {
             update_loosely(msg, imu_buf.front());
         }
-
 
         // clean the x and P history since the new update corrects the previous propagate
         while (!x_history.empty()) x_history.pop();
@@ -364,7 +374,7 @@ void odom_callback(const uwb_msgs::uwb &msg) {
 
         queue <sensor_msgs::Imu::ConstPtr> temp_imu_buf;
         while (!imu_buf.empty()) {
-            ROS_INFO("propagate state with time: %f", imu_buf.front()->header.stamp.toSec());
+//            ROS_INFO("propagate state with time: %f", imu_buf.front()->header.stamp.toSec());
             propagate(imu_buf.front());
             temp_imu_buf.push(imu_buf.front());
             x_history.push(x);
@@ -385,6 +395,13 @@ int main(int argc, char **argv) {
     n.param("imu_topic", imu_topic, string("/dji_sdk/imu"));
     n.param("uwb_topic", uwb_topic, string("/uwb_driver/info"));
     n.param("publisher_topic", publisher_topic, string("/ekf_odom"));
+    n.param("uwb_weight", uwb_weight, 0.01);
+    n.param("acc_angle_weight", acc_angle_weight, 0.01);
+    n.param("magnetometer_weight" , mag_weight, 0.01);
+    n.param("accelerometer_weight", acc_weight, 0.01);
+    n.param("gyroscope_weight", gyro_weight, 0.01);
+    n.param("acc_bias_weight" , acc_bias_weight, 0.01);
+    n.param("gyro_bias_weight", gyro_bias_weight, 0.01);
 
     ros::Subscriber s1 = n.subscribe(imu_topic, 100, imu_callback);
     ros::Subscriber s2 = n.subscribe(uwb_topic, 10, odom_callback);
