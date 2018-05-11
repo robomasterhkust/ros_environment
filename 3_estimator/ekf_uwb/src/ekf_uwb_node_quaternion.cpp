@@ -121,7 +121,7 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
 
     MatrixXd A = MatrixXd::Zero(15, 15);
     A.block<3, 3>(0, 0) = -R_omg;
-    A.block<3, 3>(12, 0) = -1 * I;
+    A.block<3, 3>(0, 12)= -1 * I;
     A.block<3, 3>(3, 6) = I;
     A.block<3, 3>(6, 0) = (-1 * Rt.toRotationMatrix()) * R_a;
     A.block<3, 3>(6, 9) = (-1 * Rt.toRotationMatrix());
@@ -131,7 +131,7 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     U.block<3, 3>(0, 0) = -1 * I;
     U.block<3, 3>(6, 3) = -1 * Rt.toRotationMatrix();
     U.block<3, 3>(9, 6) = I;
-    U.block<3, 3>(12, 9) = I;
+    U.block<3, 3>(12, 9)= I;
     // cout << "DEBUG:: propagate U" << endl << U << endl;
 
     MatrixXd F, V;
