@@ -62,7 +62,9 @@ bool odom_initialized = false;
 
 // TODO: Calibrate sensor position
 // imu frame to world frame rotation matrix, {[0, 0, -1], pi/2}
-Matrix3d imu_R_world = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
+//Matrix3d imu_R_world = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
+Matrix3d imu_R_world;
+
 Matrix3d init_robot_pose = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
 
 void pub_odom_ekf(std_msgs::Header header) {
@@ -261,7 +263,8 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
 
         // Initialize the state and the gravity
         x.setZero();
-        Quaterniond init_pose(init_robot_pose);
+        // Quaterniond init_pose(init_robot_pose);
+        Quaterniond init_pose(imu_R_world);
         x(0) = init_pose.w();
         x(1) = init_pose.x();
         x(2) = init_pose.y();
@@ -411,6 +414,10 @@ int main(int argc, char **argv) {
     ros::Rate r(400);
 
 //    Rimu = Quaterniond(0.7071, 0, 0, -0.7071).toRotationMatrix();
+    imu_R_world << 0, -1, 0,
+            1, 0,  0,
+            0, 0,  1;
+
     cout << "imu_R_world" << endl << imu_R_world << endl;
 
     ros::spin();
