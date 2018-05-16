@@ -56,11 +56,14 @@ and add the following:
 
 and `source ~/.bashrc` after saving the vim file.
 
-3. install CV related dependences
+3. install DJI-SDK
+http://wiki.ros.org/dji_sdk/Tutorials/Getting%20Started
+
+4. install CV related dependences
 
 openCV, Eigen, PCL, Ceres
 
-4. install RMOC open sourced dependency
+5. install RMOC open sourced dependency
 https://github.com/robomasterhkust/RoboRTS
 
 Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
