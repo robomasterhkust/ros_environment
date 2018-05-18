@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="canmaster" type="canmaster_node" name="canmaster_test" output="screen"/>
+
+	<node pkg="socketcan_bridge" type="topic_to_socketcan_node" name="topic_to_socketcan_test" output="screen"/>
+</launch>
