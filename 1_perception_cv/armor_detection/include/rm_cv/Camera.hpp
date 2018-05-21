@@ -42,36 +42,94 @@ public:
     delete[] outQ;
   };
 
-  ConcurrentQueue<FrameInfo> *outQ;
-
-  bool loadBaseParameters(const FileStorage &fs);
-  bool storeBaseParameters(FileStorage &fs);
-  virtual bool loadDriverParameters(const FileStorage &fs) = 0;
-  virtual bool storeDriverParameters(FileStorage &fs) = 0;
-
   bool tryRead(); //this function is probably blocking, limited by camera's fps
+
+  void rectifyCoor(cv::Vec3d &crude_Coordinate) const;
+
+  const Mat &getCameraMatrix() const;
+  const Mat &getDistCoeffs() const;
+
+  ConcurrentQueue<FrameInfo> *outQ;
 
   virtual bool initialize() = 0; //function to initiallize to prepare for startStream
 
+  /**
+   * @brief 
+   * stop stream-> loadconfigs -> set camera-> read from camera-> store configs-> startstream 
+   */
+  bool applySetting();
+
+  /**
+   * @brief 
+   *  these functions are used to start and stop camera from sending images,
+   *  and are supposed to allow the camera to update their settings 
+   * @return true 
+   * @return false 
+   */
+  virtual bool startStream() = 0;
+  virtual bool closeStream() = 0;
+
+protected:
+  bool loadAllConfig();
+  bool storeAllConfig();
+  bool loadBaseParameters(const FileStorage &fs);
+  bool storeBaseParameters(FileStorage &fs);
+
+  /**
+   * @brief 
+   *  really try to set the camera to the specified config 
+   */
+  virtual bool writeCamConfig() = 0;
+
+  /**
+   * @brief 
+   * read camera's current config 
+   */
+  virtual bool readCamConfig() = 0;
+
+  /**
+   * @brief loadDriverParameters
+   * load configs from the file, return true when success, doesn't really update the camera
+   */
+  virtual bool loadDriverParameters(const FileStorage &fs) = 0;
+
+  /**
+   * @brief 
+   * store configs to the file, return true when success, doesn't really read from the camera
+   */
+  virtual bool storeDriverParameters(FileStorage &fs) = 0;
+
+  /**
+   * @brief Get the Video Size, was dewsigned to do the job but the mat object saved in the queue seems also provided that info
+   */
   virtual bool getVideoSize(int &width, int &height) = 0;
 
-  virtual FrameInfo *getFrame() = 0;
-  virtual bool setExposureTime(bool auto_exp, int t) = 0;
+  /**
+   * @brief 
+   * this just provide a way to read and discard a frame from the camera, mostly usless
+   * 
+   */
+  virtual void discardFrame() = 0;
 
-  virtual bool startStream() = 0; //outputs are supposed to be available afther calling this sucessfully (return true)
-  virtual bool closeStream() = 0;
+  /**
+   * @brief Blocking function call to decode and copy the image from ther camera to the pointed concurrentQueue 
+   * 
+   * @return FrameInfo* 
+   */
+  virtual FrameInfo *getFrame() = 0;
 
   virtual void info() = 0; //print information about the cam
 
-  Mat getCameraMatrix() const;
-  Mat getDistCoeffs() const;
-
-protected:
-  Camera(int _outQCount) : outQCount(_outQCount)
+  Camera(int _outQCount, const string &config_filename)
+      : outQCount(_outQCount),
+        config_filename(config_filename)
   {
     outQ = new ConcurrentQueue<FrameInfo>[outQCount];
     clock_gettime(CLOCK_MONOTONIC, &lastRead);
   };
+
+  const string config_filename;
+
   unsigned int outQCount;
   bool haveROI;
   int capture_width;
@@ -85,23 +143,45 @@ protected:
   Mat distCoeffs;
 
   //coordinate relative to robot's origin/main camera
+  Mat rotationMat;
+  Mat inverseRotationMat;
   Vec3f rotationVec;
   Vec3f translationVec;
 
   //thread things
   ConcurrentQueue<FrameInfo> *inputQ;
-  atomic<bool> runBool;
-  thread *threadPtr;
   mutex lockcam;
 
   //try read one camera
+  friend void startCams(const Settings &settings, vector<Camera *> &cams, int _outQCount);
   friend void tryReadCam(const Settings &settings, vector<Camera *> &cams);
+  friend bool updateCams(vector<Camera *> &cams);
+  friend void storeCams(vector<Camera *> &cams);
+  friend Camera *startCamFromFile(const string &filename, int _outQCount);
 };
 
-//construct objects for all cameras descripted in settings
-void loadCams(const Settings &settings, vector<Camera *> &cams, int _outQCount);
-void storeCams(const Settings &settings, vector<Camera *> &cams);
-
-//tryReadCam: get a frame from one camera according to the miniman delay set (max fps) and thier pirority
-//cam0 in settings.xml have higher pirority then others, meaning that it is read before others and once its read it will be processed first
+/**
+  * @brief 
+  *     try to read from one camera, according to the actual reading rate
+  *     it will not try to read camera faster than the maximum rate specified
+  *     while if some camera's minimum rate is reached, this function will try to read it first
+  *  
+  * @param settings 
+  * @param cams 
+ */
 void tryReadCam(const Settings &settings, vector<Camera *> &cams);
+
+//construct objects for all cameras descripted in settings
+void startCams(const Settings &settings, vector<Camera *> &cams, int _outQCount);
+
+/**
+ * @brief Try to update the camera's settings from the config file
+ * 
+ * @param cams 
+ * @return true 
+ * @return false 
+ */
+bool updateCams(vector<Camera *> &cams);
+void storeCams(vector<Camera *> &cams);
+
+Camera *startCamFromFile(const string &filename, int _outQCount);

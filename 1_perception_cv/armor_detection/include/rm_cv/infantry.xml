@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<mavlink>
+  <version>2</version>
+  <enums>
+    <enum name="ROBO_TYPE">
+      <entry value="0" name="ROBO_TYPE_SOLDIER">
+        <description>Generic micro air vehicle.</description>
+      </entry>
+      <entry value="1" name="ROBO_TYPE_SENTRY">
+        <description>Fixed wing aircraft.</description>
+      </entry>
+      <entry value="2" name="ROBO_TYPE_ENGINEER">
+        <description>Quadrotor</description>
+      </entry>
+      <entry value="3" name="ROBO_TYPE_HERO">
+        <description>Coaxial helicopter</description>
+      </entry>
+      <entry value="4" name="ROBO_TYPE_DRONE">
+        <description>Normal helicopter with tail rotor.</description>
+      </entry>
+    </enum>
+    <enum name="ROBO_MODE_FLAG">
+      <description>These flags encode the state of FSM.</description>
+      <entry value="128" name="MAV_MODE_FLAG_MANUAL">
+        <description>0b10000000 Robot is controlled by RC input.</description>
+      </entry>
+      <entry value="64" name="MAV_MODE_FLAG_PATROL">
+        <description>0b01000000 Patrol when adversaries are out of sight.</description>
+      </entry>
+      <entry value="32" name="MAV_MODE_FLAG_EVADE">
+        <description>0b00100000 Evade under heavy fire.</description>
+      </entry>
+      <entry value="16" name="MAV_MODE_FLAG_FOCUS_FIRE">
+        <description>0b00010000 Focus firepower when at advantage.</description>
+      </entry>
+    </enum>
+    <enum name="ROBO_MODE_FLAG_DECODE_POSITION">
+      <description>These values encode the bit positions of the decode position. These values can be used to read the value of a flag bit by combining the base_mode variable with AND with the flag position value. The result will be either 0 or 1, depending on if the flag is set or not.</description>
+      <entry value="128" name="MAV_MODE_FLAG_DECODE_POSITION_MANUAL">
+        <description>First bit:  10000000</description>
+      </entry>
+      <entry value="64" name="MAV_MODE_FLAG_DECODE_POSITION_PATROL">
+        <description>Second bit: 01000000</description>
+      </entry>
+      <entry value="32" name="MAV_MODE_FLAG_DECODE_POSITION_EVADE">
+        <description>Third bit:  00100000</description>
+      </entry>
+      <entry value="16" name="MAV_MODE_FLAG_DECODE_POSITION_FOCUS">
+        <description>Fourth bit: 00010000</description>
+      </entry>
+    </enum>
+    <enum name="ROBO_STATE">
+      <entry value="0" name="ROBO_STATE_UNINIT">
+        <description>Uninitialized system, state is unknown.</description>
+      </entry>
+      <entry name="ROBO_STATE_BOOT">
+        <description>System is booting up.</description>
+      </entry>
+      <entry name="ROBO_STATE_CALIBRATING">
+        <description>System is calibrating and not flight-ready.</description>
+      </entry>
+      <entry name="ROBO_STATE_STANDBY">
+        <description>System is grounded and on standby. It can be launched any time.</description>
+      </entry>
+      <entry name="ROBO_STATE_ACTIVE">
+        <description>System is active and might be already airborne. Motors are engaged.</description>
+      </entry>
+      <entry name="ROBO_STATE_CRITICAL">
+        <description>System is in a non-normal flight mode. It can however still navigate.</description>
+      </entry>
+      <entry name="ROBO_STATE_EMERGENCY">
+        <description>System is in a non-normal flight mode. It lost control over parts or over the whole airframe. It is in mayday and going down.</description>
+      </entry>
+      <entry name="ROBO_STATE_POWEROFF">
+        <description>System just initialized its power-down sequence, will shut down now.</description>
+      </entry>
+    </enum>
+  </enums>
+  <messages>
+    <message id="0" name="HEARTBEAT">
+      <description>The heartbeat message shows that a system is present and responding. The type of the MAV and Autopilot hardware allow the receiving system to treat further messages from this system appropriate (e.g. by laying out the user interface based on the autopilot).</description>
+      <field type="uint8_t" name="type" enum="ROBO_TYPE">Type of the MAV (soldier, sentry, etc., up to 5 types, defined in ROBO_TYPE ENUM)</field>
+      <field type="uint8_t" name="base_mode">System mode bitfield, see ROBO_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h</field>
+      <field type="uint32_t" name="custom_mode">A bitfield for use for autopilot-specific flags.</field>
+      <field type="uint8_t" name="system_status" enum="ROBO_STATE">System status flag, see ROBO_STATE ENUM</field>
+      <field type="uint8_t_mavlink_version" name="mavlink_version">MAVLink version</field>
+    </message>
+    <message id="30" name="ATTITUDE">
+      <description>The attitude in the aeronautical frame (right-handed, Z-down, X-front, Y-right).</description>
+      <field type="uint32_t" name="time_boot_ms" units="ms">Timestamp (milliseconds since system boot)</field>
+      <field type="float" name="roll" units="rad">Roll angle (rad, -pi..+pi)</field>
+      <field type="float" name="pitch" units="rad">Pitch angle (rad, -pi..+pi)</field>
+      <field type="float" name="yaw" units="rad">Yaw angle (rad, -pi..+pi)</field>
+      <field type="float" name="rollspeed" units="rad/s">Roll angular speed (rad/s)</field>
+      <field type="float" name="pitchspeed" units="rad/s">Pitch angular speed (rad/s)</field>
+      <field type="float" name="yawspeed" units="rad/s">Yaw angular speed (rad/s)</field>
+    </message>
+    <message id="31" name="ATTITUDE_QUATERNION">
+      <description>The attitude in the aeronautical frame (right-handed, Z-down, X-front, Y-right), expressed as quaternion. Quaternion order is w, x, y, z and a zero rotation would be expressed as (1 0 0 0).</description>
+      <field type="uint32_t" name="time_boot_ms" units="ms">Timestamp (milliseconds since system boot)</field>
+      <field type="float" name="q1">Quaternion component 1, w (1 in null-rotation)</field>
+      <field type="float" name="q2">Quaternion component 2, x (0 in null-rotation)</field>
+      <field type="float" name="q3">Quaternion component 3, y (0 in null-rotation)</field>
+      <field type="float" name="q4">Quaternion component 4, z (0 in null-rotation)</field>
+      <field type="float" name="rollspeed" units="rad/s">Roll angular speed (rad/s)</field>
+      <field type="float" name="pitchspeed" units="rad/s">Pitch angular speed (rad/s)</field>
+      <field type="float" name="yawspeed" units="rad/s">Yaw angular speed (rad/s)</field>
+    </message>
+    <message id="32" name="LOCAL_POSITION_NED">
+      <description>The filtered local position (e.g. fused computer vision and accelerometers). Coordinate frame is right-handed, Z-axis down (aeronautical frame, NED / north-east-down convention)</description>
+      <field type="uint32_t" name="time_boot_ms" units="ms">Timestamp (milliseconds since system boot)</field>
+      <field type="float" name="x" units="m">X Position</field>
+      <field type="float" name="y" units="m">Y Position</field>
+      <field type="float" name="z" units="m">Z Position</field>
+      <field type="float" name="vx" units="m/s">X Speed</field>
+      <field type="float" name="vy" units="m/s">Y Speed</field>
+      <field type="float" name="vz" units="m/s">Z Speed</field>
+    </message>
+    <message id="82" name="SET_ATTITUDE_TARGET">
+      <description>Sets a desired vehicle attitude. Used by an external controller to command the vehicle (manual controller or other system).</description>
+      <field type="uint32_t" name="time_boot_ms" units="ms">Timestamp in milliseconds since system boot</field>
+      <field type="uint8_t" name="target_system">System ID</field>
+      <field type="uint8_t" name="target_component">Component ID</field>
+      <field type="uint8_t" name="type_mask">Mappings: If any of these bits are set, the corresponding input should be ignored: bit 1: body roll rate, bit 2: body pitch rate, bit 3: body yaw rate. bit 4-bit 6: reserved, bit 7: throttle, bit 8: attitude</field>
+      <field type="float[4]" name="q">Attitude quaternion (w, x, y, z order, zero-rotation is 1, 0, 0, 0)</field>
+      <field type="float" name="body_roll_rate" units="rad/s">Body roll rate in radians per second</field>
+      <field type="float" name="body_pitch_rate" units="rad/s">Body pitch rate in radians per second</field>
+      <field type="float" name="body_yaw_rate" units="rad/s">Body yaw rate in radians per second</field>
+      <field type="float" name="thrust">Collective thrust, normalized to 0 .. 1 (-1 .. 1 for vehicles capable of reverse trust)</field>
+    </message>
+  </messages>
+</mavlink>

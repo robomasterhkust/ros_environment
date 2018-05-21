@@ -8,26 +8,29 @@
 
 using namespace cv;
 
-mvCamera::mvCamera(int outCount) : Camera(outCount){};
-mvCamera::mvCamera(int outCount, const FileStorage &fs) : Camera(outCount)
-{
-	loadBaseParameters(fs);
-	loadDriverParameters(fs);
-};
+mvCamera::mvCamera(int outCount, const string &config_path)
+	: Camera(outCount, config_path){};
 
 mvCamera::~mvCamera()
 {
 	CameraUnInit(hCamera);
 	//Caution! uninit before free
-	free(g_pRgbBuffer);
+	//free(g_pRgbBuffer);
 };
 
 bool mvCamera::initialize()
 {
-	CameraSdkInit(1);
+	int error_no;
+	if ((error_no = CameraSdkInit(1)) != CAMERA_STATUS_SUCCESS)
+	{
+		cout << "ERROR: CameraSdkInit returned " << error_no << endl;
+		return false;
+	}
+
 	CameraEnumerateDevice(&tCameraEnumList, &iCameraCounts);
 	if (iCameraCounts == 0)
 	{
+		cout << "ERROR: No mv camera found" << endl;
 		return false;
 	}
 	iStatus = CameraInit(&tCameraEnumList, -1, -1, &hCamera);
@@ -35,45 +38,14 @@ bool mvCamera::initialize()
 	{
 		return false;
 	}
-	CameraGetCapability(hCamera, &tCapability);
-	g_pRgbBuffer = (unsigned char *)malloc(tCapability.sResolutionRange.iHeightMax * tCapability.sResolutionRange.iWidthMax * 3);
 
-	if (tCapability.sIspCapacity.bMonoSensor)
-	{
-		channel = 1;
-		CameraSetIspOutFormat(hCamera, CAMERA_MEDIA_TYPE_MONO8);
-	}
-	else
-	{
-		channel = 3;
-		CameraSetIspOutFormat(hCamera, CAMERA_MEDIA_TYPE_BGR8);
-	}
+	this->applySetting();
 
-	if (CameraSetAeState(hCamera, auto_exp) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetAeState Failed!!!!!!\n";
-
-	if (CameraSetExposureTime(hCamera, exposure_time) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetExposureTime Failed!!!!!!\n";
-
-	if (CameraSetAnalogGain(hCamera, analogGain) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetAnalogGain Failed!!!!!!\n";
-
-	if (CameraSetGamma(hCamera, iGamma) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetGamma Failed!!!!!!\n";
-
-	if (CameraSetContrast(hCamera, iContrast) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetContrast Failed!!!!!!\n";
-
-	if (CameraSetSaturation(hCamera, iSaturation) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetSaturation Failed!!!!!!\n";
-
-	if (CameraSetFrameSpeed(hCamera, iFrameSpeed) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam CameraSetFrameSpeed Failed!!!!!!\n";
-
+	//CameraLoadParameter(hCamera, PARAMETER_TEAM_A);
 	//sync the time
 	timespec uptime;
 	if (CameraRstTimeStamp(hCamera) != CAMERA_STATUS_SUCCESS)
-		std::cout << "800RMB cam RstTimeStamp Failed!!!!!!\n";
+		std::cout << "MindVision cam RstTimeStamp Failed!!!!!!\n";
 
 	clock_gettime(CLOCK_MONOTONIC, &uptime);
 	camSetTime.tv_sec = uptime.tv_sec;
@@ -84,23 +56,32 @@ bool mvCamera::initialize()
 	return true;
 }
 
+void mvCamera::discardFrame()
+{
+	FrameInfo *pFrame = new FrameInfo(this);
+	CameraSdkStatus temp;
+	if ((temp = CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1000)) == CAMERA_STATUS_SUCCESS)
+	{
+		CameraReleaseImageBuffer(hCamera, pbyBuffer);
+	}
+	else
+	{
+		cout << "\n\nmvCamera::getFrame error!! no:" << temp << endl;
+	}
+};
+
 FrameInfo *mvCamera::getFrame()
 {
 	FrameInfo *pFrame = new FrameInfo(this);
 	CameraSdkStatus temp;
 	if ((temp = CameraGetImageBuffer(hCamera, &sFrameInfo, &pbyBuffer, 1000)) == CAMERA_STATUS_SUCCESS)
 	{
-		CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer, &sFrameInfo);
-		if (iplImage)
-		{
-			cvReleaseImageHeader(&iplImage);
-		}
-		iplImage = cvCreateImageHeader(cvSize(sFrameInfo.iWidth, sFrameInfo.iHeight), IPL_DEPTH_8U, channel);
-		cvSetData(iplImage, g_pRgbBuffer, sFrameInfo.iWidth * channel);
-		pFrame->img = Mat(cvarrToMat(iplImage));
-		Mat Iimag(cvarrToMat(iplImage)); //这里只是进行指针转换，将IplImage转换成Mat类型
-		//imshow("OpenCV Demo", Iimag);
+		pFrame->img = Mat(sFrameInfo.iHeight, sFrameInfo.iWidth, CV_8UC3);
+		//directly write to mat's data location so that the mat object will own the data and delete for me
+		CameraImageProcess(hCamera, pbyBuffer, pFrame->img.ptr(), &sFrameInfo);
+		cvtColor(pFrame->img, pFrame->img, COLOR_RGB2BGR);
 		CameraReleaseImageBuffer(hCamera, pbyBuffer);
+
 		pFrame->rotationVec = this->rotationVec;
 		pFrame->translationVec = this->translationVec;
 		//uiTimeStamp is in 0.1ms from reset
@@ -122,10 +103,12 @@ bool mvCamera::loadDriverParameters(const FileStorage &fs)
 	fsHelper::readOrDefault(node["auto_exp"], auto_exp, false);
 	fsHelper::readOrDefault(node["exposure_time"], exposure_time, 70.0);
 	fsHelper::readOrDefault(node["analogGain"], analogGain, 0);
-	fsHelper::readOrDefault(node["iGamma"], iGamma, 50);
+	fsHelper::readOrDefault(node["iGamma"], iGamma, 100);
 	fsHelper::readOrDefault(node["iContrast"], iContrast, 100);
 	fsHelper::readOrDefault(node["iSaturation"], iSaturation, 100);
 	fsHelper::readOrDefault(node["iFrameSpeed"], iFrameSpeed, 1);
+	fsHelper::readOrDefault(node["frameWidth"], tImageResolution.iWidth, 640);
+	fsHelper::readOrDefault(node["frameHeight"], tImageResolution.iHeight, 480);
 	return true;
 };
 
@@ -140,7 +123,76 @@ bool mvCamera::storeDriverParameters(FileStorage &fs)
 	   << "iContrast" << iContrast
 	   << "iSaturation" << iSaturation
 	   << "iFrameSpeed" << iFrameSpeed
+	   << "frameWidth" << tImageResolution.iWidth
+	   << "frameHeight" << tImageResolution.iHeight
 	   << "}";
+};
+
+bool mvCamera::writeCamConfig()
+{
+	CameraGetCapability(hCamera, &tCapability);
+
+	CameraLoadParameter(hCamera, PARAMETER_TEAM_A);
+
+	if (tCapability.sIspCapacity.bMonoSensor)
+	{
+		channel = 1;
+		CameraSetIspOutFormat(hCamera, CAMERA_MEDIA_TYPE_MONO8);
+	}
+	else
+	{
+		channel = 3;
+		CameraSetIspOutFormat(hCamera, CAMERA_MEDIA_TYPE_BGR8);
+	}
+
+	if (CameraSetAeState(hCamera, auto_exp) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetAeState Failed!!!!!!\n";
+
+	if (CameraSetExposureTime(hCamera, exposure_time) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetExposureTime Failed!!!!!!\n";
+
+	if (CameraSetAnalogGain(hCamera, analogGain) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetAnalogGain Failed!!!!!!\n";
+
+	if (CameraSetGamma(hCamera, iGamma) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetGamma Failed!!!!!!\n";
+
+	if (CameraSetContrast(hCamera, iContrast) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetContrast Failed!!!!!!\n";
+
+	if (CameraSetSaturation(hCamera, iSaturation) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetSaturation Failed!!!!!!\n";
+
+	if (CameraGetImageResolution(hCamera, &tImageResolution) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get image resolutiion failed\n";
+	if (CameraSetImageResolution(hCamera, &tImageResolution) != CAMERA_STATUS_SUCCESS)
+		std::cout << "MindVision cam CameraSetImageResolution Failed!!!!!!\n";
+
+	// if (CameraSetFrameSpeed(hCamera, iFrameSpeed) != CAMERA_STATUS_SUCCESS)
+	// 	std::cout << "MindVision cam CameraSetFrameSpeed Failed!!!!!!\n";
+	//CameraLoadParameter(hCamera, PARAMETER_TEAM_A);
+	return true;
+};
+
+bool mvCamera::readCamConfig()
+{
+	if (CameraGetImageResolution(hCamera, &tImageResolution) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get image resolutiion failed\n";
+	if (CameraGetFrameSpeed(hCamera, &tFrameSpeed.iIndex) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get tFrameSpeed failed\n";
+	if (CameraGetExposureTime(hCamera, &exposure_time) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get exposure time failed\n";
+	if (CameraGetAeState(hCamera, (int *)&auto_exp) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get auto exposure enable failed\n";
+	if (CameraGetSaturation(hCamera, &iSaturation) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get saturation failed\n";
+	if (CameraGetContrast(hCamera, &iContrast) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get contrast failed\n";
+	if (CameraGetGamma(hCamera, &iGamma) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get gamma failed\n";
+	if (CameraGetAnalogGain(hCamera, &analogGain) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get analogGain failed\n";
+	return true;
 };
 
 bool mvCamera::startStream()
@@ -167,9 +219,26 @@ bool mvCamera::closeStream()
 void mvCamera::info()
 {
 	CameraGetCapability(hCamera, &tCapability);
-	cout << tCapability.sResolutionRange.iHeightMax << endl;
-	cout << tCapability.sResolutionRange.iWidthMax << endl;
-	//TODO:
+	if (CameraGetImageResolution(hCamera, &tImageResolution) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get image resolutiion failed\n";
+	cout << "Initiallized image resolution: " << tImageResolution.iWidth << "x" << tImageResolution.iHeight << endl;
+
+	if (CameraGetFrameSpeed(hCamera, &tFrameSpeed.iIndex) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get image resolutiion failed\n";
+	std::cout << "Initiallized frame speed: " << tFrameSpeed.iIndex << endl;
+
+	if (CameraGetExposureTime(hCamera, &exposure_time) != CAMERA_STATUS_SUCCESS)
+		std::cout << "ERROR: mv cam get exposure time failed\n";
+	std::cout << "Initiallized exposure time: " << exposure_time << "us" << endl;
+
+	cout << "\nAvailable resolutions:\n";
+	for (int i = 0; i < tCapability.iImageSizeDesc; i++)
+	{
+		cout << tCapability.pImageSizeDesc[i].acDescription << endl
+			 << "iHeight: " << tCapability.pImageSizeDesc[i].iHeight << endl
+			 << "iWidth: " << tCapability.pImageSizeDesc[i].iWidth << endl
+			 << endl;
+	}
 };
 
 void mvCamera::showSettigsPage()

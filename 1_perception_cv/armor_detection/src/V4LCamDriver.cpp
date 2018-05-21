@@ -3,6 +3,7 @@
 #include "Settings.hpp"
 #include "Camera.hpp"
 #include "V4LCamDriver.hpp"
+#include "StopWatch.hpp"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -12,17 +13,13 @@
 #include <string>
 #include <math.h>
 #include <time.h>
-//TODO: start with stored parameters (fps format etc) done:resolution
 using namespace std;
 using namespace cv;
 
-V4LCamDriver::V4LCamDriver(int outCount) : Camera(outCount){};
-V4LCamDriver::V4LCamDriver(int outCount, const FileStorage &fs)
-    : Camera(outCount)
-{
-  loadBaseParameters(fs);
-  loadDriverParameters(fs);
-}
+StopWatch v4ltimer("v4l Cam Read");
+
+V4LCamDriver::V4LCamDriver(int outCount, const string &config_path)
+    : Camera(outCount, config_path){};
 
 V4LCamDriver::~V4LCamDriver()
 {
@@ -57,12 +54,26 @@ bool V4LCamDriver::storeDriverParameters(FileStorage &fs)
      << "}";
 }
 
+//TODO:
+bool V4LCamDriver::writeCamConfig()
+{
+  setExposureTime(this->auto_exp, this->exposureTime);
+  setFormat(this->capture_width, this->capture_height, true);
+  return true;
+};
+bool V4LCamDriver::readCamConfig()
+{
+  this->refreshVideoFormat();
+  return true;
+};
+
 bool V4LCamDriver::initialize()
 {
   fd = open(video_path.c_str(), O_RDWR);
   mb = new MapBuffer[buffer_size];
   setFormat(capture_width, capture_height, 1);
   setExposureTime(auto_exp, exposureTime);
+  buffr_idx = 0;
   info();
   return true;
 };
@@ -417,8 +428,9 @@ void V4LCamDriver::info()
              (float)streamparm.parm.capture.timeperframe.numerator);
 }
 
-FrameInfo *V4LCamDriver::getFrame()
+void V4LCamDriver::discardFrame()
 {
+  lock_guard<std::mutex> lockg(lockcam);
   FrameInfo *out = new FrameInfo(this);
   struct v4l2_buffer bufferinfo = {0};
   bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -429,7 +441,36 @@ FrameInfo *V4LCamDriver::getFrame()
     perror("VIDIOC_DQBUF Error");
     exit(1);
   }
-  //std::cout << "raw data size: " << bufferinfo.bytesused << std::endl;
+  //queue buffer back allowing the driver to read again
+  bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  bufferinfo.memory = V4L2_MEMORY_MMAP;
+  bufferinfo.index = buffr_idx;
+  if (ioctl(fd, VIDIOC_QBUF, &bufferinfo) < 0)
+  {
+    perror("VIDIOC_QBUF Error");
+    cout << "buffr_idx: " << buffr_idx << endl;
+    exit(1);
+  }
+  ++buffr_idx;
+  buffr_idx = buffr_idx >= buffer_size ? buffr_idx - buffer_size : buffr_idx;
+  ++cur_frame;
+};
+
+FrameInfo *V4LCamDriver::getFrame()
+{
+  v4ltimer.reset();
+  FrameInfo *out = new FrameInfo(this);
+  //dequeue buffer
+  struct v4l2_buffer bufferinfo = {0};
+  bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  bufferinfo.memory = V4L2_MEMORY_MMAP;
+  bufferinfo.index = buffr_idx;
+  if (ioctl(fd, VIDIOC_DQBUF, &bufferinfo) < 0)
+  {
+    perror("VIDIOC_DQBUF Error");
+    exit(1);
+  }
+  //decode raw data into mat
   cvtRaw2Mat(mb[buffr_idx].ptr, out->img);
   out->capTime = bufferinfo.timestamp;
   out->rotationVec = rotationVec;
@@ -447,6 +488,6 @@ FrameInfo *V4LCamDriver::getFrame()
   ++buffr_idx;
   buffr_idx = buffr_idx >= buffer_size ? buffr_idx - buffer_size : buffr_idx;
   ++cur_frame;
-
+  v4ltimer.lap();
   return out;
 };

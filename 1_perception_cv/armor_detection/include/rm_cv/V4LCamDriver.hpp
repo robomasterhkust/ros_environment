@@ -6,14 +6,17 @@
 class V4LCamDriver : public Camera
 {
 public:
-  V4LCamDriver(int outCount);
-  V4LCamDriver(int outCount, const FileStorage &fs);
+  V4LCamDriver(int outCount, const string &config_filename);
   ~V4LCamDriver();
 
   bool loadDriverParameters(const FileStorage &fs);
   bool storeDriverParameters(FileStorage &fs);
 
+  bool writeCamConfig();
+  bool readCamConfig();
+
   bool initialize();
+  void discardFrame();
   FrameInfo *getFrame();
 
   void restartCapture();

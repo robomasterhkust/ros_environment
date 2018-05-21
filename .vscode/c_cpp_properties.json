@@ -1,0 +1,69 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "/home/acw/Desktop/catkin_ws/devel/include",
+                    "/opt/ros/kinetic/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/camera_base/include",
+                    "/home/acw/Desktop/catkin_ws/src/caninterface/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_402/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_chain_node/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_master/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_motor_node/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/combined_robot_hw/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/combined_robot_hw_tests/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/controller_interface/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/controller_manager/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/controller_manager_tests/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/cv_camera/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/3_estimator/ext/dji_sdk/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/hardware_interface/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/joint_limits_interface/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/mavmaster/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/realtime_tools/include",
+                    "/home/acw/Desktop/catkin_ws/src/RMComputerVision/include",
+                    "/home/acw/Desktop/catkin_ws/src/rmcan/include",
+                    "/home/acw/Desktop/catkin_ws/src/backups/RMSentryUpperLevelInterface/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/socketcan_bridge/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/socketcan_interface/include",
+                    "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/transmission_interface/include",
+                    "/usr/include"
+                ]
+            },
+            "includePath": [
+                "/home/acw/Desktop/catkin_ws/devel/include",
+                "/opt/ros/kinetic/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/camera_base/include",
+                "/home/acw/Desktop/catkin_ws/src/caninterface/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_402/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_chain_node/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_master/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/canopen_motor_node/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/combined_robot_hw/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/combined_robot_hw_tests/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/controller_interface/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/controller_manager/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/controller_manager_tests/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/cv_camera/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/3_estimator/ext/dji_sdk/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/hardware_interface/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/joint_limits_interface/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/mavmaster/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/realtime_tools/include",
+                "/home/acw/Desktop/catkin_ws/src/RMComputerVision/include",
+                "/home/acw/Desktop/catkin_ws/src/rmcan/include",
+                "/home/acw/Desktop/catkin_ws/src/backups/RMSentryUpperLevelInterface/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/socketcan_bridge/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_canopen/socketcan_interface/include",
+                "/home/acw/Desktop/catkin_ws/src/ros_environment/0_driver/ext/ros_control/transmission_interface/include",
+                "/usr/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

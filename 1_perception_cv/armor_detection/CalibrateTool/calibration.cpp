@@ -511,7 +511,7 @@ int main(int argc, char **argv)
         }
 
         imshow("Image View", view);
-        char key = (char)waitKey(capture.isOpened() ? 50 : 500);
+        char key = (char)waitKey(capture.isOpened() ? 20 : 20);
 
         if (key == 27)
             break;

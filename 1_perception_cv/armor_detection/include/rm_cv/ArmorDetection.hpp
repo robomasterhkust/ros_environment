@@ -40,17 +40,6 @@ public:
   vector<Point2f> vertices; //for debug purpose only
 };
 
-class TrackedArmor
-{
-public:
-  Vec3f rotation;
-  Vec3f translation;
-  Vec3f velocity;
-  Vec3f angularVelocity;
-  time_t duration;
-  time_t lastSeen;
-};
-
 class LightStorage
 {
 public:
@@ -90,21 +79,12 @@ public:
   const Size imgSize; //only used for debug
 };
 
-class TrackedArmorStorage
-{
-public:
-  TrackedArmorStorage(){};
-  void printArmors();
-  vector<TrackedArmor> tArmors;
-};
-
 class LightFinder
 {
 public:
-  LightFinder(ConcurrentQueue<FrameInfo> *_inputQ, int outQCount = 1, int outBufSize = 2);
+  LightFinder(ConcurrentQueue<FrameInfo> *_inputQ);
+  void addOutputQueue(ConcurrentQueue<LightStorage> *newOutputQueuePtr);
   bool tryWork();
-  ConcurrentQueue<LightStorage> **outputQArr;
-  const int outQCount;
 
 private:
   LightStorage *findLight(const FrameInfo &frame);
@@ -113,9 +93,10 @@ private:
 
   static bool testAspectRatio(const RotatedRect &light);
   static bool testArea(const RotatedRect &light);
-  static bool testAngle(const RotatedRect &light);
+  static bool testTilt(const RotatedRect &light);
 
   ConcurrentQueue<FrameInfo> *inputQ;
+  vector<ConcurrentQueue<LightStorage> *> outQPtrs;
   mutex lock;
 };
 
@@ -125,14 +106,14 @@ private:
 class ArmorProcessor
 {
 public:
-  ArmorProcessor(ConcurrentQueue<LightStorage> *_inputQ, int outQCount = 1, int outBufSize = 2);
+  ArmorProcessor(ConcurrentQueue<LightStorage> *_inputQ);
+  void addOutputQueue(ConcurrentQueue<ArmorStorage> *newOutputQueuePtr);
   bool tryWork();
-
-  const int outQCount;
-  ConcurrentQueue<ArmorStorage> **outputQArr;
 
 private:
   ArmorStorage *generateArmors(const LightStorage &lights);
+  ConcurrentQueue<LightStorage> *inputQ;
+  vector<ConcurrentQueue<ArmorStorage> *> outQPtrs;
 
   class ArmorLightGp
   {
@@ -150,7 +131,7 @@ private:
   //grouping
   void armorGrouper(const LightStorage &lights, vector<ArmorLightGp> &ArmorLightGps);
   //finding coordinates
-  void armorLocator(const vector<ArmorLightGp> &ArmorLightGps, const Mat cameraMatrix, const Mat distCoeffs, ArmorStorage &result);
+  void armorLocator(const vector<ArmorLightGp> &ArmorLightGps, const Camera *const &sourceCamPtr, ArmorStorage &result);
 
   bool addLightToArmor(ArmorLightGp &gp, const Light *const newlight);
   void merge(ArmorLightGp &mainArmorLightGp, ArmorLightGp &toolArmorLightGp);
@@ -160,17 +141,5 @@ private:
   bool testSize(const Light *a, const Light *b) const;
   //TODO: test std deviation and darkness between lights?
 
-  ConcurrentQueue<LightStorage> *inputQ;
   mutex lock;
-};
-
-class ArmorTracker //perform logging and tracking
-{
-public:
-  ArmorTracker(TrackedArmorStorage *storage);
-  void update(ArmorStorage &newArmors);
-  void getMostProbableTarget(Armor &target);
-
-private:
-  TrackedArmorStorage *storage;
 };

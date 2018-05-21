@@ -1,6 +1,7 @@
 #pragma once
 #include "opencv2/core/core.hpp"
 #include <string>
+#include "defines.hpp"
 
 using namespace std;
 using namespace cv;
@@ -30,7 +31,6 @@ class CameraDeployConfig
 {
 public:
   CameraDeployConfig(){};
-  int camDriver = 0;
   string camFileName = "";
   //cameras have same id means they are used together as a setup of stereo vision
   int stereoGp = -1;
@@ -47,31 +47,31 @@ class ADSetting
 {
 public:
   int enemyColor = ArmorColor_RED;
-  // cv::Scalar HSVMinBlue = Scalar(10, 0, 130);
-  // cv::Scalar HSVMaxBlue = Scalar(60, 255, 255);
-  // cv::Scalar HSVMinRed = Scalar(80, 0, 130);
-  // cv::Scalar HSVMaxRed = Scalar(60, 255, 255);
-  cv::Scalar BGRMinBlue = Scalar(180, 0, 0);
-  cv::Scalar BGRMaxBlue = Scalar(255, 255, 255);
-  cv::Scalar BGRMinRed = Scalar(0, 0, 180);
-  cv::Scalar BGRMaxRed = Scalar(255, 255, 255);
+  cv::Scalar BGRMinBlue = ARMOR_LIGHT_BGRMinBlue;
+  cv::Scalar BGRMaxBlue = ARMOR_LIGHT_BGRMaxBlue;
+  cv::Scalar BGRMinRed = ARMOR_LIGHT_BGRMinRed;
+  cv::Scalar BGRMaxRed = ARMOR_LIGHT_BGRMaxRed;
   //Filter lights
-  float light_max_aspect_ratio_ = 5;
-  float light_min_area_ = 5;
-  float light_max_angle_ = 30;
+  float light_min_aspect_ratio_ = ARMOR_LIGHT_MIN_RATIO;
+  float light_min_area_ = ARMOR_LIGHT_MIN_AREA;
+  float light_max_tilt_ = ARMOR_LIGHT_MAX_TILT;
 
   //Filter ArmorLightGp
-  float armor_max_angle_diff_ = 10;
-  float armor_max_anglePos_diff_ = 10;
-  float armor_min_area_ = 50;
-  float armor_max_aspect_ratio_ = 2.5;
-  float armor_max_stddev_ = 40;
+  float armor_max_tilt_diff_ = ARMOR_GROUPING_MAX_TILT_DIFF;
+  float armor_max_anglePos_diff_ = ARMOR_GROUPING_MAX_ANGULAR_POS_DIFF;
+  float armor_min_area_ = ARMOR_GROUPING_MIN_AREA;
+  float armor_max_aspect_ratio_ = ARMOR_GROUPING_MAX_ASPECT_RATIO;
 
   //geometry of the armor, upper-left, lower-left, upper-right, lower-right
-  vector<Point3f> realArmorPoints = {Point3f(-65, -28, 0),
-                                     Point3f(-65, 28, 0),
-                                     Point3f(65, -28, 0),
-                                     Point3f(65, 28, 0)};
+  vector<Point3f> realArmorPoints = {Point3f(-SMALL_ARMOR_WIDTH / 2, -ALL_ARMOR_HEIGHT / 2, 0),
+                                     Point3f(-SMALL_ARMOR_WIDTH / 2, ALL_ARMOR_HEIGHT / 2, 0),
+                                     Point3f(SMALL_ARMOR_WIDTH / 2, -ALL_ARMOR_HEIGHT / 2, 0),
+                                     Point3f(SMALL_ARMOR_WIDTH / 2, ALL_ARMOR_HEIGHT / 2, 0)};
+
+  vector<Point3f> realArmorPoints_Big = {Point3f(-BIG_ARMOR_WIDTH / 2, -ALL_ARMOR_HEIGHT / 2 / 2, 0),
+                                         Point3f(-BIG_ARMOR_WIDTH / 2, ALL_ARMOR_HEIGHT / 2 / 2, 0),
+                                         Point3f(BIG_ARMOR_WIDTH / 2, -ALL_ARMOR_HEIGHT / 2 / 2, 0),
+                                         Point3f(BIG_ARMOR_WIDTH / 2, ALL_ARMOR_HEIGHT / 2 / 2, 0)};
 
   void write(FileStorage &fs) const;
   void read(const FileNode &node);
@@ -86,10 +86,11 @@ public:
   ~Settings();
   void save();
   void load();
-  void openTuner(); //only use when this object is not being used
 
   CameraDeployConfig *cameraConfigs;
   ADSetting adSetting;
+  bool enable_Serial = true;
+  bool Debug = true;
 
 private:
   std::string filename;

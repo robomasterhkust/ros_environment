@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rm_cv)
 
+set (USE_MVSDK true)
+
+if (USE_MVSDK)
+add_definitions(-DUSE_MVSDK)
+endif (USE_MVSDK)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
@@ -33,14 +39,51 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
-FIND_LIBRARY(MVSDK ${PROJECT_SOURCE_DIR}/lib)
+if (USE_MVSDK)
+set(${PROJECT_NAME}_SOURCES
+    src/ArmorDetection.cpp
+    src/Settings.cpp
+    src/V4LCamDriver.cpp
+    src/ArmorTracker.cpp
+    src/main.cpp
+    src/StopWatch.cpp
+    src/Camera.cpp
+    src/cvThreadPool.cpp
+    src/ROSHandle.cpp
+    src/GimbalController.cpp
+    src/serial.cpp
+    src/interface.cpp
+    src/mvCamera.cpp
+)
+else(USE_MVSDK)
+set(${PROJECT_NAME}_SOURCES
+    src/ArmorDetection.cpp
+    src/Settings.cpp
+    src/V4LCamDriver.cpp
+    src/ArmorTracker.cpp
+    src/main.cpp
+    src/StopWatch.cpp
+    src/Camera.cpp
+    src/cvThreadPool.cpp
+    src/ROSHandle.cpp
+    src/GimbalController.cpp
+    src/serial.cpp
+    src/interface.cpp
+)
+endif(USE_MVSDK)
 
-aux_source_directory(./src DIR_SRCS)
-add_executable(${PROJECT_NAME}_node ${DIR_SRCS})
+add_executable(armor_detection_node ${${PROJECT_NAME}_SOURCES})
 
-target_link_libraries(${PROJECT_NAME}_node
+
+target_link_libraries(armor_detection_node
    ${catkin_LIBRARIES}
    ${Boost_SYSTEM_LIBRARY}
-   MVSDK
    ${OpenCV_LIBS}
 )
+
+if (USE_MVSDK)
+FIND_LIBRARY(MVSDK ${PROJECT_SOURCE_DIR}/lib)
+target_link_libraries(armor_detection_node
+  MVSDK
+)
+endif(USE_MVSDK)

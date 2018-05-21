@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<Debug>0</Debug>
+<EnableSerialCom>0</EnableSerialCom>
+<ADSetting>
+  <EnemyColor>0</EnemyColor>
+  <BGRMinBlue>
+    180. 0. 0. 0.</BGRMinBlue>
+  <BGRMaxBlue>
+    255. 255. 255. 0.</BGRMaxBlue>
+  <BGRMinRed>
+    0. 0. 180. 0.</BGRMinRed>
+  <BGRMaxRed>
+    255. 255. 255. 0.</BGRMaxRed>
+  <light_min_aspect_ratio_>3.</light_min_aspect_ratio_>
+  <light_min_area_>10.</light_min_area_>
+  <light_max_tilt_>40.</light_max_tilt_>
+  <armor_max_tilt_diff_>10.</armor_max_tilt_diff_>
+  <armor_max_anglePos_diff_>20.</armor_max_anglePos_diff_>
+  <armor_min_area_>50.</armor_min_area_>
+  <armor_max_aspect_ratio_>8.</armor_max_aspect_ratio_>
+  <realArmorPoints>
+    -65. -27. 0. -65. 27. 0. 65. -27. 0. 65. 27. 0.</realArmorPoints>
+  <realArmorPoints_Big>
+    -112. -13. 0. -112. 13. 0. 112. -13. 0. 112. 13. 0.</realArmorPoints_Big></ADSetting>
+<Cam0>
+  <camFileName>testcam.xml</camFileName>
+  <stereoGp>-1</stereoGp>
+  <motionGroup>0</motionGroup></Cam0>
+<Cam1>
+  <camFileName>""</camFileName>
+  <stereoGp>-1</stereoGp>
+  <motionGroup>0</motionGroup></Cam1>
+<Cam2>
+  <camFileName>""</camFileName>
+  <stereoGp>-1</stereoGp>
+  <motionGroup>0</motionGroup></Cam2>
+<Cam3>
+  <camFileName>""</camFileName>
+  <stereoGp>-1</stereoGp>
+  <motionGroup>0</motionGroup></Cam3>
+<Cam4>
+  <camFileName>""</camFileName>
+  <stereoGp>-1</stereoGp>
+  <motionGroup>0</motionGroup></Cam4>
+</opencv_storage>

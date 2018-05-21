@@ -1,7 +1,7 @@
+#include "defines.hpp"
 #include "ArmorDetection.hpp"
 #include "Settings.hpp"
 #include "StopWatch.hpp"
-//#define DEBUG
 extern Settings settings;
 
 const Scalar lightDrawColor = Scalar(255, 0, 0);
@@ -62,16 +62,13 @@ void ArmorStorage::draw()
     cout << "latercy: " << dt << "s\n";
 };
 
-LightFinder::LightFinder(ConcurrentQueue<FrameInfo> *_inputQ, int outQCount, int outBufSize)
-    : inputQ(_inputQ),
-      outQCount(outQCount)
+LightFinder::LightFinder(ConcurrentQueue<FrameInfo> *_inputQ)
+    : inputQ(_inputQ){};
+
+void LightFinder::addOutputQueue(ConcurrentQueue<LightStorage> *newOutputQueuePtr)
 {
-    outputQArr = new ConcurrentQueue<LightStorage> *[outQCount];
-    for (int i = 0; i < outQCount; i++)
-    {
-        outputQArr[i] = new ConcurrentQueue<LightStorage>(outBufSize);
-    }
-};
+    outQPtrs.push_back(newOutputQueuePtr);
+}
 
 LightStorage *LightFinder::findLight(const FrameInfo &frame)
 {
@@ -83,8 +80,11 @@ LightStorage *LightFinder::findLight(const FrameInfo &frame)
                                             frame.sourceCamPtr);
 
     //preprocessing start
+    //TODO: improvements
 
-    medianBlur(frame.img, result->preprocessedImg, 5);
+    medianBlur(frame.img, result->preprocessedImg, 3);
+    static Mat ele = getStructuringElement(MORPH_RECT, Size(5, 5));
+    morphologyEx(result->preprocessedImg, result->preprocessedImg, MORPH_CLOSE, ele);
 
     if (settings.adSetting.enemyColor == ArmorColor_BLUE)
     {
@@ -116,7 +116,7 @@ LightStorage *LightFinder::findLight(const FrameInfo &frame)
         ConvertRRectAngle2Normal(tempRRect);
         if (testAspectRatio(tempRRect) &&
             testArea(tempRRect) &&
-            testAngle(tempRRect))
+            testTilt(tempRRect))
         {
             result->lights.push_back(Light(tempRRect));
         }
@@ -126,7 +126,7 @@ LightStorage *LightFinder::findLight(const FrameInfo &frame)
 
 bool LightFinder::testAspectRatio(const RotatedRect &light)
 {
-    return ((light.size.width / light.size.height) <= settings.adSetting.light_max_aspect_ratio_);
+    return ((light.size.height / light.size.width) >= settings.adSetting.light_min_aspect_ratio_);
 };
 
 bool LightFinder::testArea(const RotatedRect &light)
@@ -134,9 +134,9 @@ bool LightFinder::testArea(const RotatedRect &light)
     return (light.size.area() >= settings.adSetting.light_min_area_);
 };
 
-bool LightFinder::testAngle(const RotatedRect &light)
+bool LightFinder::testTilt(const RotatedRect &light)
 {
-    return (abs(light.angle) <= settings.adSetting.light_max_angle_);
+    return (abs(light.angle) <= settings.adSetting.light_max_tilt_);
 };
 
 void LightFinder::ConvertRRectAngle2Normal(RotatedRect &rRect)
@@ -156,14 +156,19 @@ bool LightFinder::tryWork()
         FrameInfo *tempin;
         if (inputQ->dequeue(tempin))
         {
-            LightStorage *tempout = findLight(*tempin);
-            outputQArr[0]->enqueue(tempout);
-            for (int i = 1; i < outQCount; i++)
+            lss.reset();
+            if (outQPtrs.size() > 0)
             {
-                outputQArr[i]->enqueue(new LightStorage(*tempout));
+                LightStorage *tempout = findLight(*tempin);
+                outQPtrs[0]->enqueue(tempout);
+                for (int i = 1; i < outQPtrs.size(); i++)
+                {
+                    outQPtrs[i]->enqueue(new LightStorage(*tempout));
+                }
             }
             delete tempin;
-            //lss.lap();
+            lss.lap();
+
             lock.unlock();
             return true;
         }
@@ -172,16 +177,13 @@ bool LightFinder::tryWork()
     return false;
 };
 
-ArmorProcessor::ArmorProcessor(ConcurrentQueue<LightStorage> *_inputQ, int outQCount, int outBufSize)
-    : inputQ(_inputQ),
-      outQCount(outQCount)
+ArmorProcessor::ArmorProcessor(ConcurrentQueue<LightStorage> *_inputQ)
+    : inputQ(_inputQ){};
+
+void ArmorProcessor::addOutputQueue(ConcurrentQueue<ArmorStorage> *newOutputQueuePtr)
 {
-    outputQArr = new ConcurrentQueue<ArmorStorage> *[outQCount];
-    for (int i = 0; i < outQCount; i++)
-    {
-        outputQArr[i] = new ConcurrentQueue<ArmorStorage>(outBufSize);
-    }
-};
+    outQPtrs.push_back(newOutputQueuePtr);
+}
 
 bool ArmorProcessor::tryWork()
 {
@@ -190,13 +192,19 @@ bool ArmorProcessor::tryWork()
         LightStorage *tempin;
         if (inputQ->dequeue(tempin))
         {
-            ArmorStorage *tempout = generateArmors(*tempin);
-            outputQArr[0]->enqueue(tempout);
-            for (int i = 1; i < outQCount; i++)
+            ads.reset();
+            if (outQPtrs.size() > 0)
             {
-                outputQArr[i]->enqueue(new ArmorStorage(*tempout));
+                ArmorStorage *tempout = generateArmors(*tempin);
+                outQPtrs[0]->enqueue(tempout);
+                for (int i = 1; i < outQPtrs.size(); i++)
+                {
+                    outQPtrs[i]->enqueue(new ArmorStorage(*tempout));
+                }
             }
             delete tempin;
+            ads.lap();
+
             lock.unlock();
             return true;
         }
@@ -211,7 +219,7 @@ ArmorStorage *ArmorProcessor::generateArmors(const LightStorage &lights)
     vector<ArmorLightGp> algps;
 
     armorGrouper(lights, algps);
-    armorLocator(algps, lights.sourceCamPtr->getCameraMatrix(), lights.sourceCamPtr->getDistCoeffs(), *out);
+    armorLocator(algps, lights.sourceCamPtr, *out);
     return out;
 };
 
@@ -229,7 +237,7 @@ void ArmorProcessor::armorGrouper(const LightStorage &ls, vector<ArmorLightGp> &
         {
             if (matchLightWithArmor(*i, *j))
                 if (matched)
-                { 
+                {
                     merge(*firstMatchArmor, *i);
                     i = algps.erase(i);
                     continue;
@@ -253,12 +261,10 @@ void ArmorProcessor::armorGrouper(const LightStorage &ls, vector<ArmorLightGp> &
 };
 
 void ArmorProcessor::armorLocator(const vector<ArmorLightGp> &ArmorLightGps,
-                                  const Mat cameraMatrix,
-                                  const Mat distCoeffs,
+                                  const Camera *const &sourceCamPtr,
                                   ArmorStorage &result)
 {
-    //TODO: run PnP to find distance and angles here
-    Mat rotationMatrix, translationMatrix;
+    cv::Vec3d rotationVec, translationVec;
     for (vector<ArmorLightGp>::const_iterator i = ArmorLightGps.begin(); i != ArmorLightGps.end(); i++)
     {
         //only handle armor group with 2 lights now
@@ -266,10 +272,18 @@ void ArmorProcessor::armorLocator(const vector<ArmorLightGp> &ArmorLightGps,
         {
             vector<Point2f> vertices;
             i->getVertices(vertices);
-            solvePnP(settings.adSetting.realArmorPoints, vertices, cameraMatrix, distCoeffs, rotationMatrix, translationMatrix);
-            result.armors.push_back(Armor(rotationMatrix, translationMatrix, vertices));
+            solvePnP(settings.adSetting.realArmorPoints,
+                     vertices,
+                     sourceCamPtr->getCameraMatrix(),
+                     sourceCamPtr->getDistCoeffs(),
+                     rotationVec,
+                     translationVec);
+            //TODO: apply transformation and rotation for camera
+            sourceCamPtr->rectifyCoor(translationVec);
 
-            //temp
+            result.armors.push_back(Armor(rotationVec, translationVec, vertices));
+
+#ifdef DEBUG
             Point2f temp;
             for (int j = 0; j < vertices.size(); j++)
             {
@@ -277,7 +291,9 @@ void ArmorProcessor::armorLocator(const vector<ArmorLightGp> &ArmorLightGps,
             }
             temp.x /= 4;
             temp.y /= 4;
-            cout << "armor at pixel:" << temp << "\n coordinate:" << translationMatrix << endl;
+            cout << "Found armor at \n  Pixel: " << temp << "\n  Coordinate:\n  "
+                 << translationVec << endl;
+#endif
         }
     }
 };
@@ -299,13 +315,15 @@ bool ArmorProcessor::matchLightWithArmor(const ArmorLightGp &gp, const Light &li
     vector<const Light *>::const_iterator i;
     for (i = gp.lights.begin(); i != gp.lights.end(); i++)
     {
-        // cout << "matching [" << light.vertex[0] << light.vertex[1] << " with " << (*i)->vertex[0] << (*i)->vertex[1] << endl;
-        bool a = testSeparation(*i, &light),
-             b = testTilt(*i, &light),
-             c = testSize(*i, &light);
-        //cout << a << b << c << endl;
+        //cout << "matching [" << light.vertex[0] << light.vertex[1] << " with " << (*i)->vertex[0] << (*i)->vertex[1] << endl;
+        // bool a = testSeparation(*i, &light),
+        //      b = testTilt(*i, &light),
+        //      c = testSize(*i, &light);
+        // //cout << a << b << c << endl;
 
-        if (a && b && c)
+        if (testSeparation(*i, &light) &&
+            testTilt(*i, &light) &&
+            testSize(*i, &light))
         {
             return true;
         }
@@ -318,14 +336,14 @@ bool ArmorProcessor::testSeparation(const Light *a, const Light *b) const
     double meanLength = 0.5 * (a->rect.size.height + b->rect.size.height);
     //cout << "meanLength " << meanLength << endl;
     double distance = norm(a->rect.center - b->rect.center);
-    //cout << "distance " << distance << endl;
+    // cout << "distance " << distance << endl;
     //cout << "settings.adSetting.armor_max_aspect_ratio_" << settings.adSetting.armor_max_aspect_ratio_ << endl;
     return (distance <= (settings.adSetting.armor_max_aspect_ratio_ * meanLength));
 };
 
 bool ArmorProcessor::testTilt(const Light *a, const Light *b) const
 {
-    if (abs(a->rect.angle - b->rect.angle) <= settings.adSetting.armor_max_angle_diff_)
+    if (abs(a->rect.angle - b->rect.angle) <= settings.adSetting.armor_max_tilt_diff_)
     {
         double angle = atan2(a->rect.center.y - b->rect.center.y,
                              a->rect.center.x - b->rect.center.x) *
@@ -398,7 +416,3 @@ void ArmorProcessor::ArmorLightGp::getVertices(vector<Point2f> &points) const
         points.push_back(lights[i]->vertex[1]);
     }
 };
-
-ArmorTracker::ArmorTracker(TrackedArmorStorage *storage){};
-void ArmorTracker::update(ArmorStorage &newArmors){};
-void ArmorTracker::getMostProbableTarget(Armor &target){};

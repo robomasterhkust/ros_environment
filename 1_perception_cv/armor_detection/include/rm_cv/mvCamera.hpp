@@ -10,15 +10,18 @@ public:
   //
   //inherited
   //
-  mvCamera(int outCount);
-  mvCamera(int outCount, const FileStorage &fs);
+  mvCamera(int outCount, const string &config_filename);
   ~mvCamera();
 
   bool initialize();
+  void discardFrame();
   FrameInfo *getFrame();
 
   bool loadDriverParameters(const FileStorage &fs);
   bool storeDriverParameters(FileStorage &fs);
+
+  bool writeCamConfig();
+  bool readCamConfig();
 
   bool getVideoSize(int &width, int &height);
   bool setExposureTime(bool auto_exp, int t);
@@ -35,15 +38,18 @@ public:
   void showSettigsPage();
 
 private:
+  int hCamera;
+
   //buffers
   BYTE *pbyBuffer;
   unsigned char *g_pRgbBuffer;
   int iCameraCounts = 1;
   int iStatus = -1;
   tSdkCameraDevInfo tCameraEnumList;
-  int hCamera;
   tSdkCameraCapbility tCapability;
   tSdkFrameHead sFrameInfo;
+  tSdkImageResolution tImageResolution;
+  tSdkFrameSpeed tFrameSpeed;
   int iDisplayFrames = 10000;
   IplImage *iplImage = NULL;
   int channel = 3;
@@ -55,6 +61,8 @@ private:
   int iContrast;
   int iSaturation;
   int iFrameSpeed;
+  int frameWidth;
+  int frameHeight;
 
   timeval camSetTime;
 };
