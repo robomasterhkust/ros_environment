@@ -1,2 +1,0 @@
-#include <mavlink/infantry/mavlink.h>
-using msgid_t = uint32_t;
