@@ -65,7 +65,8 @@ bool odom_initialized = false;
 //Matrix3d imu_R_world = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
 Matrix3d imu_R_world;
 
-Matrix3d init_robot_pose = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
+// Matrix3d init_robot_pose = Quaterniond(sqrt(1/2), 0, 0, -sqrt(1/2)).toRotationMatrix();
+// Matrix3d init_robot_pose = Quaterniond(0, 0, 0, 1).toRotationMatrix();
 
 void pub_odom_ekf(std_msgs::Header header) {
     nav_msgs::Odometry odom;
@@ -180,7 +181,8 @@ void update_loosely(const uwb_msgs::uwb &msg, const sensor_msgs::Imu::ConstPtr &
     K = P * C.transpose() * (C * P * C.transpose() + R).inverse();
 //    cout << "DEBUG:: update K" << endl << K << endl;
 
-    Matrix3d uwb_R_world = AngleAxisd(theta_z, Vector3d::UnitZ()) * imu_R_world * q_g.toRotationMatrix();
+    // Matrix3d uwb_R_world = AngleAxisd(theta_z, Vector3d::UnitZ()) * imu_R_world * q_g.toRotationMatrix();
+	Matrix3d uwb_R_world = AngleAxisd(theta_z, Vector3d::UnitZ()) * q_g.toRotationMatrix();
 //    cout << "DEBUG:: measured angle" << endl << uwb_R_world << endl;
 
     VectorXd r(6);
@@ -271,7 +273,8 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
         x(3) = init_pose.z();
 
         G = imu_R_world * g_init;
-        cout << "DEBUG: measured G" << endl << G << endl;
+        cout << "DEBUG: init state x" << x(0) << x(1) << x(2) << x(3) << endl;
+		cout << "DEBUG: measured G" << endl << G << endl;
         t_prev = imu_msg->header.stamp.toSec();
         imu_initialized = true;
     } else if (imu_initialized && odom_initialized) {
@@ -334,6 +337,12 @@ void odom_callback(const uwb_msgs::uwb &msg) {
         x(4) = msg.pos_x;
         x(5) = msg.pos_y;
         x(6) = 0;
+		
+		x(0) = 1;
+		x(1) = 0;
+		x(2) = 0;
+		x(3) = 0;
+
         theta_bias = msg.pos_theta;
         R.topLeftCorner(2, 2) = acc_angle_weight * R.topLeftCorner(2, 2);
         R(2, 2) = mag_weight * R(2, 2);
@@ -414,8 +423,8 @@ int main(int argc, char **argv) {
     ros::Rate r(400);
 
 //    Rimu = Quaterniond(0.7071, 0, 0, -0.7071).toRotationMatrix();
-    imu_R_world << 0, -1, 0,
-            1, 0,  0,
+    imu_R_world << 1, 0, 0,
+            0, 1,  0,
             0, 0,  1;
 
     cout << "imu_R_world" << endl << imu_R_world << endl;
