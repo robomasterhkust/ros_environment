@@ -7,25 +7,29 @@
 ros::Publisher can_publisher;
 ros::Subscriber cmd_vel_subscriber;
 
-void cmd_cb(const geometry_msgs::Twist &t){
+// void cmd_cb(const geometry_msgs::Twist &t){
+void cmd_cb(const geometry_msgs::Vector3 &t){
 	static can_msgs::Frame f;
 
-	ROS_INFO("Received cmd_vel vx=%f vy=%f vw=%f",t.linear.x,t.linear.y,t.angular.z);
+	// ROS_INFO("Received cmd_vel vx=%f vy=%f vw=%f",t.linear.x,t.linear.y,t.angular.z);
 	//f.header.frame_id="0";
 	f.header.stamp = ros::Time::now();
 
 	f.id = CAN_NVIDIA_TX2_BOARD_ID;
 	f.dlc = (16 / 8) * 3;
 
-	int16_t vx = (int16_t) (t.linear.x * 1000); // convert to mm/s
-	f.data[3] = (uint8_t) (vx >> 8) & 0xff;
-	f.data[2] = (uint8_t) vx & 0xff;
+	// int16_t vx = (int16_t) (t.linear.x * 100000); // convert to mm/s
+	int16_t vx = (int16_t) (t.z * 100000); // convert to mm/s
+	int16_t vy = (int16_t) (t.x * 100000); // convert to mm/s
+	int16_t vw = (int16_t) (t.y * 100000); // convert to mm/s
+	f.data[0] = (uint8_t) (vx >> 8) & 0xff;
+	f.data[1] = (uint8_t) vx & 0xff;
 	
-	int16_t vy = (int16_t) (-t.linear.y * 1000); // convert to mm/s
-	f.data[1] = (uint8_t) (vy >> 8) & 0xff;
-	f.data[0] = (uint8_t) vy & 0xff;
+	// int16_t vy = (int16_t) (-t.linear.y * 100000); // convert to mm/s
+	f.data[2] = (uint8_t) (vy >> 8) & 0xff;
+	f.data[3] = (uint8_t) vy & 0xff;
 
-	int16_t vw = (int16_t) -t.angular.z*90;
+	// int16_t vw = (int16_t) -t.angular.z*100000;
 	f.data[5] = (uint8_t) (vw >> 8) & 0xff;
 	f.data[4] = (uint8_t) vw & 0xff;
 
@@ -37,8 +41,9 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh("~");
 
 	can_publisher = nh.advertise<can_msgs::Frame>("/sent_messages",10);
-	cmd_vel_subscriber = nh.subscribe("/cmd_vel",10,cmd_cb);
-	
+	// cmd_vel_subscriber = nh.subscribe("/cmd_vel",10,cmd_cb);
+	cmd_vel_subscriber = nh.subscribe("/gimbal_target_veloity",10,cmd_cb);	
+
 	ROS_INFO("CANMaster node started");
     ros::spin();
 }
