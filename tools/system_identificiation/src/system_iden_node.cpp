@@ -22,7 +22,7 @@ volatile double stop_time_table[31];
 
 int P = 5;
 int N = 30;
-float gain = 500.0f;
+float gain = 0.01f;
 
 
 int main(int argc, char* argv[]){
