@@ -7,7 +7,6 @@
 #include <cmath>
 #include <chrono>
 
-using namespace chrono;
 using namespace std;
 
 ros::Publisher cmd_vel_publisher;
@@ -31,7 +30,7 @@ int main(int argc, char* argv[]){
 
     nh.param("cmd_topic", cmd_topic, string("/system_iden_cmd_vel"));
 
-	cmd_vel_publisher = nh.advertise<geomtry_msgs::Twist>(cmd_topic, 10);
+	cmd_vel_publisher = nh.advertise<geometry_msgs::Twist>(cmd_topic, 10);
 
     ros::Duration(1).sleep();
 
@@ -55,14 +54,14 @@ int main(int argc, char* argv[]){
         stop_time_table[i] = stop_time_table[i-1] + P * (1 / freq_log_space[i]);
     }
 
-    steady_clock::time_point start_time = steady_clock::now();
-    steady_clock::time_point end_time   = steady_clock::now();
-    auto time_used = duration<double, milli>(end_time - start_time);
+    chrono::steady_clock::time_point start_time = chrono::steady_clock::now();
+    chrono::steady_clock::time_point end_time   = chrono::steady_clock::now();
+    auto time_used = chrono::duration<double, std::milli>(end_time - start_time);
     cout << "solve time cost " << time_used.count() << " seconds. " << endl;
 
     while (ros::ok())
     {
-        auto cur_time = duration<double>(steady_clock::now() - start_time);
+        auto cur_time = chrono::duration<double>(chrono::steady_clock::now() - start_time);
         if (n < N) {
             if(cur_time.count() > stop_time_table[n]) {
                 n++;

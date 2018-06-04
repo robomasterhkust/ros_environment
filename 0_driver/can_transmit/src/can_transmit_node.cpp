@@ -1,13 +1,14 @@
 #include <ros/ros.h>
 #include <can_msgs/Frame.h>
 #include <geometry_msgs/Twist.h>
+#include <string>
 
 #define CAN_NVIDIA_TX2_BOARD_ID 0x103
 
 ros::Publisher can_publisher;
 ros::Subscriber cmd_vel_subscriber;
 
-string cmd_topic;
+std::string cmd_topic;
 
 // void cmd_cb(const geometry_msgs::Twist &t){
 void cmd_cb(const geometry_msgs::Vector3 &t){
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]){
     ros::init(argc,argv,"can_transmit_node");
     ros::NodeHandle nh("~");
 
-	nh.param("cmd_topic", cmd_topic, string("/cmd_vel"));
+	nh.param("cmd_topic", cmd_topic, std::string("/cmd_vel"));
 
 	can_publisher = nh.advertise<can_msgs::Frame>("/sent_messages",10);
 	cmd_vel_subscriber = nh.subscribe(cmd_topic,10,cmd_cb);
