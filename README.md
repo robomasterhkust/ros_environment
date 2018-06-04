@@ -28,7 +28,7 @@ http://wiki.ros.org/ROS/Installation
 
 4. `git submodule update`
 
-5. `cd 1_perception_cv/lib && sudo cp libMVSDK.so /usr/lib`
+5. `sudo cp 1_perception_cv/RMComputerVision/lib/libMVSDK.so /usr/lib`
 
 6. `cd ~/ws && catkin_make`
 
