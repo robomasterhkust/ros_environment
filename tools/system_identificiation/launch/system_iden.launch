@@ -1,6 +1,7 @@
 <launch>
     <node pkg="system_identification" type="system_identification_node" name="system_iden_node" output="screen">
         <param name="cmd_topic" type="string" value="/system_iden_cmd_vel"/>
+        <param name="gain" type="double" value="3"/>
     </node>
 
 	<node pkg="can_transmit" type="can_transmit_node" name="can_transmit_test" output="screen">

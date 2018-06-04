@@ -22,7 +22,7 @@ volatile double stop_time_table[31];
 
 int P = 5;
 int N = 30;
-float gain = 0.01f;
+double gain;
 
 
 int main(int argc, char* argv[]){
@@ -30,13 +30,14 @@ int main(int argc, char* argv[]){
     ros::NodeHandle nh("~");
 
     nh.param("cmd_topic", cmd_topic, string("/system_iden_cmd_vel"));
+    nh.param("gain", gain, 0.1);
 
 	cmd_vel_publisher = nh.advertise<geometry_msgs::Twist>(cmd_topic, 10);
 
     ros::Duration(1).sleep();
 
-    // 100 Hz command value
-    ros::Rate r(100);
+    // 1000 Hz command value
+    ros::Rate r(1000);
 
     int i = 0;
     int n = 0;
@@ -74,7 +75,7 @@ int main(int argc, char* argv[]){
 
             // publish the message
             geometry_msgs::Twist cmd_vel;
-            cmd_vel.angular.z = excit_cmd;
+            cmd_vel.angular.y = excit_cmd;
             cmd_vel_publisher.publish(cmd_vel);
         }
         else
