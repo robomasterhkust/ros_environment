@@ -71,31 +71,24 @@ Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
 https://github.com/gaowenliang/ELEC5660_lab_code
 
 ## Multi-machine debugging
-To debug using another ROS machine, using multimachine by modifying the `/etc/hosts` abd setting three environment variables in the `~/.bashrc`
+Two ros machines, one Intel Nuc, one TX2.
 
-For the master node, add the ip address of the itself and the slave in the `/etc/hosts`, for instance, like this:
+Follow the guide line here: https://askubuntu.com/questions/22835/how-to-network-two-ubuntu-computers-using-ethernet-without-a-router. 
+
+Set the ip address of nuc to be `10.0.0.2`, tx2 to be `10.0.0.1`. Nuc is the ros master.
+
+`export ROS_MASTER_URI=http://10.0.0.2:11311` on both computers.
+
+To debug using another ROS machine, using multimachine by modifying the `/etc/hosts` and setting three environment variables in the `~/.bashrc`
+
+On both machines, add the ip address of the itself and the slave in the `/etc/hosts`, for instance, like this:
 
 ```
 127.0.0.1       localhost
 127.0.1.1       desktop
-192.168.1.237   master
-192.168.1.123   desktop
+10.0.0.2   	rmsoldier#
+10.0.0.1   	tegra-ubuntu
 ```
 
-Then add three environment variables in the `~/.bashrc`:
-
-```
-export ROS_HOSTNAME=master
-export ROS_MASTER_URI=http://master:11311
-export ROS_IP=master
-```
-
-In the slave machine, do all the same thing except for ROS_IP:
-
-```
-export ROS_HOSTNAME=master
-export ROS_MASTER_URI=http://master:11311
-export ROS_IP=desktop
-```
 
 Then launch roscore in the master machine, and all nodes don't need to launch roscore and can receive topics from each others.

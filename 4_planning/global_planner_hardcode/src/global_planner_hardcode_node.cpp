@@ -12,10 +12,10 @@
 using namespace std;
 ros::Publisher path_pub;
 string odom_topic, publisher_topic;
-vector<double> path_array(10, 0);
-double path_array_init[10] = {0, 0, 5.0, 7.0, 4.5, 7.0, 4.0, 7.0, 3.5, 7.0};
+vector<double> path_array;
+double path_array_init[10] = {5.0, 7.0, 5.0, 7.0, 4.5, 7.0, 4.0, 7.0, 3.5, 7.0};
 
-void odom_callback(nav_msgs::Odometry::ConstPtr odom)
+void odom_callback(const nav_msgs::Odometry::ConstPtr &odom)
 {
     if (odom->header.stamp.toSec() > ros::Time::now().toSec() - 1)
     {
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle n("~");
 
     // sleep for 11 seconds for the ekf to generate the odometry
-    ros::Duration(11).sleep();
+//    ros::Duration(11).sleep();
 
     n.param("odom_topic", odom_topic, string("/ekf_odom"));
     n.param("publisher_topic", publisher_topic, string("/global_path_hardcode"));
@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
     // 100 Hz path update rate
     ros::Rate r(100);
 
+    path_array.resize(10);
     for (unsigned int i = 0; i < path_array.size(); i++) {
         path_array[i] = path_array_init[i];
     }
