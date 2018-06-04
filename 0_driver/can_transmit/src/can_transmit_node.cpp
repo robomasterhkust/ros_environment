@@ -35,8 +35,8 @@ void cmd_cb(const geometry_msgs::Twist &t){
 	f.data[3] = (uint8_t) vy & 0xff;
 
 	// int16_t vw = (int16_t) -t.angular.z*100000;
-	f.data[5] = (uint8_t) (vw >> 8) & 0xff;
-	f.data[4] = (uint8_t) vw & 0xff;
+	f.data[5] = (uint8_t) (vz >> 8) & 0xff;
+	f.data[4] = (uint8_t) vz & 0xff;
 
 	can_publisher.publish(f);
 }
