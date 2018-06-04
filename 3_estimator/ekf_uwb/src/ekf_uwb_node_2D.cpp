@@ -51,7 +51,8 @@ const int IMU_INIT_COUNT = 30;
 Vector3d imu_mean_buf[IMU_INIT_COUNT]; // gyro, accel_x, accel_y
 queue<double> odom_mean_buf_x;
 queue<double> odom_mean_buf_y;
-queue<double> odom_mean_buf_theta;
+queue<double> odom_mean_buf_w;
+double theta_bias = 0;
 bool imu_initialized = false;
 bool odom_initialized= false;
 
@@ -61,6 +62,7 @@ Eigen::Matrix3d Rimu;
 /**
  * non-linear propagate for EKF
  * with linearization around the current state
+ * imu propagate in the world frame
  * @param imu_msg
  */
 void propagate(const sensor_msgs::ImuConstPtr &imu_msg)
@@ -69,7 +71,7 @@ void propagate(const sensor_msgs::ImuConstPtr &imu_msg)
     double w     = imu_msg->angular_velocity.z;
     double ax_raw   = imu_msg->linear_acceleration.x;
     double ay_raw   = imu_msg->linear_acceleration.y;
-    Vector3d a_rotate = Rimu * Vector3d(ax_raw, ay_raw, 0);
+    Vector3d a_rotate = Vector3d(ax_raw, ay_raw, 0);
     double ax = a_rotate(0);
     double ay = a_rotate(1);
 
@@ -214,6 +216,11 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
     }
 }
 
+/**
+ * initialize, handle and save uwb messages
+ * Also doing time synchronization
+ * @param uwb msg
+ */
 void odom_callback(const uwb_msgs::uwb &msg)
 {
 //    ROS_INFO("UWB callback, time: %f", msg->header.stamp.toSec());
@@ -223,7 +230,7 @@ void odom_callback(const uwb_msgs::uwb &msg)
         // calculate the uwb covariance and mean
         odom_mean_buf_x.push(msg.pos_x);
         odom_mean_buf_y.push(msg.pos_y);
-        odom_mean_buf_theta.push(msg.pos_theta);
+        odom_mean_buf_w.push(msg.pos_theta);
     }
     else if (imu_initialized && !odom_initialized)
     {
@@ -234,16 +241,16 @@ void odom_callback(const uwb_msgs::uwb &msg)
         for (int i = 0; i < odom_count; ++i) {
             double temp_x = odom_mean_buf_x.front();
             double temp_y = odom_mean_buf_y.front();
-            double temp_a = odom_mean_buf_theta.front();
+            double temp_w = odom_mean_buf_w.front();
             odom_mean[0] += temp_x;
             odom_mean[1] += temp_y;
-            odom_mean[2] += temp_a;
+            odom_mean[2] += temp_w;
             odom_cova[0] += pow( temp_x, 2 );
             odom_cova[1] += pow( temp_y, 2 );
-            odom_cova[2] += pow( temp_a, 2 );
+            odom_cova[2] += pow( temp_w, 2 );
             odom_mean_buf_x.pop();
             odom_mean_buf_y.pop();
-            odom_mean_buf_theta.pop();
+            odom_mean_buf_w.pop();
         }
         odom_mean[0] /= odom_count;
         odom_mean[1] /= odom_count;
@@ -251,10 +258,24 @@ void odom_callback(const uwb_msgs::uwb &msg)
         odom_cova[0] /= odom_count;
         odom_cova[1] /= odom_count;
         odom_cova[2] /= odom_count;
-        R(0, 0) = odom_cova[0] - pow( odom_mean[0], 2 );
+
+		// Initialize the position and bias
+		x(0) = odom_mean[0];
+		x(1) = odom_mean[1];
+		x(2) = 0;
+		theta_bias = odom_mean[2];
+
+        // Initialize the covariance R
+		R(0, 0) = odom_cova[0] - pow( odom_mean[0], 2 );
         R(1, 1) = odom_cova[1] - pow( odom_mean[1], 2 );
         R(2, 2) = odom_cova[2] - pow( odom_mean[2], 2 );
+#else
+		x(0) = msg.pos_x;
+		x(1) = msg.pos_y;
+		x(2) = 0;
+		theta_bias = msg.pos_theta;
 #endif
+		t = msg.header.stamp.toSec();
         odom_initialized = true;
     }
     else {
@@ -317,8 +338,11 @@ int main(int argc, char **argv)
     odom_pub = n.advertise<nav_msgs::Odometry>(publiser_topic, 100);
     ros::Rate r(100);
 
-    Rimu = Quaterniond( 0.7071, 0, 0, -0.7071 ).toRotationMatrix( );
-    cout << "R_cam" << endl << Rimu << endl;
+    // Rimu = Quaterniond( 0.7071, 0, 0, -0.7071 ).toRotationMatrix( );
+    Rimu << 1, 0, 0,
+			0, 1, 0,
+			0, 0, 1;
+	cout << "R_cam" << endl << Rimu << endl;
 
     odom_initialized = true;
 

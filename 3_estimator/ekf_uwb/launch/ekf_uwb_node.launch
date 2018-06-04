@@ -23,5 +23,12 @@
         <param name="imu_topic" type="string" value="/dji_sdk/imu"/>
         <param name="uwb_topic" type="string" value="/uwb_driver/info"/>
         <param name="publisher_topic" type="string" value="/ekf_odom"/>
+        <param name="uwb_weight" type="double" value="100"/>
+        <param name="acc_angle_weight" type="double" value="100"/>
+        <param name="magnetometer_weight" type="double" value="100"/>
+        <param name="accelerometer_weight" type="double" value="0.1"/>
+        <param name="gyroscope_weight" type="double" value="0.1"/>
+        <param name="acc_bias_weight" type="double" value="10"/>
+        <param name="gyro_bias_weight" type="double" value="10"/>
     </node>
 </launch>
