@@ -8,6 +8,7 @@
 #include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 ros::Publisher cmd_vel_publisher;
 
@@ -37,7 +38,8 @@ int main(int argc, char* argv[]){
     // 100 Hz command value
     ros::Rate r(100);
 
-    int i, n;
+    int i = 0;
+    int n = 0;
 
     // Hardcoded sweeping frequency from 1Hz to 500Hz in log space
     double freq_log_space[30] = {1.0f,	1.23899037094209f,	1.53509713928722f,	1.90197057403762f,	    \
@@ -55,22 +57,33 @@ int main(int argc, char* argv[]){
     }
 
     chrono::steady_clock::time_point start_time = chrono::steady_clock::now();
-    chrono::steady_clock::time_point end_time   = chrono::steady_clock::now();
-    auto time_used = chrono::duration<double, std::milli>(end_time - start_time);
-    cout << "solve time cost " << time_used.count() << " seconds. " << endl;
 
     while (ros::ok())
     {
-        auto cur_time = chrono::duration<double>(chrono::steady_clock::now() - start_time);
+        chrono::steady_clock::time_point cur_time_global   = chrono::steady_clock::now();
+        double cur_time = chrono::duration_cast<chrono::duration<double>>(cur_time_global - start_time).count();
+
         if (n < N) {
-            if(cur_time.count() > stop_time_table[n]) {
+            if(cur_time > stop_time_table[n]) {
                 n++;
             }
-        }
 
-        double period_time = cur_time.count() - stop_time_table[n - 1];
-        double frequency = freq_log_space[n];
-        double excit_cmd = gain * sin(2 * M_PI * frequency * period_time);
+            double period_time = cur_time - stop_time_table[n - 1];
+            double frequency = freq_log_space[n];
+            double excit_cmd = gain * sin(2 * M_PI * frequency * period_time);
+
+            // publish the message
+            geometry_msgs::Twist cmd_vel;
+            cmd_vel.angular.z = excit_cmd;
+            cmd_vel_publisher.publish(cmd_vel);
+        }
+        else
+        {
+            // publish the message
+            geometry_msgs::Twist cmd_vel;
+            cmd_vel.angular.z = 0;
+            cmd_vel_publisher.publish(cmd_vel);
+        }
 
         r.sleep();
         ros::spinOnce();

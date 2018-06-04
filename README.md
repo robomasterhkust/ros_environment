@@ -71,12 +71,15 @@ Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
 https://github.com/gaowenliang/ELEC5660_lab_code
 
 ## Multi-machine debugging
-Two ros machines, one Intel Nuc, one TX2. 
-Follow the guide line here: https://askubuntu.com/questions/22835/how-to-network-two-ubuntu-computers-using-ethernet-without-a-router. 
-Set the ip address of nuc to be `10.0.0.2`, tx2 to be `10.0.0.1`. Nuc is the ros master.
-`export ROS_MASTER_URI=http://10.0.0.2:11311` on both computers. 
+Two ros machines, one Intel Nuc, one TX2.
 
-To debug using another ROS machine, using multimachine by modifying the `/etc/hosts` abd setting three environment variables in the `~/.bashrc`
+Follow the guide line here: https://askubuntu.com/questions/22835/how-to-network-two-ubuntu-computers-using-ethernet-without-a-router. 
+
+Set the ip address of nuc to be `10.0.0.2`, tx2 to be `10.0.0.1`. Nuc is the ros master.
+
+`export ROS_MASTER_URI=http://10.0.0.2:11311` on both computers.
+
+To debug using another ROS machine, using multimachine by modifying the `/etc/hosts` and setting three environment variables in the `~/.bashrc`
 
 On both machines, add the ip address of the itself and the slave in the `/etc/hosts`, for instance, like this:
 
