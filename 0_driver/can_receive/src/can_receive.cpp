@@ -1,12 +1,12 @@
-#include <can_receive/dbus.h>
+#include <can_receive_msg/dbus.h>
 
-#include <can_receive/gameinfo.h>
-#include <can_receive/projectile_hlth.h>
-#include <can_receive/power_buffer.h>
-#include <can_receive/power_vol_cur.h>
-#include <can_receive/power_shooter_rfid_bufferinfo.h>
-#include <can_receive/location_xy.h>
-#include <can_receive/location_zyaw.h>
+#include <can_receive_msg/gameinfo.h>
+#include <can_receive_msg/projectile_hlth.h>
+#include <can_receive_msg/power_buffer.h>
+#include <can_receive_msg/power_vol_cur.h>
+#include <can_receive_msg/power_shooter_rfid_bufferinfo.h>
+#include <can_receive_msg/location_xy.h>
+#include <can_receive_msg/location_zyaw.h>
 
 #include <can_msgs/Frame.h>
 #include <string>
@@ -42,7 +42,7 @@ float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
 void msgCallback(const can_msgs::Frame &f) {
     switch (f.id) {
         case CAN_GIMBAL_BOARD_ID: {
-            can_receive::dbus dbus_msg;
+            can_receive_msg::dbus dbus_msg;
             dbus_msg.header.stamp = f.header.stamp;
             dbus_msg.header.frame_id = "world";
             dbus_msg.channel0 = (uint16_t) f.data[1] << 8 | (uint16_t) f.data[0];
@@ -56,7 +56,7 @@ void msgCallback(const can_msgs::Frame &f) {
         }
 
         case CAN_CHASSIS_BOARD_GAMEINFO_ID: {
-            can_receive::gameinfo gameinfo_msg;
+            can_receive_msg::gameinfo gameinfo_msg;
             gameinfo_msg.header.stamp = f.header.stamp;
             gameinfo_msg.header.frame_id = "world";
             gameinfo_msg.remainTime = (uint16_t) f.data[1] << 8 | (uint16_t) f.data[0];
@@ -69,9 +69,9 @@ void msgCallback(const can_msgs::Frame &f) {
             break;
         }
         case CAN_CHASSIS_BOARD_PROJECTILE_HLTH_ID: {
-            can_receive::projectile_hlth projectile_hlth_msg;
-            hlth_msg.header.stamp = f.header.stamp;
-            hlth_msg.header.frame_id = "world";
+            can_receive_msg::projectile_hlth projectile_hlth_msg;
+            projectile_hlth_msg.header.stamp = f.header.stamp;
+            projectile_hlth_msg.header.frame_id = "world";
             projectile_hlth_msg.bulletSpeed = data_to_float(f, 0, 1, 2, 3);
             projectile_hlth_msg.bulletType = (uint8_t) f.data[4];
             projectile_hlth_msg.bulletFreq = (uint8_t) f.data[5];
@@ -82,7 +82,7 @@ void msgCallback(const can_msgs::Frame &f) {
             break;
         }
         case CAN_CHASSIS_BOARD_POWER_POWERBUFFER_ID: {
-            can_receive::power_buffer power_buffer_msg;
+            can_receive_msg::power_buffer power_buffer_msg;
             power_buffer_msg.header.stamp = f.header.stamp;
             power_buffer_msg.header.frame_id = "world";
             power_buffer_msg.power = data_to_float(f, 0, 1, 2, 3);
@@ -93,7 +93,7 @@ void msgCallback(const can_msgs::Frame &f) {
         }
 
         case CAN_CHASSIS_BOARD_VOLT_CURRENT_ID: {
-            can_receive::power_vol_cur power_vol_cur_msg;
+            can_receive_msg::power_vol_cur power_vol_cur_msg;
             power_vol_cur_msg.header.stamp = f.header.stamp;
             power_vol_cur_msg.header.frame_id = "world";
             power_vol_cur_msg.volt = data_to_float(f, 0, 1, 2, 3);
@@ -104,9 +104,9 @@ void msgCallback(const can_msgs::Frame &f) {
         }
 
         case CAN_CHASSIS_BOARD_SHOOTERHEAT_RFID_BUFFERINFO_ID: {
-            can_receive::power_shooter_rfid_bufferinfo power_shooter_rfid_bufferinfo_msg;
-            power_shooter_msg.header.stamp = f.header.stamp;
-            power_shooter_msg.header.frame_id = "world";
+            can_receive_msg::power_shooter_rfid_bufferinfo power_shooter_rfid_bufferinfo_msg;
+            power_shooter_rfid_bufferinfo_msg.header.stamp = f.header.stamp;
+            power_shooter_rfid_bufferinfo_msg.header.frame_id = "world";
             power_shooter_rfid_bufferinfo_msg.shooterHeat0 = (uint16_t) f.data[1] << 8 | (uint16_t) f.data[0];
             power_shooter_rfid_bufferinfo_msg.shooterHeat1 = (uint16_t) f.data[3] << 8 | (uint16_t) f.data[2];
             power_shooter_rfid_bufferinfo_msg.cardType = (uint8_t) f.data[4];
@@ -119,7 +119,7 @@ void msgCallback(const can_msgs::Frame &f) {
         }
 
         case CAN_CHASSIS_BOARD_LOCATION_X_Y_ID: {
-            can_receive::location_xy location_xy_msg;
+            can_receive_msg::location_xy location_xy_msg;
             location_xy_msg.header.stamp = f.header.stamp;
             location_xy_msg.header.frame_id = "world";
             location_xy_msg.x = data_to_float(f, 0, 1, 2, 3);
@@ -130,7 +130,7 @@ void msgCallback(const can_msgs::Frame &f) {
         }
 
         case CAN_CHASSIS_BOARD_LOCATION_Z_YAW_ID: {
-            can_receive::location_zyaw location_zyaw_msg;
+            can_receive_msg::location_zyaw location_zyaw_msg;
             location_zyaw_msg.header.stamp = f.header.stamp;
             location_zyaw_msg.header.frame_id = "world";
             location_zyaw_msg.z = data_to_float(f, 0, 1, 2, 3);
@@ -150,15 +150,15 @@ int main(int argc, char *argv[]) {
     std::string can_device;
     nh_param.param<std::string>("can_device", can_device, "can1");
 
-    dbus_publisher = nh.advertise<can_receive::dbus>("dbus", 100);
+    dbus_publisher = nh.advertise<can_receive_msg::dbus>("dbus", 100);
 
-    gameinfo_publisher = nh.advertise<can_receive::gameinfo>("gameinfo", 100);
-    projectile_hlth_publisher = nh.advertise<can_receive::projectile_hlth>("projectile_hlth", 100);
-    location_zyaw_publisher = nh.advertise<can_receive::location_zyaw>("location_zyaw", 100);
-    location_xy_publisher = nh.advertise<can_receive::location_xy>("location_xy", 100);
-    power_shooter_rfid_bufferinfo_publisher = nh.advertise<can_receive::power_shooter_rfid_bufferinfo>("power_shooter_rfid_bufferinfo", 100);
-    power_vol_cur_publisher = nh.advertise<can_receive::power_vol_cur>("power_vol_cur", 100);
-    power_buffer_publisher = nh.advertise<can_receive::power_buffer>("power_buffer", 100);
+    gameinfo_publisher = nh.advertise<can_receive_msg::gameinfo>("gameinfo", 100);
+    projectile_hlth_publisher = nh.advertise<can_receive_msg::projectile_hlth>("projectile_hlth", 100);
+    location_zyaw_publisher = nh.advertise<can_receive_msg::location_zyaw>("location_zyaw", 100);
+    location_xy_publisher = nh.advertise<can_receive_msg::location_xy>("location_xy", 100);
+    power_shooter_rfid_bufferinfo_publisher = nh.advertise<can_receive_msg::power_shooter_rfid_bufferinfo>("power_shooter_rfid_bufferinfo", 100);
+    power_vol_cur_publisher = nh.advertise<can_receive_msg::power_vol_cur>("power_vol_cur", 100);
+    power_buffer_publisher = nh.advertise<can_receive_msg::power_buffer>("power_buffer", 100);
 
     ros::Subscriber can_subscriber = nh.subscribe("/" + can_device + "_raw", 100, msgCallback);
 

@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Wall")
 find_package(catkin REQUIRED COMPONENTS
         can_msgs
         roscpp
-        message_generation
+        can_receive_msg
         )
 
 ## System dependencies are found with CMake's conventions
@@ -52,20 +52,9 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(DIRECTORY msg
-        FILES
-        dbus.msg
-        bufferinfo.msg
-        gameinfo.msg
-        hlth.msg
-        location_xy.msg
-        location_zyaw.msg
-        power_buffer.msg
-        power_shooter.msg
-        power_vol_cur.msg
-        projectile.msg
-        rfid.msg
-        )
+#add_message_files(DIRECTORY msg
+#        FILES
+#        )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -82,10 +71,10 @@ add_message_files(DIRECTORY msg
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-        DEPENDENCIES
-        std_msgs
-)
+#generate_messages(
+#        DEPENDENCIES
+#        std_msgs
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -117,10 +106,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-        CATKIN_DEPENDS can_msgs roscpp
+        CATKIN_DEPENDS can_msgs roscpp can_receive_msg
         DEPENDS can_msgs
-        message_runtime
         std_msgs
+        can_receive_msg
 )
 
 ###########
