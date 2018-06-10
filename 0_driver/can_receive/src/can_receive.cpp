@@ -44,7 +44,7 @@ ros::Publisher location_zyaw_publisher;
 
 void msgCallback(const can_msgs::Frame &f) {
     switch (f.id) {
-        case CAN_GIMBAL_BOARD_ID:
+        case CAN_GIMBAL_BOARD_ID: {
             can_receive::dbus dbus_msg;
             dbus_msg.header.stamp = f.header.stamp;
             dbus_msg.header.frame_id = "world";
@@ -56,7 +56,9 @@ void msgCallback(const can_msgs::Frame &f) {
 
             dbus_publisher.publish(dbus_msg);
             break;
-        case CAN_CHASSIS_BOARD_GAMEINFO_ID:
+        }
+
+        case CAN_CHASSIS_BOARD_GAMEINFO_ID: {
             can_receive::gameinfo gameinfo_msg;
             gameinfo_msg.header.stamp = f.header.stamp;
             gameinfo_msg.header.frame_id = "world";
@@ -68,7 +70,8 @@ void msgCallback(const can_msgs::Frame &f) {
 
             gameinfo_publisher.publish(gameinfo_msg);
             break;
-        case CAN_CHASSIS_BOARD_HLTH_ID:
+        }
+        case CAN_CHASSIS_BOARD_HLTH_ID: {
             can_receive::hlth hlth_msg;
             hlth_msg.header.stamp = f.header.stamp;
             hlth_msg.header.frame_id = "world";
@@ -77,7 +80,8 @@ void msgCallback(const can_msgs::Frame &f) {
 
             hlth_publisher.publish(hlth_msg);
             break;
-        case CAN_CHASSIS_BOARD_PROJECTILE_ID:
+        }
+        case CAN_CHASSIS_BOARD_PROJECTILE_ID: {
             can_receive::projectile projectile_msg;
             projectile_msg.header.stamp = f.header.stamp;
             projectile_msg.header.frame_id = "world";
@@ -88,7 +92,8 @@ void msgCallback(const can_msgs::Frame &f) {
 
             projectile_publisher.publish(projectile_msg);
             break;
-        case CAN_CHASSIS_BOARD_POWER_POWERBUFFER_ID:
+        }
+        case CAN_CHASSIS_BOARD_POWER_POWERBUFFER_ID: {
             can_receive::power_buffer power_buffer_msg;
             power_buffer_msg.header.stamp = f.header.stamp;
             power_buffer_msg.header.frame_id = "world";
@@ -98,8 +103,9 @@ void msgCallback(const can_msgs::Frame &f) {
 
             power_buffer_publisher.publish(power_buffer_msg);
             break;
+        }
 
-        case CAN_CHASSIS_BOARD_VOLT_CURRENT_ID:
+        case CAN_CHASSIS_BOARD_VOLT_CURRENT_ID: {
             can_receive::power_vol_cur power_vol_cur_msg;
             power_vol_cur_msg.header.stamp = f.header.stamp;
             power_vol_cur_msg.header.frame_id = "world";
@@ -109,8 +115,9 @@ void msgCallback(const can_msgs::Frame &f) {
 
             power_vol_cur_publisher.publish(power_vol_cur_msg);
             break;
+        }
 
-        case CAN_CHASSIS_BOARD_SHOOTERHEAT_ID:
+        case CAN_CHASSIS_BOARD_SHOOTERHEAT_ID: {
             can_receive::power_shooter power_shooter_msg;
             power_shooter_msg.header.stamp = f.header.stamp;
             power_shooter_msg.header.frame_id = "world";
@@ -119,8 +126,9 @@ void msgCallback(const can_msgs::Frame &f) {
 
             power_shooter_publisher.publish(power_shooter_msg);
             break;
+        }
 
-        case CAN_CHASSIS_BOARD_RFID_ID:
+        case CAN_CHASSIS_BOARD_RFID_ID: {
             can_receive::rfid rfid_msg;
             rfid_msg.header.stamp = f.header.stamp;
             rfid_msg.header.frame_id = "world";
@@ -129,8 +137,9 @@ void msgCallback(const can_msgs::Frame &f) {
 
             rfid_publisher.publish(rfid_msg);
             break;
+        }
 
-        case CAN_CHASSIS_BOARD_BUFFERINFO_ID:
+        case CAN_CHASSIS_BOARD_BUFFERINFO_ID: {
             can_receive::bufferinfo bufferinfo_msg;
             bufferinfo_msg.header.stamp = f.header.stamp;
             bufferinfo_msg.header.frame_id = "world";
@@ -139,8 +148,8 @@ void msgCallback(const can_msgs::Frame &f) {
 
             bufferinfo_publisher.publish(bufferinfo_msg);
             break;
-
-        case CAN_CHASSIS_BOARD_LOCATION_X_Y_ID:
+        }
+        case CAN_CHASSIS_BOARD_LOCATION_X_Y_ID: {
             can_receive::location_xy location_xy_msg;
             location_xy_msg.header.stamp = f.header.stamp;
             location_xy_msg.header.frame_id = "world";
@@ -150,8 +159,9 @@ void msgCallback(const can_msgs::Frame &f) {
 
             location_xy_publisher.publish(location_xy_msg);
             break;
+        }
 
-        case CAN_CHASSIS_BOARD_LOCATION_Z_YAW_ID:
+        case CAN_CHASSIS_BOARD_LOCATION_Z_YAW_ID: {
             can_receive::location_zyaw location_zyaw_msg;
             location_zyaw_msg.header.stamp = f.header.stamp;
             location_zyaw_msg.header.frame_id = "world";
@@ -161,6 +171,7 @@ void msgCallback(const can_msgs::Frame &f) {
 
             location_zyaw_publisher.publish(location_zyaw_msg);
             break;
+        }
     }
 
 }
