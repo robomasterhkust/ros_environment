@@ -41,6 +41,11 @@ ros::Publisher bufferinfo_publisher;
 ros::Publisher location_xy_publisher;
 ros::Publisher location_zyaw_publisher;
 
+float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d){
+    uint32_t hehe = ((uint32_t)(f.data[d]<<24)|((uint32_t)(f.data[c]<<16)|((uint32_t)(f.data[b]<<8)|(uint32_t)f.data[a])));
+    float *haha = (float*)&hehe;
+    return *haha;
+}
 
 void msgCallback(const can_msgs::Frame &f) {
     switch (f.id) {
@@ -87,8 +92,7 @@ void msgCallback(const can_msgs::Frame &f) {
             projectile_msg.header.frame_id = "world";
             projectile_msg.bulletType = (uint8_t) f.data[0];
             projectile_msg.bulletFreq = (uint8_t) f.data[1];
-            projectile_msg.bulletSpeed =
-                    (float) f.data[5] << 24 | (float)f.data[4] << 16 | (float)f.data[3] << 8 | (float)f.data[2];
+            projectile_msg.bulletSpeed = data_to_float(f,2,3,4,5);
 
             projectile_publisher.publish(projectile_msg);
             break;
@@ -97,9 +101,8 @@ void msgCallback(const can_msgs::Frame &f) {
             can_receive::power_buffer power_buffer_msg;
             power_buffer_msg.header.stamp = f.header.stamp;
             power_buffer_msg.header.frame_id = "world";
-            power_buffer_msg.power = (float) (f.data[3] << 24 | f.data[2] << 16 )| (f.data[1] << 8 | f.data[0]);
-            power_buffer_msg.powerBuffer =
-                    (float) (f.data[7] << 24 | f.data[6] << 16 )|( f.data[5] << 8 | f.data[4]);
+            power_buffer_msg.power = data_to_float(f,0,1,2,3);
+            power_buffer_msg.powerBuffer = data_to_float(f,4,5,6,7);
 
             power_buffer_publisher.publish(power_buffer_msg);
             break;
@@ -109,10 +112,9 @@ void msgCallback(const can_msgs::Frame &f) {
             can_receive::power_vol_cur power_vol_cur_msg;
             power_vol_cur_msg.header.stamp = f.header.stamp;
             power_vol_cur_msg.header.frame_id = "world";
-            power_vol_cur_msg.volt = (float) (f.data[3] << 24 | f.data[2] << 16) | (f.data[1] << 8 | f.data[0]);
-            power_vol_cur_msg.current =
-                    (float) (f.data[7] << 24 | f.data[6] << 16) | (f.data[5] << 8 | f.data[4]);
-
+            power_vol_cur_msg.volt = data_to_float(f,0,1,2,3);
+            power_vol_cur_msg.current = data_to_float(f,4,5,6,7);
+                    
             power_vol_cur_publisher.publish(power_vol_cur_msg);
             break;
         }
@@ -153,9 +155,8 @@ void msgCallback(const can_msgs::Frame &f) {
             can_receive::location_xy location_xy_msg;
             location_xy_msg.header.stamp = f.header.stamp;
             location_xy_msg.header.frame_id = "world";
-            location_xy_msg.x = (float) f.data[3] << 24 | f.data[2] << 16 | f.data[1] << 8 | f.data[0];
-            location_xy_msg.y =
-                    (float) f.data[7] << 24 | f.data[6] << 16 | f.data[5] << 8 | f.data[4];
+            location_xy_msg.x = data_to_float(f,0,1,2,3);
+            location_xy_msg.y = data_to_float(f,4,5,6,7);
 
             location_xy_publisher.publish(location_xy_msg);
             break;
@@ -165,9 +166,8 @@ void msgCallback(const can_msgs::Frame &f) {
             can_receive::location_zyaw location_zyaw_msg;
             location_zyaw_msg.header.stamp = f.header.stamp;
             location_zyaw_msg.header.frame_id = "world";
-            location_zyaw_msg.z = (float) f.data[3] << 24 | f.data[2] << 16 | f.data[1] << 8 | f.data[0];
-            location_zyaw_msg.yaw =
-                    (float) f.data[7] << 24 | f.data[6] << 16 | f.data[5] << 8 | f.data[4];
+            location_zyaw_msg.z = data_to_float(f,0,1,2,3);
+            location_zyaw_msg.yaw =data_to_float(f,4,5,6,7);
 
             location_zyaw_publisher.publish(location_zyaw_msg);
             break;
@@ -186,15 +186,15 @@ int main(int argc, char *argv[]) {
     dbus_publisher = nh.advertise<can_receive::dbus>("dbus", 100);
 
     gameinfo_publisher = nh.advertise<can_receive::gameinfo>("gameinfo", 100);
-    hlth_publisher = nh.advertise<can_receive::hlth>("gameinfo", 100);
-    location_zyaw_publisher = nh.advertise<can_receive::location_xy>("gameinfo", 100);
-    location_xy_publisher = nh.advertise<can_receive::location_zyaw>("gameinfo", 100);
-    projectile_publisher = nh.advertise<can_receive::projectile>("gameinfo", 100);
-    rfid_publisher = nh.advertise<can_receive::rfid>("gameinfo", 100);
-    bufferinfo_publisher = nh.advertise<can_receive::bufferinfo>("gameinfo", 100);
-    power_shooter_publisher = nh.advertise<can_receive::power_shooter>("gameinfo", 100);
-    power_vol_cur_publisher = nh.advertise<can_receive::power_vol_cur>("gameinfo", 100);
-    power_buffer_publisher = nh.advertise<can_receive::power_buffer>("gameinfo", 100);
+    hlth_publisher = nh.advertise<can_receive::hlth>("hlth", 100);
+    location_zyaw_publisher = nh.advertise<can_receive::location_zyaw>("location_zyaw", 100);
+    location_xy_publisher = nh.advertise<can_receive::location_xy>("location_xy", 100);
+    projectile_publisher = nh.advertise<can_receive::projectile>("projectile", 100);
+    rfid_publisher = nh.advertise<can_receive::rfid>("rfid", 100);
+    bufferinfo_publisher = nh.advertise<can_receive::bufferinfo>("bufferinfo", 100);
+    power_shooter_publisher = nh.advertise<can_receive::power_shooter>("power_shooter", 100);
+    power_vol_cur_publisher = nh.advertise<can_receive::power_vol_cur>("power_vol_cur", 100);
+    power_buffer_publisher = nh.advertise<can_receive::power_buffer>("power_buffer", 100);
 
     ros::Subscriber can_subscriber = nh.subscribe("/" + can_device + "_raw", 100, msgCallback);
 
