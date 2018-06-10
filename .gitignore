@@ -39,4 +39,3 @@ cmake-build-debug
 .vscode/settings.json
 CATKIN_IGNORE
 0_driver/ptgrey_reader/install/usb/
-0_driver/ptgrey_reader/launch/*
