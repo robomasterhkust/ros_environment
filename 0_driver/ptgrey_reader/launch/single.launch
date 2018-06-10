@@ -1,7 +1,7 @@
 <launch>
 
     <arg name="device" default = "17591762"/>
-    <arg name="rate" default="5"/>
+    <arg name="rate" default="40"/>
 
     <node name="single_reader" pkg="ptgrey_reader" type="single_reader"
          ns="pg_$(arg device)" output="screen">
@@ -18,7 +18,7 @@
         <param name="exposure" type="double" value="0.8"/>
         <param name="WB_red" type="int" value="550"/>
         <param name="WB_Blue" type="int" value="810"/>
-        <param name="gain" type="double" value="5.0"/>
+        <param name="gain" type="double" value="10.0"/>
         <rosparam>
             is_sync:   false
             is_grey:   false

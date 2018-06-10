@@ -1,0 +1,3 @@
+Header header
+uint8 powerUpType
+uint8 powerUpPercentage
