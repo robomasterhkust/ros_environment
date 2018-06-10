@@ -65,7 +65,6 @@ add_message_files(DIRECTORY msg
         power_vol_cur.msg
         projectile.msg
         rfid.msg
-        # judge.msg
         )
 
 ## Generate services in the 'srv' folder

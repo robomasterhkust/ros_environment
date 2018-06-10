@@ -88,7 +88,7 @@ void msgCallback(const can_msgs::Frame &f) {
             projectile_msg.bulletType = (uint8_t) f.data[0];
             projectile_msg.bulletFreq = (uint8_t) f.data[1];
             projectile_msg.bulletSpeed =
-                    (float) f.data[5] << 24 | f.data[4] << 16 | f.data[3] << 8 | f.data[2];
+                    (float) f.data[5] << 24 | (float)f.data[4] << 16 | (float)f.data[3] << 8 | (float)f.data[2];
 
             projectile_publisher.publish(projectile_msg);
             break;
@@ -97,9 +97,9 @@ void msgCallback(const can_msgs::Frame &f) {
             can_receive::power_buffer power_buffer_msg;
             power_buffer_msg.header.stamp = f.header.stamp;
             power_buffer_msg.header.frame_id = "world";
-            power_buffer_msg.power = (float) f.data[3] << 24 | f.data[2] << 16 | f.data[1] << 8 | f.data[0];
+            power_buffer_msg.power = (float) (f.data[3] << 24 | f.data[2] << 16 )| (f.data[1] << 8 | f.data[0]);
             power_buffer_msg.powerBuffer =
-                    (float) f.data[7] << 24 | f.data[6] << 16 | f.data[5] << 8 | f.data[4];
+                    (float) (f.data[7] << 24 | f.data[6] << 16 )|( f.data[5] << 8 | f.data[4]);
 
             power_buffer_publisher.publish(power_buffer_msg);
             break;
@@ -109,9 +109,9 @@ void msgCallback(const can_msgs::Frame &f) {
             can_receive::power_vol_cur power_vol_cur_msg;
             power_vol_cur_msg.header.stamp = f.header.stamp;
             power_vol_cur_msg.header.frame_id = "world";
-            power_vol_cur_msg.volt = (float) f.data[3] << 24 | f.data[2] << 16 | f.data[1] << 8 | f.data[0];
+            power_vol_cur_msg.volt = (float) (f.data[3] << 24 | f.data[2] << 16) | (f.data[1] << 8 | f.data[0]);
             power_vol_cur_msg.current =
-                    (float) f.data[7] << 24 | f.data[6] << 16 | f.data[5] << 8 | f.data[4];
+                    (float) (f.data[7] << 24 | f.data[6] << 16) | (f.data[5] << 8 | f.data[4]);
 
             power_vol_cur_publisher.publish(power_vol_cur_msg);
             break;
