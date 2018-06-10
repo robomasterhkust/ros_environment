@@ -22,8 +22,8 @@ void cmd_cb(const geometry_msgs::Twist &t){
 	f.dlc = (16 / 8) * 3;
 
 	int16_t vx = (int16_t) (t.linear.x  * 1000); // convert to mm/s
-    int16_t vy = (int16_t) (t.angular.y * 1000); // pitch, rotate by Y axis
-    int16_t vz = (int16_t) (t.angular.z * 1000); // yaw,   rotate by Z axis
+        int16_t vy = (int16_t) (t.angular.y * 1000); // pitch, rotate by Y axis
+        int16_t vz = (int16_t) (t.angular.z * 1000); // yaw,   rotate by Z axis
 	// int16_t vx = (int16_t) (t.z * 100000); // convert to mm/s
 	// int16_t vy = (int16_t) (t.x * 100000); // convert to mm/s
 	// int16_t vw = (int16_t) (t.y * 100000); // convert to mm/s
