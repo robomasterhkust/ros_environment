@@ -53,10 +53,20 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(DIRECTORY msg
-   FILES
-   dbus.msg
-   # judge.msg
-)
+        FILES
+        dbus.msg
+        bufferinfo.msg
+        gameinfo.msg
+        hlth.msg
+        location_xy.msg
+        location_zyaw.msg
+        power_buffer.msg
+        power_shooter.msg
+        power_vol_cur.msg
+        projectile.msg
+        rfid.msg
+        # judge.msg
+        )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -74,8 +84,8 @@ add_message_files(DIRECTORY msg
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-   DEPENDENCIES
-   std_msgs
+        DEPENDENCIES
+        std_msgs
 )
 
 ################################################
