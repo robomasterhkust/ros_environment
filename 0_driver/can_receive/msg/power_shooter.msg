@@ -1,3 +1,0 @@
-Header header
-uint16 shooterHeat0
-uint16 shooterHeat1
