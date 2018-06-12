@@ -1,2 +1,0 @@
-geometry_msgs/Point armorCoordintae
-std_msgs/Time observedTime
