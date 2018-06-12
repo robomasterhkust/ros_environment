@@ -1,2 +1,2 @@
-geometry_msgs/Point armorCoordintae
+geometry_msgs/Twist armorCoordintae
 std_msgs/Time observedTime
