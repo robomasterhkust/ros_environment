@@ -38,3 +38,4 @@ cmake-build-debug
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 CATKIN_IGNORE
+/CMakeLists.txt
