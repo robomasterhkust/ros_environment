@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find rm_cv)/launch/cv_ad.launch"/>
+  <node pkg="rm_tracking_pid" name="armor_tracking" type="armor_tracking_node.py" output="screen"></node>
+  <node pkg="rm_tracking_pid" name="armor_pid" type="armor_pid_node.py" output="screen"></node>
+</launch>
