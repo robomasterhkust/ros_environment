@@ -7,14 +7,6 @@ import rospy
 import cv2
 from geometry_msgs.msg import Point, Twist
 import numpy as np
-from dynamic_reconfigure.server import Server
-from rm_tracking_pid.cfg import tuningConfig
-
-y_kp = 0.0
-y_kd = 0.0
-z_kp = 0.0
-z_kd = 0.0
-
 
 class armor_pid:
     def __init__(self):
@@ -30,35 +22,36 @@ class armor_pid:
         self.image_center_y = rospy.get_param('center_y', 512)
 
     def calc(self):
+	y_kp = rospy.get_param('/y_kp')
+	y_kd = rospy.get_param('/y_kd')
+	z_kp = rospy.get_param('/z_kp')
+	z_kd = rospy.get_param('/z_kd')
+	rospy.loginfo("y_kp:%f,y_kd:%f",y_kp,y_kd)
         vy = y_kp * self.y_err + y_kd * (self.y_err - self.prev_y_err)
         vz = z_kp * self.z_err + z_kd * (self.z_err - self.prev_z_err)
-
+	rospy.loginfo("vy:%f,vz:%f",vy,vz)
         self.prev_y_err = self.y_err
         self.prev_z_err = self.z_err
 
         vel_msg = Twist()
         vel_msg.angular.y = vy
         vel_msg.angular.z = vz
+	rospy.loginfo("entering armor pid")
         self.cmd_pub.publish(vel_msg)
 
     def callback(self, point):
-        self.y_err = self.image_center_x - point.x
-        self.z_err = self.image_center_y - point.y
-        self.calc()
-
-
-def callback(config, level):
-    y_kp = config.y_kp
-    y_kd = config.y_kd
-    z_kp = config.z_kp
-    z_kd = config.z_kd
-    rospy.loginfo("setting y_kp:%f, y_kd:%f, z_kp:%f, z_kd:%f",
-                  y_kp, y_kd, z_kp, z_kd)
-    return config
+	if point is not None:
+            self.y_err = -1 + point.y/self.image_center_y
+            self.z_err = 1 - point.x/self.image_center_x
+            self.calc()
+        else:
+            vel_msg = Twist()
+            vel_msg.angular.y = 0
+            vel_msg.angular.z = 0
+            self.cmd_pub.publish(vel_msg)
 
 
 if __name__ == "__main__":
     rospy.init_node('armor_pid_node')
     pid = armor_pid()
-    srv = Server(tuningConfig, callback)
     rospy.spin()
