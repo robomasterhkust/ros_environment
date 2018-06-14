@@ -5,6 +5,11 @@ System: Ubuntu 16.04 LTS
 
 ROS Version: Kinetic
 
+## Attention
+1. Never add CMakeList.txt to git repo.
+2. Never add CMakeList.txt to git ignore.
+3. There will be reminder that CMakeList.txt is not tracked in git. Just leave it there. Every computer has different src CMakeList.txt which linked to the place where ros is installed. 
+
 ## Software architecture
 
 - modules
@@ -73,7 +78,7 @@ https://github.com/gaowenliang/ELEC5660_lab_code
 ## Multi-machine debugging
 Two ros machines, one Intel Nuc, one TX2.
 
-Follow the guide line here: https://askubuntu.com/questions/22835/how-to-network-two-ubuntu-computers-using-ethernet-without-a-router. 
+Follow the guide line here: https://askubuntu.com/questions/22835/how-to-network-two-ubuntu-computers-using-ethernet-without-a-router.
 
 Set the ip address of nuc to be `10.0.0.2`, tx2 to be `10.0.0.1`. Nuc is the ros master.
 
