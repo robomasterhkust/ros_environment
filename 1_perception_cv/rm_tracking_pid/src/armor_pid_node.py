@@ -27,11 +27,11 @@ class armor_pid:
         if(abs(point.x) > sys.float_info.epsilon and abs(point.y) > sys.float_info.epsilon):
             self.y_err = -1 + point.y / self.image_center_y
             self.z_err = 1 - point.x / self.image_center_x
-            y_kp = rospy.get_param('/y_kp')
-            y_kd = rospy.get_param('/y_kd')
-            z_kp = rospy.get_param('/z_kp')
-            z_kd = rospy.get_param('/z_kd')
-            rospy.loginfo("y_kp:%f,y_kd:%f", y_kp, y_kd)
+            y_kp = rospy.get_param('/server_node/y_kp')
+            y_kd = rospy.get_param('/server_node/y_kd')
+            z_kp = rospy.get_param('/server_node/z_kp')
+            z_kd = rospy.get_param('/server_node/z_kd')
+            rospy.loginfo("y_kp: %f,y_kd: %f", y_kp, y_kd)
             vy = y_kp * self.y_err + y_kd * (self.y_err - self.prev_y_err)
             vz = z_kp * self.z_err + z_kd * (self.z_err - self.prev_z_err)
             self.prev_y_err = self.y_err
@@ -46,6 +46,7 @@ class armor_pid:
 
         self.cmd_pub.publish(vel_msg)
         rospy.loginfo("vy:%f,vz:%f", vel_msg.angular.y, vel_msg.angular.z)
+
 
 if __name__ == "__main__":
     rospy.init_node('armor_pid_node')

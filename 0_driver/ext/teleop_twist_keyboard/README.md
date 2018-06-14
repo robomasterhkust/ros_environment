@@ -30,3 +30,8 @@ e/c : increase/decrease only angular speed by 10%
 CTRL-C to quit
 ```
 
+Modified by Yang Shaohui:
+j: z=1, gimbal turns left
+l: z=-1, gimbal turns right
+i: y=-1, gimbal turns upward
+,: y=1, gimbal turns downward
