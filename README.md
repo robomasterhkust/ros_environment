@@ -23,9 +23,9 @@ ROS Version: Kinetic
   - 6_decision
 - tools
 
-## Frame definition
-1. World frame. At t = 0, x axis points to the direction of gimbal gunner, origin is at the starting rotation center of gimbal.
-2. Chassis frame. Any time instant, x axis points to current direction of soldier heading, origin is at the camera on the chassis.
+## Frame definition(right handed, all z axises heading upward)
+1. World frame. At t = 0, x axis points to the starting direction of gimbal gunner, origin is at the starting rotation center of gimbal.
+2. Chassis frame. Any time instant, x axis points to current direction of soldier heading, origin is at the current camera position on the chassis.
 3. Transition frame. At any time instant, x axis points to current direction of soldier heading, origin is at the current rotation center of gimbal.
 4. Gimbal frame. At any time instant, x axis points to current direction of gimbal gunner, origin is at the current rotation center of gimbal.
 
