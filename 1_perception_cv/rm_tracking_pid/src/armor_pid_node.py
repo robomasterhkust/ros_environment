@@ -5,35 +5,37 @@ import numpy as np
 import sys
 import rospy
 import cv2
-from geometry_msgs.msg import Point, Twist
+from geometry_msgs.msg import Twist
 import numpy as np
 
 
 class armor_pid:
     def __init__(self):
         self.result_sub = rospy.Subscriber(
-            "/armor_center", Point, self.callback)
+            "/armor_center_kf", Twist, self.callback)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
         self.y_err = 0
         self.z_err = 0
         self.prev_y_err = 0
         self.prev_z_err = 0
-        self.image_center_x = rospy.get_param('center_x', 640)
-        self.image_center_y = rospy.get_param('center_y', 512)
 
     def callback(self, point):
         vel_msg = Twist()
-        if(abs(point.x) > sys.float_info.epsilon and abs(point.y) > sys.float_info.epsilon):
-            self.y_err = -1 + point.y / self.image_center_y
-            self.z_err = 1 - point.x / self.image_center_x
+        if(abs(point.linear.x) > sys.float_info.epsilon and abs(point.linear.y) > sys.float_info.epsilon):
+            image_center_x = rospy.get_param('/server_node/center_x')
+            image_center_y = rospy.get_param('/server_node/center_y')
+            self.y_err = (-1 + point.linear.y / image_center_y)
+            self.z_err = 1 - point.linear.x / image_center_x
             y_kp = rospy.get_param('/server_node/y_kp')
             y_kd = rospy.get_param('/server_node/y_kd')
             z_kp = rospy.get_param('/server_node/z_kp')
             z_kd = rospy.get_param('/server_node/z_kd')
+            vy_kp = rospy.get_param('/server_node/vy_kp')
+            vz_kp = rospy.get_param('/server_node/vz_kp')
             rospy.loginfo("y_kp: %f,y_kd: %f", y_kp, y_kd)
-            vy = y_kp * self.y_err + y_kd * (self.y_err - self.prev_y_err)
-            vz = z_kp * self.z_err + z_kd * (self.z_err - self.prev_z_err)
+            vy = y_kp * self.y_err + y_kd * (self.y_err - self.prev_y_err) + vy_kp*point.angular.y
+            vz = z_kp * self.z_err + z_kd * (self.z_err - self.prev_z_err) + vz_kp*point.angular.x
             self.prev_y_err = self.y_err
             self.prev_z_err = self.z_err
 
