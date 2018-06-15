@@ -1,6 +1,3 @@
 <launch>
-  <include file="$(find rm_cv)/launch/cv_ad.launch"/>
-  <node pkg="rm_tracking_pid" name="server" type="server_node.py" output="screen"></node>
-  <node pkg="rm_tracking_pid" name="armor_pid" type="armor_pid_node.py" output="screen"></node>
-  <node pkg="rqt_reconfigure" name="rqt_reconfigure_node" type="rqt_reconfigure" output="screen"></node>
+    <include file="$(find rm_cv)/launch/cv_ad.launch"/>
 </launch>
