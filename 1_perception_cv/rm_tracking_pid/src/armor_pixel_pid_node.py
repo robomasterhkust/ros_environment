@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-
+'''
+This ros node handles pixel values, working kind of well in Z axis but not in Y axis.
+'''
 import roslib
 import numpy as np
 import sys
@@ -9,7 +11,7 @@ from geometry_msgs.msg import Twist
 import numpy as np
 
 
-class armor_pid:
+class armor_pixel_pid:
     def __init__(self):
         self.result_sub = rospy.Subscriber(
             "/armor_center_kf", Twist, self.callback)
@@ -34,8 +36,10 @@ class armor_pid:
             vy_kp = rospy.get_param('/server_node/vy_kp')
             vz_kp = rospy.get_param('/server_node/vz_kp')
             rospy.loginfo("y_kp: %f,y_kd: %f", y_kp, y_kd)
-            vy = y_kp * self.y_err + y_kd * (self.y_err - self.prev_y_err) + vy_kp*point.angular.y
-            vz = z_kp * self.z_err + z_kd * (self.z_err - self.prev_z_err) + vz_kp*point.angular.x
+            vy = y_kp * self.y_err + y_kd * \
+                (self.y_err - self.prev_y_err) + vy_kp * point.angular.y
+            vz = z_kp * self.z_err + z_kd * \
+                (self.z_err - self.prev_z_err) + vz_kp * point.angular.x
             self.prev_y_err = self.y_err
             self.prev_z_err = self.z_err
 
@@ -51,6 +55,6 @@ class armor_pid:
 
 
 if __name__ == "__main__":
-    rospy.init_node('armor_pid_node')
-    pid = armor_pid()
+    rospy.init_node('armor_pixel_pid_node')
+    pid = armor_pixel_pid()
     rospy.spin()
