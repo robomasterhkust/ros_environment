@@ -57,16 +57,23 @@ class armor_frame_pid:
 
     def callback(self, pnp):
         vel_msg = Twist()
-        if (abs(pnp.twist.linear.x) < sys.float_info.epsilon):
+        if abs(pnp.twist.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
         else:
-            y_kp = rospy.get_param('/server_node/y_kp')
-            y_kd = rospy.get_param('/server_node/y_kd')
-            z_kp = rospy.get_param('/server_node/z_kp')
-            z_kd = rospy.get_param('/server_node/z_kd')
-            image_center_x = rospy.get_param('/server_node/center_x')
-            image_center_y = rospy.get_param('/server_node/center_y')
+            y_kp = 0.0
+            y_kd = 0.0
+            z_kp = 0.0
+            z_kd = 0.0
+            image_center_y = 300
+            image_center_x = 400
+            if rospy.has_param('/server_node/y_kp'):
+                y_kp = rospy.get_param('/server_node/y_kp')
+                y_kd = rospy.get_param('/server_node/y_kd')
+                z_kp = rospy.get_param('/server_node/z_kp')
+                z_kd = rospy.get_param('/server_node/z_kd')
+                image_center_x = rospy.get_param('/server_node/center_x')
+                image_center_y = rospy.get_param('/server_node/center_y')
 
             shield_T_camera = np.array(
                 [pnp.twist.linear.x, pnp.twist.linear.y, pnp.twist.linear.z])

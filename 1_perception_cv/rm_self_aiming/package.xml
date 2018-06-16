@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rm_tracking_pid</name>
+  <name>rm_self_aiming</name>
   <version>0.0.0</version>
   <description>ROS package for auto aiming, includes one pid node, one server node for tuning and one tracking node using kalman filter.</description>
 
