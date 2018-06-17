@@ -1,6 +1,0 @@
-#ifndef MULTICAMERA_CONFIG_H
-#define MULTICAMERA_CONFIG_H
-
-#define CAM_NUM 2
-
-#endif // MULTICAMERA_CONFIG_H

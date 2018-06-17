@@ -1,3 +1,0 @@
-[submodule "1_perception_cv/RMComputerVision"]
-	path = 1_perception_cv/RMComputerVision
-	url = git@github.com:robomasterhkust/RMComputerVision.git
