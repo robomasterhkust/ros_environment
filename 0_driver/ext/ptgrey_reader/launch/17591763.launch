@@ -1,7 +1,7 @@
 <launch>
 
-    <arg name="device" default = "17591762"/>
-    <arg name="rate" default="50"/>
+    <arg name="device" default = "17591763"/>
+    <arg name="rate" default="100"/>
 
     <node name="single_reader" pkg="ptgrey_reader" type="single_reader"
          ns="pg_$(arg device)" output="screen">
@@ -14,19 +14,19 @@
         <param name="frameRate" type="double" value="$(arg rate)"/>
         <param name="is_auto_shutter" type="bool" value="false"/>
         <param name="shutter" type="double" value="5.0"/>
-        <param name="brightness" type="double" value="5"/>
-        <param name="exposure" type="double" value="0.5"/>
+        <param name="brightness" type="double" value="2"/>
+        <param name="exposure" type="double" value="0.3"/>
         <param name="WB_red" type="int" value="550"/>
         <param name="WB_Blue" type="int" value="810"/>
-        <param name="gain" type="double" value="1.0"/>
+        <param name="gain" type="double" value="0.5"/>
         <rosparam>
             is_sync:   false
             is_grey:   false
             is_roi:    false
-            size_x:    1280
-            size_y:    1024
-            center_x:  640
-            center_y:  512
+            size_x:    640
+            size_y:    512
+            center_x:  320
+            center_y:  256
             cropper_x: 900
             cropper_y: 900
             down_sample_scale: 1.0

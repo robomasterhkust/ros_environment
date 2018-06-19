@@ -49,9 +49,7 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>rm_cv</build_depend>
-  <build_export_depend>rm_cv</build_export_depend>
-  <exec_depend>rm_cv</exec_depend>
+  <depend>rm_cv</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
