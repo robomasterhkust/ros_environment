@@ -81,7 +81,10 @@ class armor_frame_pid:
                                         [-1, 0, 0],
                                         [0, -1, 0]])
             shield_T_camera_rot = opencv_rotation.dot(shield_T_camera)
-            camera_T_gimbal = np.array([135, 0, 0])
+            # for soldier 2
+            # camera_T_gimbal = np.array([135, 0, 0])
+            # for soldier 1
+            camera_T_gimbal = np.array([185, 0, 0])
             T = shield_T_camera_rot + camera_T_gimbal
 
             normalized_T = T / np.linalg.norm(T)
@@ -97,8 +100,10 @@ class armor_frame_pid:
             T_euler1 = np.arcsin(-R[2, 0])
             T_euler2 = np.arctan2(R[2, 1], R[2, 2])
 
-            rospy.loginfo("armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
-            rospy.loginfo("armor center euler angle zyx: %f, %f, %f", T_euler0, T_euler1, T_euler2)
+            rospy.loginfo(
+                "armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
+            rospy.loginfo("armor center euler angle zyx: %f, %f, %f",
+                          T_euler0, T_euler1, T_euler2)
 
             # image_center_2d = np.array([image_center_x, image_center_y, 1])
             # hehe_temp = np.array([[2.0092461474223967e+03, 0., 5.5050445651906716e+02],
