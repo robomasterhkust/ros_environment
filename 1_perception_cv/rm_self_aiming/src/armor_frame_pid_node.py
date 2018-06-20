@@ -47,7 +47,7 @@ def rotation_matrix(direction, angle):
 class armor_frame_pid:
     def __init__(self):
         self.armor_subscriber = rospy.Subscriber(
-            "/beckThing", TwistStamped, self.callback)
+            "/pnp_twist", TwistStamped, self.callback,queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
         self.y_err = 0
@@ -79,7 +79,8 @@ class armor_frame_pid:
                 [pnp.twist.linear.x, pnp.twist.linear.y, pnp.twist.linear.z])
             opencv_rotation = np.array([[0, 0, 1],
                                         [-1, 0, 0],
-                                        [0, -1, 0]])
+                                        [0, 1, 0]])
+
             shield_T_camera_rot = opencv_rotation.dot(shield_T_camera)
             # for soldier 2
             # camera_T_gimbal = np.array([135, 0, 0])
