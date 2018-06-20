@@ -8,7 +8,8 @@ import numpy as np
 import sys
 import rospy
 import cv2
-from geometry_msgs.msg import TwistStamped, Twist
+from geometry_msgs.msg import Twist
+from rm_cv.msg import ArmorRecord
 import numpy as np
 import math
 
@@ -47,7 +48,7 @@ def rotation_matrix(direction, angle):
 class armor_frame_pid:
     def __init__(self):
         self.armor_subscriber = rospy.Subscriber(
-            "/pnp_twist", TwistStamped, self.callback,queue_size=1)
+            "/detected_armor", ArmorRecord, self.callback, queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
         self.y_err = 0
@@ -55,9 +56,9 @@ class armor_frame_pid:
         self.prev_y_err = 0
         self.prev_z_err = 0
 
-    def callback(self, pnp):
+    def callback(self, subArmorRecord):
         vel_msg = Twist()
-        if abs(pnp.twist.linear.x) < sys.float_info.epsilon:
+        if abs(subArmorRecord.armorPose.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
         else:
@@ -76,7 +77,7 @@ class armor_frame_pid:
                 image_center_y = rospy.get_param('/server_node/center_y')
 
             shield_T_camera = np.array(
-                [pnp.twist.linear.x, pnp.twist.linear.y, pnp.twist.linear.z])
+                [subArmorRecord.armorPose.linear.x, subArmorRecord.armorPose.linear.y, subArmorRecord.armorPose.linear.z])
             opencv_rotation = np.array([[0, 0, 1],
                                         [-1, 0, 0],
                                         [0, 1, 0]])
