@@ -1,14 +1,10 @@
 <launch>
     <!--<include file="$(find ptgrey_reader)/launch/single.launch"/>-->
-    <!--<include file="$(find rm_cv)/launch/cv_ad.launch"/>-->
-
-    <node pkg="rm_self_aiming" name="server_node" type="server_node.py" output="screen"/>
-    <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>
-
+    <!--<node name="cv_ad" pkg="rm_cv" type="armor_detection_node" cwd="ROS_HOME" launch-prefix="sudo -E bash -c" output="screen">-->
+    <!--</node>-->
     <node name="gimbal_controller" pkg="gimbal_controller" type="gimbal_controller_node" output="screen">
         <param name="lp_yaw_alpha" type="double" value="0.9"/>
         <param name="lp_pit_alpha" type="double" value="0.9"/>
-        <param name="x_target_in_mm" type="double" value="1000.0"/>
         <param name="camera_twist" type="string" value="/beckThing"/>
         <param name="publisher_topic" type="string" value="/cmd_vel"/>
     </node>
