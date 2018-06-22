@@ -2,7 +2,7 @@
     <!--<include file="$(find ptgrey_reader)/launch/single.launch"/>-->
     <!--<include file="$(find rm_cv)/launch/cv_ad.launch"/>-->
 
-    <node pkg="rm_self_aiming" name="server_node" type="server_node.py" output="screen"/>
+    <node pkg="self_aiming" name="server_node" type="server_node.py" output="screen"/>
     <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>
 
     <node name="gimbal_controller" pkg="gimbal_controller" type="gimbal_controller_node" output="screen">

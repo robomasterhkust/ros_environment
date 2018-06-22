@@ -4,10 +4,8 @@
 This ros package uses the world coordinate result by "solvePnP".
 '''
 import roslib
-import numpy as np
 import sys
 import rospy
-import cv2
 from geometry_msgs.msg import Twist
 from rm_cv.msg import ArmorRecord
 import numpy as np
@@ -86,7 +84,9 @@ class armor_frame_pid:
             # for soldier 2
             # camera_T_gimbal = np.array([135, 0, 0])
             # for soldier 1
-            camera_T_gimbal = np.array([185, 0, 0])
+            # camera_T_gimbal = np.array([185, 0, 0])
+
+            camera_T_gimbal = np.array([142, -45, 0])
             T = shield_T_camera_rot + camera_T_gimbal
 
             normalized_T = T / np.linalg.norm(T)

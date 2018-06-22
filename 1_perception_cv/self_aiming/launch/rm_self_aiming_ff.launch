@@ -1,6 +1,6 @@
 <launch>
-    <node pkg="rm_self_aiming" name="server_node" type="server_node.py" output="screen"/>
+    <node pkg="self_aiming" name="server_node" type="server_node.py" output="screen"/>
     <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>
-    <node pkg="rm_self_aiming" name="armor_frame_ff_node" type="armor_frame_ff_node.py" output="screen"/>
+    <node pkg="self_aiming" name="armor_frame_ff_node" type="armor_frame_ff_node.py" output="screen"/>
     <node pkg="rm_cv" name="cv_ad" type="armor_detection_node" cwd="ROS_HOME" output="screen"/>
 </launch>
