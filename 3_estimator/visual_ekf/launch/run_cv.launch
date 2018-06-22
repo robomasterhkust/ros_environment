@@ -1,6 +1,6 @@
 <launch>
 
-    <include file="$(find ptgrey_reader)/launch/single.launch"/>
+    <include file="$(find ptgrey_reader)/launch/15508324.launch"/>
     <include file="$(find rm_cv)/launch/cv_ad.launch"/>
 
 </launch>

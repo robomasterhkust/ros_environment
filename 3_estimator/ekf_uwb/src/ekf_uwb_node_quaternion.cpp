@@ -148,7 +148,8 @@ void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg) {
 }
 
 // Loosely coupled update in world frame, fusing the global position of UWB and angle
-void update_loosely(const uwb_msgs::uwb &msg, const sensor_msgs::Imu::ConstPtr &imu_msg) {
+void update_loosely(const uwb_msgs::uwb &msg,
+                    const sensor_msgs::Imu::ConstPtr &imu_msg) {
     Quaterniond q_g(1, 0, 0, 0);
 /*
     if (imu_msg != nullptr && &imu_msg != NULL) {
