@@ -47,7 +47,7 @@ http://wiki.ros.org/ROS/Installation
 1. install the following dependency for fast development
 `sudo apt-get install openocd minicom -y`
 
-`sudo apt-get install terminator cmake vim htop libmuparser-dev -y`
+`sudo apt-get install terminator cmake vim htop libmuparser-dev ntp* -y`
 
 2. set up the .bashrc for speed up the development process
 
