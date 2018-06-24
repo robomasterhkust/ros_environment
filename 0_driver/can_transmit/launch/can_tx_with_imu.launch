@@ -1,0 +1,21 @@
+<launch>
+	<node pkg="can_transmit" type="can_transmit_node" name="can_transmit_test" output="screen">
+        <param name="cmd_topic" type="string" value="/cmd_vel"/>
+    </node>
+
+	<node pkg="socketcan_bridge" type="topic_to_socketcan_node" name="topic_to_socketcan_test" output="screen">
+		<param name="can_device" value="can1"/>
+	</node>
+
+    <node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk" output="screen">
+        <!-- node parameters -->
+        <param name="serial_name" type="string" value="/dev/ttyTHS2"/>
+        <param name="baud_rate" type="int" value="921600"/>
+        <param name="app_id" type="int" value="$(env DJIROS_APPID)"/>
+        <param name="app_version" type="int" value="1"/>
+        <param name="align_time" type="bool" value="false"/>
+        <param name="enc_key" type="string" value="$(env DJIROS_ENCKEY)"/>
+        <param name="use_broadcast" type="bool" value="false"/>
+    </node>
+
+</launch>
