@@ -207,6 +207,7 @@ int main(int argc, char *argv[]) {
             "power_shooter_rfid_bufferinfo", 100);
     power_vol_cur_publisher = nh.advertise<can_receive_msg::power_vol_cur>("power_vol_cur", 100);
     power_buffer_publisher = nh.advertise<can_receive_msg::power_buffer>("power_buffer", 100);
+    imu_16470_publisher = nh.advertise<can_receive_msg::imu_16470>("imu_16470",100);
 
     ros::Subscriber can_subscriber = nh.subscribe("/" + can_device + "_raw", 100, msgCallback);
 
