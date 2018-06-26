@@ -7,6 +7,9 @@
 #include <can_receive_msg/power_shooter_rfid_bufferinfo.h>
 #include <can_receive_msg/location_xy.h>
 #include <can_receive_msg/location_zyaw.h>
+#include <can_receive_msg/imu_16470.h>
+
+#include <std_msgs/Header.h>
 
 #include <can_msgs/Frame.h>
 #include <string>
@@ -21,6 +24,7 @@
 #define CAN_CHASSIS_BOARD_SHOOTERHEAT_RFID_BUFFERINFO_ID            0x007
 #define CAN_CHASSIS_BOARD_LOCATION_X_Y_ID            0x008
 #define CAN_CHASSIS_BOARD_LOCATION_Z_YAW_ID            0x009
+#define CAN_GIMBAL_SEND_16470_ID                     0x010
 
 ros::Publisher dbus_publisher;
 
@@ -31,6 +35,15 @@ ros::Publisher power_vol_cur_publisher;
 ros::Publisher power_shooter_rfid_bufferinfo_publisher;
 ros::Publisher location_xy_publisher;
 ros::Publisher location_zyaw_publisher;
+ros::Publisher imu_16470_publisher;
+
+bool imu_16470_start = false;
+uint8_t imu_16470_index = 0;
+uint32_t temp_timestamp;
+std_msgs::Header temp_header1;
+std_msgs::Header temp_header2;
+float temp_a = 0.0;
+float temp_b = 0.0;
 
 float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
     uint32_t hehe = ((uint32_t)(f.data[d] << 24) |
@@ -139,6 +152,40 @@ void msgCallback(const can_msgs::Frame &f) {
             location_zyaw_publisher.publish(location_zyaw_msg);
             break;
         }
+
+        case CAN_GIMBAL_SEND_16470_ID:
+            if (!imu_16470_start && f.dlc == 4) {
+                imu_16470_start = true;
+            }
+            if (imu_16470_start) {
+                if (f.dlc == 4) {
+                    imu_16470_index = 0;
+                    temp_header1 = f.header;
+                    temp_timestamp =
+                            ((uint32_t)(f.data[3] << 24) |
+                             ((uint32_t)(f.data[2] << 16) | ((uint32_t)(f.data[1] << 8) | (uint32_t) f.data[0])));
+                } else if (f.dlc == 8) {
+                    imu_16470_index++;
+                    if (imu_16470_index == 1) {
+                        temp_header2 = f.header;
+                        temp_a = data_to_float(f, 0, 1, 2, 3);
+                        temp_b = data_to_float(f, 4, 5, 6, 7);
+                    } else if (imu_16470_index == 2) {
+                        can_receive_msg::imu_16470 imu_16470_msg;
+                        imu_16470_msg.header1 = temp_header1;
+                        imu_16470_msg.header2 = temp_header2;
+                        imu_16470_msg.header3 = f.header;
+                        imu_16470_msg.timestamp = temp_timestamp;
+                        imu_16470_msg.quaternion[0] = temp_a;
+                        imu_16470_msg.quaternion[1] = temp_b;
+                        imu_16470_msg.quaternion[2] = data_to_float(f,0,1,2,3);
+                        imu_16470_msg.quaternion[3] = data_to_float(f,4,5,6,7);
+
+                        imu_16470_publisher.publish(imu_16470_msg);
+                    }
+                }
+            }
+            break;
     }
 
 }
@@ -156,11 +203,15 @@ int main(int argc, char *argv[]) {
     projectile_hlth_publisher = nh.advertise<can_receive_msg::projectile_hlth>("projectile_hlth", 100);
     location_zyaw_publisher = nh.advertise<can_receive_msg::location_zyaw>("location_zyaw", 100);
     location_xy_publisher = nh.advertise<can_receive_msg::location_xy>("location_xy", 100);
-    power_shooter_rfid_bufferinfo_publisher = nh.advertise<can_receive_msg::power_shooter_rfid_bufferinfo>("power_shooter_rfid_bufferinfo", 100);
+    power_shooter_rfid_bufferinfo_publisher = nh.advertise<can_receive_msg::power_shooter_rfid_bufferinfo>(
+            "power_shooter_rfid_bufferinfo", 100);
     power_vol_cur_publisher = nh.advertise<can_receive_msg::power_vol_cur>("power_vol_cur", 100);
     power_buffer_publisher = nh.advertise<can_receive_msg::power_buffer>("power_buffer", 100);
+    imu_16470_publisher = nh.advertise<can_receive_msg::imu_16470>("imu_16470",100);
 
     ros::Subscriber can_subscriber = nh.subscribe("/" + can_device + "_raw", 100, msgCallback);
 
     ros::spin();
+
+    ros::waitForShutdown();
 }
