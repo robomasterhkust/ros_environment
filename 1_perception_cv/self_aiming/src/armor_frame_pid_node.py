@@ -8,24 +8,11 @@ import sys
 import rospy
 from geometry_msgs.msg import Twist
 from rm_cv.msg import ArmorRecord
+from can_receive_msg.msg import imu_16470
 import numpy as np
+import quaternion
 import math
-
-
-def rotation_matrix(axis, theta):
-    """
-    Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
-    """
-    axis = np.asarray(axis)
-    axis = axis / math.sqrt(np.dot(axis, axis))
-    a = math.cos(theta / 2.0)
-    b, c, d = -axis * math.sin(theta / 2.0)
-    aa, bb, cc, dd = a * a, b * b, c * c, d * d
-    bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
-    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+from collections import deque
 
 
 def rotation_matrix(direction, angle):
@@ -46,7 +33,9 @@ def rotation_matrix(direction, angle):
 class armor_frame_pid:
     def __init__(self):
         self.armor_subscriber = rospy.Subscriber(
-            "/detected_armor", ArmorRecord, self.callback, queue_size=1)
+            "/detected_armor", ArmorRecord, self.cv_callback, queue_size=1)
+        self.imu_16470_subscriber = rospy.Subscriber(
+            "/can_receive_1/imu_16470", imu_16470, self.imu_callback, queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
         self.y_err = 0
@@ -54,12 +43,50 @@ class armor_frame_pid:
         self.prev_y_err = 0
         self.prev_z_err = 0
 
-    def callback(self, subArmorRecord):
+        self.time_queue = deque([rospy.get_rostime()])
+        self.imu_queue = deque([np.quaternion(1, 0, 0, 0)])
+
+    def imu_callback(self, subImu_16470):
+        current_quaternion = np.quaternion(
+            subImu_16470.quaternion[0], subImu_16470.quaternion[1], subImu_16470.quaternion[2], subImu_16470.quaternion[3])
+        current_time = subImu_16470.header3.stamp
+        self.imu_queue.append(current_quaternion)
+        self.time_queue.append(current_time)
+        rospy.loginfo("imu callback -- queue length: %d", len(self.imu_queue))
+
+    def cv_callback(self, subArmorRecord):
         vel_msg = Twist()
         if abs(subArmorRecord.armorPose.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
         else:
+            image_time = subArmorRecord.header.stamp
+            now_time = rospy.get_rostime()
+
+            start_index = 1
+            for i in range(len(self.time_queue)):
+                if self.time_queue[i] < image_time:
+                    continue
+                else:
+                    start_index = i
+                    break
+
+            for _ in range(start_index - 1):
+                self.imu_queue.popleft()
+                self.time_queue.popleft()
+
+            final_quaternion = np.quaternion(1, 0, 0, 0)
+            array = quaternion.as_float_array(final_quaternion)
+            for i in range(len(self.time_queue) - 1):
+                temp_quaternion = self.imu_queue[i + 1] / self.imu_queue[i]
+                final_quaternion = final_quaternion * temp_quaternion
+
+            final_rotation_matrix = quaternion.as_rotation_matrix(
+                final_quaternion)
+            rospy.loginfo("cv callback -- queue length: %d",
+                          len(self.imu_queue))
+            rospy.loginfo("cv callback -- quaternion %f, %f, %f, %f",
+                          array[0], array[1], array[2], array[3])
             y_kp = 0.0
             y_kd = 0.0
             z_kp = 0.0
@@ -88,6 +115,7 @@ class armor_frame_pid:
 
             camera_T_gimbal = np.array([142, -45, 0])
             T = shield_T_camera_rot + camera_T_gimbal
+            T = final_rotation_matrix.dot(T)
 
             normalized_T = T / np.linalg.norm(T)
             x_axis = np.array([1, 0, 0])
@@ -106,27 +134,6 @@ class armor_frame_pid:
                 "armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
             rospy.loginfo("armor center euler angle zyx: %f, %f, %f",
                           T_euler0, T_euler1, T_euler2)
-
-            # image_center_2d = np.array([image_center_x, image_center_y, 1])
-            # hehe_temp = np.array([[2.0092461474223967e+03, 0., 5.5050445651906716e+02],
-            #                       [0., 2.0092461474223967e+03, 4.3204184700626911e+02],
-            #                       [0., 0., 1.]])
-            # inverse = np.linalg.inv(hehe_temp)
-            # image_center_in_camera_frame = inverse.dot(image_center_2d)
-            # I = image_center_in_camera_frame + camera_T_gimbal
-            #
-            # normalized_I = I / np.linalg.norm(I)
-            # axis = np.cross(normalized_I, x_axis)
-            # normalized_axis = axis / np.linalg.norm(axis)
-            # angle = np.arccos(x_axis.dot(normalized_I))
-            #
-            # R = rotation_matrix(normalized_axis, angle)
-            # I_euler0 = np.arctan2(R[1, 0], R[0, 0])
-            # I_euler1 = np.arccos(R[1, 0] / np.sin(I_euler0))
-            # I_euler2 = np.arctan2(R[2, 1], R[2, 2])
-
-            # rospy.loginfo("image center in gimbal rotation center:%f, %f, %f", I[0], I[1], I[2])
-            # rospy.loginfo("image center euler angle zyx: %f, %f, %f", I_euler0, I_euler1, I_euler2)
 
             self.y_err = T_euler1 - image_center_y
             self.z_err = T_euler0 - image_center_x
