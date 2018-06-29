@@ -19,7 +19,7 @@ void cmd_cb(const geometry_msgs::Twist &t){
 	f.header.stamp = ros::Time::now();
 
 	f.id = CAN_NVIDIA_TX2_BOARD_ID;
-	f.dlc = (16 / 8) * 3;
+	f.dlc = (16 / 8) * 4;
 
 	int16_t py = (int16_t) (t.linear.y  * 1000); // convert to mm/s
 	int16_t pz = (int16_t) (t.linear.z  * 1000); // convert to mm/s
