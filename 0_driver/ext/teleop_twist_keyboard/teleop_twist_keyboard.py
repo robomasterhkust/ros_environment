@@ -36,12 +36,12 @@ CTRL-C to quit
 """
 
 moveBindings = {
-		'i':(0,-1,0,0),
+		'i':(0,-0.3,0,0),
 		'o':(1,0,0,-1),
-		'j':(0,0,0,1),
-		'l':(0,0,0,-1),
+		'j':(0,0,0,0.3),
+		'l':(0,0,0,-0.3),
 		'u':(1,0,0,1),
-		',':(0,1,0,0),
+		',':(0,0.3,0,0),
 		'.':(-1,0,0,1),
 		'm':(-1,0,0,-1),
 		'O':(1,-1,0,0),
@@ -78,11 +78,11 @@ def vels(speed,turn):
 
 if __name__=="__main__":
     	settings = termios.tcgetattr(sys.stdin)
-	
+
 	pub = rospy.Publisher('cmd_vel', Twist, queue_size = 1)
 	rospy.init_node('teleop_twist_keyboard')
 
-	speed = rospy.get_param("~speed", 0.5)
+	speed = rospy.get_param("~speed", 1.0)
 	turn = rospy.get_param("~turn", 1.0)
 	x = 0
 	y = 0
@@ -131,5 +131,3 @@ if __name__=="__main__":
 		pub.publish(twist)
 
     		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-
-
