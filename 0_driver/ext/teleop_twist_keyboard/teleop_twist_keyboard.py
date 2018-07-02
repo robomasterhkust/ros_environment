@@ -2,12 +2,16 @@
 
 from __future__ import print_function
 
-import roslib; roslib.load_manifest('teleop_twist_keyboard')
+import roslib
+roslib.load_manifest('teleop_twist_keyboard')
 import rospy
 
 from geometry_msgs.msg import Twist
 
-import sys, select, termios, tty
+import sys
+import select
+import termios
+import tty
 
 msg = """
 Reading from the keyboard  and Publishing to Twist!
@@ -36,98 +40,86 @@ CTRL-C to quit
 """
 
 moveBindings = {
-		'i':(0,-0.3,0,0),
-		'o':(1,0,0,-1),
-		'j':(0,0,0,0.3),
-		'l':(0,0,0,-0.3),
-		'u':(1,0,0,1),
-		',':(0,0.3,0,0),
-		'.':(-1,0,0,1),
-		'm':(-1,0,0,-1),
-		'O':(1,-1,0,0),
-		'I':(1,0,0,0),
-		'J':(0,1,0,0),
-		'L':(0,-1,0,0),
-		'U':(1,1,0,0),
-		'<':(-1,0,0,0),
-		'>':(-1,-1,0,0),
-		'M':(-1,1,0,0),
-		't':(0,0,1,0),
-		'b':(0,0,-1,0),
-	       }
+    'i': (-0.3, 0, 0, 0),
+    ',': (0.3, 0, 0, 0),
+    'j': (0, 0.3, 0, 0),
+    'l': (0, -0.3, 0, 0),
+    'I': (0, 0, -0.1, 0),
+    '<': (0, 0, 0.1, 0),
+    'J': (0, 0, 0, 0.1),
+    'L': (0, 0, 0, -0.1)
+}
 
-speedBindings={
-		'q':(1.1,1.1),
-		'z':(.9,.9),
-		'w':(1.1,1),
-		'x':(.9,1),
-		'e':(1,1.1),
-		'c':(1,.9),
-	      }
 
 def getKey():
-	tty.setraw(sys.stdin.fileno())
-	select.select([sys.stdin], [], [], 0)
-	key = sys.stdin.read(1)
-	termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-	return key
+    tty.setraw(sys.stdin.fileno())
+    select.select([sys.stdin], [], [], 0)
+    key = sys.stdin.read(1)
+    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    return key
 
 
-def vels(speed,turn):
-	return "currently:\tspeed %s\tturn %s " % (speed,turn)
+def vels(speed, turn):
+    return "currently:\tspeed %s\tturn %s " % (speed, turn)
 
-if __name__=="__main__":
-    	settings = termios.tcgetattr(sys.stdin)
 
-	pub = rospy.Publisher('cmd_vel', Twist, queue_size = 1)
-	rospy.init_node('teleop_twist_keyboard')
+if __name__ == "__main__":
+    settings = termios.tcgetattr(sys.stdin)
 
-	speed = rospy.get_param("~speed", 1.0)
-	turn = rospy.get_param("~turn", 1.0)
-	x = 0
-	y = 0
-	z = 0
-	th = 0
-	status = 0
+    pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+    rospy.init_node('teleop_twist_keyboard')
 
-	try:
-		print(msg)
-		print(vels(speed,turn))
-		while(1):
-			key = getKey()
-			if key in moveBindings.keys():
-				x = moveBindings[key][0]
-				y = moveBindings[key][1]
-				z = moveBindings[key][2]
-				th = moveBindings[key][3]
-			elif key in speedBindings.keys():
-				speed = speed * speedBindings[key][0]
-				turn = turn * speedBindings[key][1]
+    speed = rospy.get_param("~speed", 1.0)
+    turn = rospy.get_param("~turn", 1.0)
+    vy = 0
+    vz = 0
+    py = 0
+    pz = 0
+    status = 0
 
-				print(vels(speed,turn))
-				if (status == 14):
-					print(msg)
-				status = (status + 1) % 15
-			else:
-				x = 0
-				y = 0
-				z = 0
-				th = 0
-				if (key == '\x03'):
-					break
+    try:
+        print(msg)
+        print(vels(speed, turn))
+        while(1):
+            key = getKey()
+            if key in moveBindings.keys():
+                vy = moveBindings[key][0]
+                vz = moveBindings[key][1]
+                py = moveBindings[key][2]
+                pz = moveBindings[key][3]
 
-			twist = Twist()
-			twist.linear.x = x*speed; twist.linear.y = y*speed; twist.linear.z = z*speed;
-			twist.angular.x = 0; twist.angular.y = y*speed; twist.angular.z = th*turn
-			pub.publish(twist)
+                print(vels(speed, turn))
+                if (status == 14):
+                    print(msg)
+                status = (status + 1) % 15
+            else:
+                vy = 0
+                vz = 0
+                py = 0
+                pz = 0
+                if (key == '\x03'):
+                    break
 
-	except Exception as e:
-		print(e)
+            twist = Twist()
+            twist.linear.x = 0
+            twist.linear.y = py
+            twist.linear.z = pz
+            twist.angular.x = 0
+            twist.angular.y = vy
+            twist.angular.z = vz
+            pub.publish(twist)
 
-	finally:
-		twist = Twist()
-		twist.linear.x = 0; twist.linear.y = 0; twist.linear.z = 0
-		twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = 0
-		pub.publish(twist)
+    except Exception as e:
+        print(e)
 
-    		termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    finally:
+        twist = Twist()
+        twist.linear.x = 0
+        twist.linear.y = 0
+        twist.linear.z = 0
+        twist.angular.x = 0
+        twist.angular.y = 0
+        twist.angular.z = 0
+        pub.publish(twist)
+
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
