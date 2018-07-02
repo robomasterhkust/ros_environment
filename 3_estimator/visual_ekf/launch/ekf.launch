@@ -4,9 +4,10 @@
         <param name="angular_fused" type="string" value="/dji_sdk/angular_velocity_fused"/>
         <param name="visual_topic" type="string" value="/pnp_twist"/>
         <param name="publisher_topic" type="string" value="/visual_ekf/shield_pose_fused"/>
-        <param name="gyroscope_noise_weight" type="double" value="0.1"/>
-        <param name="visual_pose_weight" type="double" value="1.0"/>
+        <param name="gyroscope_noise_weight" type="double" value="1000.0"/>
+        <param name="visual_pose_weight" type="double" value="10.0"/>
         <param name="node_sleep_time" type="int" value="10"/>
     </node>
-
+    <node pkg="rosbag" type="play" name="static_target_moving_chassis"
+          output="screen" args="-s 12.5 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>
 </launch>

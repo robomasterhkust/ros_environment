@@ -10,17 +10,19 @@
 #include <ros/console.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
-#include <Eigen/Eigen>
+// #include <Eigen/Eigen>
+#include <Eigen/Geometry>
 #include <queue>
 //#include "rm_cv/ArmorRecord.h"
 
 using namespace std;
 using namespace Eigen;
-ros::Publisher pose_pub, debug_pub;
+ros::Publisher pose_pub, debug_pub, debug_gyro_pub;
 string omg_topic, visual_topic, publisher_topic;
-double acc_weight, gyro_weight;
+double gyro_weight;
 double visual_q_weight, visual_t_weight;
 int sleep_time;
 
@@ -35,8 +37,8 @@ int sleep_time;
 VectorXd x(4);                        // state
 // MatrixXd P = MatrixXd::Zero(3, 3);     // covariance
 MatrixXd P = MatrixXd::Identity(3, 3); // covariance
-MatrixXd Q = MatrixXd::Identity(3, 3); // prediction noise covariance
-MatrixXd R = MatrixXd::Identity(3, 3); // observation noise covariance
+MatrixXd R = MatrixXd::Identity(3, 3); // prediction noise covariance
+MatrixXd Q = MatrixXd::Identity(3, 3); // observation noise covariance
 
 // buffers to save gyro and visual reading
 queue<geometry_msgs::Vector3Stamped::ConstPtr> gyro_buf;
@@ -49,39 +51,86 @@ double t_prev;
 
 // Initialization
 const int GYRO_INIT_COUNT = 10;
-const int MAX_GYRO_QUEUE_SIZE = 100;
+const int MAX_GYRO_QUEUE_SIZE = 500;
 int gyro_count  = 0;
 bool gyro_initialized = false;
 bool visual_initialized = false;
+bool visual_valid = false;
+MatrixXd imu_R_camera = MatrixXd::Identity(3, 3); // rotation matrix from camera to imu
+Vector3d imu_T_camera = MatrixXd::Zero(3, 1);
 
 void pub_fused_pose(std_msgs::Header header)
 {
-    geometry_msgs::PoseStamped pose;
+    geometry_msgs::PoseWithCovarianceStamped pose;
     pose.header = header;
-    pose.pose.orientation.w = x(0);
-    pose.pose.orientation.x = x(1);
-    pose.pose.orientation.y = x(2);
-    pose.pose.orientation.z = x(3);
+    pose.pose.pose.orientation.w = x(0);
+    pose.pose.pose.orientation.x = x(1);
+    pose.pose.pose.orientation.y = x(2);
+    pose.pose.pose.orientation.z = x(3);
+    pose.pose.covariance[0] = P(0, 0);
+    pose.pose.covariance[1] = P(1, 1);
+    pose.pose.covariance[2] = P(2, 2);
 
     pose_pub.publish(pose);
 }
 
-void propagate(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
+void pub_debug_pose(std_msgs::Header header, const Quaterniond& q)
 {
-    double cur_t = gyro->header.stamp.toSec();
+    geometry_msgs::PoseStamped pose;
+    pose.header = header;
+    pose.pose.orientation.w = q.w();
+    pose.pose.orientation.x = q.x();
+    pose.pose.orientation.y = q.y();
+    pose.pose.orientation.z = q.z();
+    debug_pub.publish(pose);
+}
+
+void pub_fused_angleAxis(std_msgs::Header header)
+{
+    geometry_msgs::PoseWithCovarianceStamped angleAxis;
+    angleAxis.header = header;
+
+    Quaterniond pose_state(x(0), x(1), x(2), x(3));
+    AngleAxisd angle_state(pose_state);
+
+    angleAxis.pose.pose.orientation.w = angle_state.angle();
+    angleAxis.pose.pose.orientation.x = angle_state.axis()[0];
+    angleAxis.pose.pose.orientation.y = angle_state.axis()[1];
+    angleAxis.pose.pose.orientation.z = angle_state.axis()[2];
+    angleAxis.pose.covariance[0] = P(0, 0);
+    angleAxis.pose.covariance[1] = P(1, 1);
+    angleAxis.pose.covariance[2] = P(2, 2);
+    pose_pub.publish(angleAxis);
+}
+
+void pub_debug_angleAxis(std_msgs::Header header, const Eigen::Vector3d axis, const double angle)
+{
+    geometry_msgs::PoseStamped angleAxis;
+    angleAxis.header = header;
+    angleAxis.pose.orientation.w = angle;
+    angleAxis.pose.orientation.x = axis.x();
+    angleAxis.pose.orientation.y = axis.y();
+    angleAxis.pose.orientation.z = axis.z();
+    debug_pub.publish(angleAxis);
+}
+
+void propagate(const geometry_msgs::Vector3Stamped &gyro)
+{
+    double cur_t = gyro.header.stamp.toSec();
     // ROS_INFO("propagate");
     Vector3d w;
-    w(0) = gyro->vector.x;
-    w(1) = gyro->vector.y;
-    w(2) = gyro->vector.z;
+    w(0) = gyro.vector.x;
+    w(1) = gyro.vector.y;
+    w(2) = gyro.vector.z;
 
     double dt = cur_t - t_prev;
     // ROS_INFO("dt in propagate is %f, at the cur_t %f, with t_prev at %f", dt, cur_t, t_prev);
-	ROS_INFO("propagate, with dt %f", dt);
+	// ROS_INFO("propagate, with dt %f", dt);
     Vector3d domg = 0.5 * dt * w;
 
     Quaterniond dq(sqrt(1 - domg.squaredNorm()), domg(0), domg(1), domg(2));
-	ROS_INFO("dq w x y z %f %f %f %f", dq.w(), dq.x(), dq.y(), dq.z() );
+    // Quaterniond dq(1, domg(0), domg(1), domg(2));
+	// ROS_INFO("dq w x y z %f %f %f %f", dq.w(), dq.x(), dq.y(), dq.z() );
     Quaterniond q_state(x(0), x(1), x(2), x(3));
     Quaterniond q = (q_state * dq).normalized();
 
@@ -102,12 +151,11 @@ void propagate(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
     F = MatrixXd::Identity(3, 3) + dt * A;
     V = dt * U;
 
-    P = F * P * F.transpose() + V * Q * V.transpose();
+    P = F * P * F.transpose() + V * R * V.transpose();
 	
     t_prev = cur_t;
-
 	// cout << "P " << endl << P << endl;
-	cout << "x " << endl << x.transpose() << endl;
+	// cout << "x " << endl << x.transpose() << endl;
 }
 
 static void update(const geometry_msgs::TwistStamped::ConstPtr &pnp)
@@ -118,41 +166,46 @@ static void update(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield[0] = pnp->twist.linear.x;
     camera_T_shield[1] = pnp->twist.linear.y;
     camera_T_shield[2] = pnp->twist.linear.z;
+    Vector3d imu_T_shield = imu_R_camera * camera_T_shield;
 
-    Vector3d T_norm = camera_T_shield.normalized();
+    Vector3d T_norm = imu_T_shield.normalized();
     Vector3d x_axis = Vector3d::UnitX();
-    Vector3d axis = x_axis.cross(T_norm).normalized();
-    double angle = acos( x_axis.dot(T_norm) );
-    // AngleAxisd camera_R_shield(angle, axis);
+    // Vector3d axis = x_axis.cross(T_norm).normalized();
+    // double angle = acos( x_axis.dot(T_norm) );
+    Vector3d axis = T_norm.cross(x_axis).normalized();
+    double angle = acos( T_norm.dot(x_axis) );
+    AngleAxisd camera_R_shield(angle, axis);
+    Quaterniond camera_q_shield(camera_R_shield);
+
+/*
     Quaterniond camera_q_shield;
     camera_q_shield.w() = x_axis.dot(T_norm);
     camera_q_shield.x() = sin(0.5 * angle) * axis(0);
     camera_q_shield.y() = sin(0.5 * angle) * axis(1);
     camera_q_shield.z() = sin(0.5 * angle) * axis(2);
     camera_q_shield.normalize();
-
     // Debug original pose from camera
-    geometry_msgs::PoseStamped pose;
-    pose.header = pnp->header;
-    pose.pose.orientation.w = camera_q_shield.w();
-    pose.pose.orientation.x = camera_q_shield.x();
-    pose.pose.orientation.y = camera_q_shield.y();
-    pose.pose.orientation.z = camera_q_shield.z();
-    debug_pub.publish(pose);
+    pub_debug_pose(pnp->header, camera_q_shield);
+
+    */
+
+    pub_debug_angleAxis(pnp->header, axis, angle);
 
     Matrix3d C = Matrix3d::Identity();
 
     MatrixXd K(3, 3);
-    K = P * C.transpose() * (C * P* C.transpose() + R).inverse();
+    K = P * C.transpose() * (C * P* C.transpose() + Q).inverse();
 
     VectorXd r(3); // residual
     Quaterniond qm = camera_q_shield;
     Quaterniond q  = Quaterniond(x(0), x(1), x(2), x(3));
     Quaterniond dq = q.conjugate() * qm;
+    // ROS_INFO("dq w x y z %f %f %f %f", dq.w(), dq.x(), dq.y(), dq.z() );
     r = 2 * dq.vec();
     Vector3d _r = K * r;
+    // ROS_INFO("dr x y z %f %f %f", _r[0], _r[1], _r[2] );
     Vector3d dw(_r(0) * 0.5, _r(1) * 0.5, _r(2) * 0.5);
-    dq = Quaterniond(1, dw(0), dw(1), dw(2)).normalized();
+    dq = Quaterniond(sqrt(1 - dw.squaredNorm()), dw(0), dw(1), dw(2)).normalized();
     q  = q * dq;
 
     x(0) = q.w();
@@ -162,7 +215,23 @@ static void update(const geometry_msgs::TwistStamped::ConstPtr &pnp)
 
     P = P - K * C * P;
 	// cout << "P " << endl << P << endl;
-	cout << "x " << endl << x.transpose() << endl;
+	// cout << "x " << endl << x.transpose() << endl;
+}
+
+/**
+ * initialization of the gyroscope
+ * @param gyro
+ */
+static void initialize_gyro(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
+{
+    t_prev = gyro->header.stamp.toSec();
+    x_history.push(x);
+    P_history.push(P);
+    gyro_buf.push(gyro);
+    gyro_count++;
+    if (gyro_count == GYRO_INIT_COUNT) {
+        gyro_initialized = true;
+    }
 }
 
 /**
@@ -177,39 +246,49 @@ static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield[0] = pnp->twist.linear.x;
     camera_T_shield[1] = pnp->twist.linear.y;
     camera_T_shield[2] = pnp->twist.linear.z;
+    Vector3d imu_T_shield = imu_R_camera * camera_T_shield;
 
-    Vector3d T_norm = camera_T_shield.normalized();
+    Vector3d T_norm = imu_T_shield.normalized();
     Vector3d x_axis = Vector3d::UnitX();
-    Vector3d axis = x_axis.cross(T_norm).normalized();
-    double angle = acos( x_axis.dot(T_norm) );
-   // AngleAxisd camera_R_shield(angle, axis);
+    // Vector3d axis = x_axis.cross(T_norm).normalized();
+    // double angle = acos( x_axis.dot(T_norm) );
+    Vector3d axis = T_norm.cross(x_axis).normalized();
+    double angle = acos( T_norm.dot(x_axis) );
+    AngleAxisd camera_R_shield(angle, axis);
+    Quaterniond camera_q_shield(camera_R_shield);
+/*
     Quaterniond camera_q_shield;
     camera_q_shield.w() = x_axis.dot(T_norm);
     camera_q_shield.x() = sin(0.5 * angle) * axis(0);
     camera_q_shield.y() = sin(0.5 * angle) * axis(1);
     camera_q_shield.z() = sin(0.5 * angle) * axis(2);
     camera_q_shield.normalize();
+*/
 
     x(0) = camera_q_shield.w();
     x(1) = camera_q_shield.x();
     x(2) = camera_q_shield.y();
     x(3) = camera_q_shield.z();
-    P = 0.01 * MatrixXd::Identity(3, 3);
+    P = MatrixXd::Identity(3, 3);
 	ROS_INFO("visual init at %f", cur_t);
     cout << "DEBUG: x initialized with " << endl << x.transpose() << endl;
 
-    pub_fused_pose(pnp->header);
+    // pub_fused_pose(pnp->header);
+    pub_fused_angleAxis(pnp->header);
     t_prev = cur_t;
-    if (gyro_initialized) {
-        visual_initialized = true;
-    }
+
+    visual_initialized = true;
 }
 
-
-static void state_machine_process(void) {
+/**
+ * Processing the valid visual and gyro information
+ */
+static void state_machine_process(void)
+{
     if (!gyro_initialized)
         return;
-    if (!visual_initialized)
+    //if (!visual_initialized)
+    if (!visual_valid)
         return;
 
     while (!visual_buf.empty()) {
@@ -225,53 +304,27 @@ static void state_machine_process(void) {
         }
 
         geometry_msgs::TwistStamped::ConstPtr visual_msg = visual_buf.front();
-        if (visual_msg->twist.linear.x == 0)
+
+        update(visual_msg);
+        visual_buf.pop();
+        // pub_fused_angleAxis(visual_msg->header);
+
+        // Repropagate
+        while (!x_history.empty()) x_history.pop();
+        while (!P_history.empty()) P_history.pop();
+
+        queue <geometry_msgs::Vector3Stamped::ConstPtr> temp_gyro_buf;
+        while (!gyro_buf.empty())
         {
-            visual_initialized = false;
-			gyro_initialized = false;
-			gyro_count = 0;
+            propagate(*gyro_buf.front());
+            temp_gyro_buf.push(gyro_buf.front());
             x_history.push(x);
             P_history.push(P);
+            gyro_buf.pop();
         }
-        else {
-            update(visual_msg);
-            visual_buf.pop();
+        swap(gyro_buf, temp_gyro_buf);
 
-            while (!x_history.empty()) x_history.pop();
-            while (!P_history.empty()) P_history.pop();
-
-            queue <geometry_msgs::Vector3Stamped::ConstPtr> temp_gyro_buf;
-            while (!gyro_buf.empty())
-            {
-                propagate(gyro_buf.front());
-                temp_gyro_buf.push(gyro_buf.front());
-                x_history.push(x);
-                P_history.push(P);
-                gyro_buf.pop();
-            }
-            swap(gyro_buf, temp_gyro_buf);
-        }
-    }
-}
-
-/**
- * initialization of the gyroscope
- * @param gyro
- */
-static void initialize_gyro(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
-{
-    //if (gyro_count < GYRO_INIT_COUNT)
-    //{
-    //    gyro_buf.push(gyro);
-    //} else 
-
-	gyro_buf.push(gyro);
-	x_history.push(x);
-	P_history.push(P);
-	gyro_count++;
-	if (gyro_count == GYRO_INIT_COUNT)
-    {
-        gyro_initialized = true;
+        // pub_fused_angleAxis();
     }
 }
 
@@ -281,22 +334,20 @@ static void initialize_gyro(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
  */
 void visual_callback(const geometry_msgs::TwistStamped::ConstPtr &pnp)
 {
-    if (pnp->twist.linear.x != 0) {
-        if (!visual_initialized) {
-            initialize_visual(pnp);
-        }
+    visual_valid = !(pnp->twist.linear.x == 0 &&
+        pnp->twist.linear.y == 0 &&
+        pnp->twist.linear.z == 0 );
+
+    if (visual_valid && visual_initialized) {
+
         visual_buf.push(pnp);
-        state_machine_process();
     }
-    else {
-        visual_initialized = false;
-        x.setZero();
-        P.setZero();
-        while (!gyro_buf.empty())   gyro_buf.pop();
-        while (!visual_buf.empty()) visual_buf.pop();
-        while (!x_history.empty())  x_history.pop();
-        while (!P_history.empty())  P_history.pop();
+    else if (visual_valid && !visual_initialized) {
+        initialize_visual(pnp);
+        visual_buf.push(pnp);
     }
+
+    state_machine_process();
 }
 
 /**
@@ -309,10 +360,9 @@ void gyro_callback(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
         initialize_gyro(gyro);
     }
     else {
-		if (visual_initialized) {
-			propagate(gyro);
-			pub_fused_pose(gyro->header);
-		}
+        propagate(*gyro);
+        // pub_fused_pose(gyro->header);
+        pub_fused_angleAxis(gyro->header);
         x_history.push(x);
         P_history.push(P);
         gyro_buf.push(gyro);
@@ -324,7 +374,8 @@ void gyro_callback(const geometry_msgs::Vector3Stamped::ConstPtr &gyro)
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     ros::init(argc, argv, "visual_gyro_fused");
     ros::NodeHandle n("~");
 
@@ -335,14 +386,28 @@ int main(int argc, char **argv) {
     n.param("visual_pose_weight", visual_q_weight, 1.0);
     n.param("node_sleep_time", sleep_time, 10);
 
+    // TODO: initalize the R and Q matrix
+    R =     gyro_weight * MatrixXd::Identity(3, 3); // gyro noise
+    Q = visual_q_weight * MatrixXd::Identity(3, 3); // observation noise
+
+    x.setZero();
+    x(0) = 1; // set quaternion to identity
+    P = 1.0 * P;
+
+    imu_R_camera <<  0, 0, 1,
+                    -1, 0, 0,
+                     0,-1, 0;
+//    imu_R_camera <<  0,-1, 0,
+//                     0, 0,-1,
+//                     1, 0, 0;
+    imu_T_camera <<  0, 0, 0; // in millimeter
+
     ros::Subscriber s2 = n.subscribe(visual_topic, 10, visual_callback);
     ros::Subscriber s3 = n.subscribe(omg_topic, 100, gyro_callback);
-    pose_pub = n.advertise<geometry_msgs::PoseStamped>(publisher_topic, 100);
+//    pose_pub = n.advertise<geometry_msgs::PoseStamped>(publisher_topic, 100);
+    pose_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>(publisher_topic, 100);
     debug_pub= n.advertise<geometry_msgs::PoseStamped>(string("/visual_ekf/visual_ekf_debug"), 100);
-
-    // TODO: initalize the Q and R matrix
-    Q =     gyro_weight * MatrixXd::Identity(3, 3); // gyro noise
-    R = visual_q_weight * MatrixXd::Identity(3, 3); // measurement orientation
+//    debug_gyro_pub= n.advertise<geometry_msgs::Vector3Stamped>(string("/visual_ekf/gyro_debug"), 100);
 
     ros::Rate r(100);
     ros::spin();
@@ -357,304 +422,57 @@ int main(int argc, char **argv) {
 
 
 
-/*
-// Initialization
-const int IMU_INIT_COUNT = 40;
-int imu_count  = 0;
-Vector3d g_init = Vector3d::Zero();
-Vector3d G = Vector3d::Zero();
-Vector3d accl_init_buf[IMU_INIT_COUNT];
-Vector3d gyro_init_buf[IMU_INIT_COUNT];
-queue<Matrix<double, 3, 1>> pnp_T_buf;
-queue<Matrix<double, 3, 1>> pnp_R_buf;
- */
-
-/**
- * publish the pose and velocity
- * @param header
- */
-/*
-static void pub_fused_T_shield(std_msgs::Header header)
-{
-    nav_msgs::Odometry odom;
-    odom.header.stamp = header.stamp;
-    odom.header.frame_id = "camera";
-    odom.pose.pose.orientation.w = x(0);
-    odom.pose.pose.orientation.x = x(1);
-    odom.pose.pose.orientation.y = x(2);
-    odom.pose.pose.orientation.z = x(3);
-    odom.pose.pose.position.x = x(4);
-    odom.pose.pose.position.y = x(5);
-    odom.pose.pose.position.z = x(6);
-    odom.twist.twist.linear.x = x(7);
-    odom.twist.twist.linear.y = x(8);
-    odom.twist.twist.linear.z = x(9);
-
-    odom_pub.publish(odom);
-}
-*/
-
-/**
- * Extended Kalman Filter propagate, taking imu reading as actions
- * @param imu_msg
- */
-/*
-static void propagate(const sensor_msgs::Imu::ConstPtr &imu_msg)
-{
-    double cur_t = imu_msg->header.stamp.toSec();
-    double dt = cur_t - t_prev;
-    Vector3d w_raw, a_raw;
-    a_raw(0) = imu_msg->linear_acceleration.x;
-    a_raw(1) = imu_msg->linear_acceleration.y;
-    a_raw(2) = imu_msg->linear_acceleration.z;
-    w_raw(0) = imu_msg->angular_velocity.x;
-    w_raw(1) = imu_msg->angular_velocity.y;
-    w_raw(2) = imu_msg->angular_velocity.z;
-
-    // TODO: check bias and use filtered angular velocity
-    Vector3d a   = a_raw;
-    Vector3d omg = w_raw;
-    Vector3d domg = 0.5 * dt * omg;
-
-    // a better approximation for quaternion
-    Quaterniond dR(sqrt(1 - domg.squaredNorm()), domg(0), domg(1), domg(2));
-    Quaterniond R_old(x(0), x(1), x(2), x(3));
-    Quaterniond R_new = (R_old * dR).normalized();
-
-    x.segment<4>(0) << R_new.w(), R_new.x(), R_new.y(), R_new.z();
-    x.segment<3>(4) += x.segment<3>(7) * dt + (R_old * a - G) * 0.5 * dt * dt;
-    x.segment<3>(7) += (R_old * a - G) * dt;
-
-    // propagate the covariance with skew-symmetric matrix
-    Matrix3d I = MatrixXd::Identity(3, 3);
-    Matrix3d w_omg, w_a;
-    w_omg <<     0 , -omg(2),  omg(1),
-             omg(2),      0 , -omg(0),
-            -omg(1),  omg(0),      0;
-    w_a   <<  0 , -a(2),  a(1),
-            a(2),    0 , -a(0),
-           -a(1),  a(0),    0;
-    MatrixXd A = MatrixXd::Zero(9, 9);
-    A.block<3, 3>(0, 0) = -w_omg;
-    A.block<3, 3>(3, 6) = I;
-    A.block<3, 3>(6, 0) = (-1 * R_old.toRotationMatrix()) * w_a;
-    // cout << "DEBUG:: propagate A" << endl << A << endl;
-
-    MatrixXd U = MatrixXd::Zero(9, 6);
-    U.block<3, 3>(0, 0) = -1 * I;
-    U.block<3, 3>(6, 3) = -1 * R_old.toRotationMatrix();
-    // cout << "DEBUG:: propagate U" << endl << U << endl;
-
-    MatrixXd F, V; // Discretize
-    F = MatrixXd::Identity(9, 9) + dt * A;
-    V = dt * U;
-
-    P = F * P * F.transpose() + V * Q * V.transpose();
-
-    t_prev = cur_t;
-}
-*/
-
-/**
- * Extended Kalman Filter update, assume the stable solution from pnp
- * @param pnp
- */
-/*
-static void update(const geometry_msgs::TwistStamped::ConstPtr &pnp)
-{
-    Matrix3d camera_R_shield;
-    Vector3d camera_T_shield;
-
-    camera_T_shield[0] = pnp->twist.linear.x;
-    camera_T_shield[1] = pnp->twist.linear.y;
-    camera_T_shield[2] = pnp->twist.linear.z;
-    Vector3d Rodrigues(pnp->twist.angular.x,
-                       pnp->twist.angular.y,
-                       pnp->twist.angular.z);
-    camera_R_shield = AngleAxisd(Rodrigues.norm(), Rodrigues.normalized())
-            .toRotationMatrix();
-    Matrix3d shield_R_imu =  camera_R_shield.transpose() *  imu_R_camera.transpose();
-    Vector3d shield_T_imu = -camera_R_shield.transpose() * (imu_R_camera.transpose() * imu_T_camera + camera_T_shield);
-    Quaterniond shield_q_imu(shield_R_imu);
-
-    geometry_msgs::PoseStamped debug;
-    debug.header.stamp = pnp->header.stamp;
-    debug.header.frame_id = "shield";
-    debug.pose.position.x = shield_T_imu(0);
-    debug.pose.position.y = shield_T_imu(1);
-    debug.pose.position.z = shield_T_imu(2);
-    debug.pose.orientation.w = shield_q_imu.w();
-    debug.pose.orientation.x = shield_q_imu.x();
-    debug.pose.orientation.y = shield_q_imu.y();
-    debug.pose.orientation.z = shield_q_imu.z();
-    debug_pub.publish(debug);
-
-    MatrixXd C = MatrixXd::Zero(6, 9);
-    C.block<3, 3>(0, 0) = Matrix3d::Identity();
-    C.block<3, 3>(3, 3) = Matrix3d::Identity();
-
-    MatrixXd K(9, 6);
-    K = P * C.transpose() * (C * P* C.transpose() + R).inverse();
-
-    VectorXd r(6); // residual
-    Vector3d T = shield_T_imu;
-    Quaterniond qm = shield_q_imu;
-    Quaterniond q  = Quaterniond(x(0), x(1), x(2), x(3));
-    Quaterniond dq = q.conjugate() * qm;
-    r.head<3>() = 2 * dq.vec();
-    r.tail<3>() = T - x.segment<3>(4);
-    VectorXd _r = K * r;
-    Vector3d dw(_r(0) * 0.5, _r(1) * 0.5, _r(2) * 0.5);
-    //    dq = Quaterniond(1, dw(0), dw(1), dw(2)).normalized();
-    dq = Quaterniond(sqrt(1 - dw.squaredNorm()), dw(0), dw(1), dw(2)).normalized();
-    q  = q * dq;
-
-    x(0) = q.w();
-    x(1) = q.x();
-    x(2) = q.y();
-    x(3) = q.z();
-
-    x.segment<6>(4) += _r.tail(6);
-    P = P - K * C * P;
-}
-*/
-
-/**
- * initialization of the imu
- * @param imu_msg
- */
-/*
-static void initialize_imu(const sensor_msgs::Imu::ConstPtr &imu_msg)
-{
-    if (imu_count < IMU_INIT_COUNT)
-    {
-        Vector3d a_raw;
-        a_raw(0) = imu_msg->linear_acceleration.x;
-        a_raw(1) = imu_msg->linear_acceleration.y;
-        a_raw(2) = imu_msg->linear_acceleration.z;
-        imu_count++;
-        g_init += a_raw;
-    }
-    else if (imu_count == IMU_INIT_COUNT)
-    {
-        g_init /= IMU_INIT_COUNT;
-        imu_initialized = true;
-    }
-}
-*/
-
-/**
- * initialization of the state and convariance from visual
- * @param pnp
- */
-/*
-static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
-{
-    double cur_t = pnp->header.stamp.toSec();
-    Matrix3d camera_R_shield;
-    Vector3d camera_T_shield;
-
-    camera_T_shield[0] = pnp->twist.linear.x;
-    camera_T_shield[1] = pnp->twist.linear.y;
-    camera_T_shield[2] = pnp->twist.linear.z;
-
-
-    Vector3d Rodrigues(pnp->twist.angular.x,
-                       pnp->twist.angular.y,
-                       pnp->twist.angular.z);
-    camera_R_shield = AngleAxisd(Rodrigues.norm(), Rodrigues.normalized())
-            .toRotationMatrix();
-    cout << "DEBUG: camera_R_shield " << endl << camera_R_shield << endl;
-    Matrix3d shield_R_imu =  camera_R_shield.transpose() *  imu_R_camera.transpose();
-    Vector3d shield_T_imu = -camera_R_shield.transpose() * (imu_R_camera.transpose() * imu_T_camera + camera_T_shield);
-    cout << "DEBUG: shield_R_imu " << endl << shield_R_imu << endl;
-    cout << "DEBUG: shield_T_imu " << endl << shield_T_imu << endl;
-    Quaterniond shield_q_imu(shield_R_imu);
-
-    x.setZero();
-    P.setZero();
-
-    x.head<4>() << shield_q_imu.w(), shield_q_imu.x(), shield_q_imu.y(), shield_q_imu.z();
-    x.segment<3>(4) << shield_T_imu;
-
-    t_prev = cur_t;
-    if (imu_initialized) {
-        G = shield_R_imu * g_init;
-        cout << "gravity vector in shield frame " << endl << G.transpose() << endl;
-        visual_initialized = true;
-    }
-}
-*/
-
-/**
- * handle, save, and process imu messages
- * @param imu_msg
- */
-/*
-void imu_callback(const sensor_msgs::Imu::ConstPtr &imu_msg)
-{
-    if (!imu_initialized && imu_count <= IMU_INIT_COUNT) {
-        initialize_imu(imu_msg);
-    }
-    else if (imu_initialized && visual_initialized) {
-        propagate(imu_msg);
-
-        x_history.push(x);
-        P_history.push(P);
-
-        // Only publish the topic in imu callback
-        if (visual_initialized)
-            pub_fused_T_shield(imu_msg->header);
-    }
-    imu_buf.push(imu_msg);
-}
- */
-
 
 /*
-int main(int argc, char **argv) {
-    ros::init(argc, argv, "visual_ekf_no_bias");
-    ros::NodeHandle n("~");
+        // DEBUG geometry relationship in visual_callback()
+        update(pnp);
+        pub_fused_angleAxis(pnp->header);
 
-    //    n.param("visual_topic", visual_topic, string("/gimbal_detected_armor"));
-    n.param("imu_topic", imu_topic, string("/dji_sdk/imu")); // 400Hz
-    n.param("angular_fused", omg_topic, string("/dji_sdk/angular_velocity_fused")); // 100Hz
-    n.param("visual_topic", visual_topic, string("/pnp_twist"));
-    n.param("publisher_topic", publisher_topic, string("/T_shield_fused"));
-    n.param("gyroscope_noise_weight", gyro_weight, 0.1);
-    n.param("accelerometer_noise_weight", acc_weight, 0.1);
-    n.param("visual_orientation_weight", visual_q_weight, 0.1);
-    n.param("visual_translation_weight", visual_t_weight, 0.1);
-    n.param("node_sleep_time", sleep_time, 10);
+        geometry_msgs::TwistStamped::ConstPtr prev_pnp = visual_buf.front();
 
-//    ros::Subscriber s1 = n.subscribe(imu_topic, 100, imu_callback);
-    ros::Subscriber s2 = n.subscribe(visual_topic, 10, visual_callback);
-    ros::Subscriber s3 = n.subscribe(omg_topic, 100, gyro_callback);
-    odom_pub = n.advertise<nav_msgs::Odometry>(publisher_topic, 100);
-    debug_pub= n.advertise<geometry_msgs::PoseStamped>(string("/visual_ekf_debug"), 100);
+        Vector3d camera_T_shield;
+        camera_T_shield[0] = prev_pnp->twist.linear.x;
+        camera_T_shield[1] = prev_pnp->twist.linear.y;
+        camera_T_shield[2] = prev_pnp->twist.linear.z;
+        Vector3d imu_T_shield = imu_R_camera * camera_T_shield;
 
+        Vector3d T_norm = imu_T_shield.normalized();
+        Vector3d x_axis = Vector3d::UnitX();
+    //    Vector3d axis = x_axis.cross(T_norm).normalized();
+    //    double angle = acos( x_axis.dot(T_norm) );
+        Vector3d axis = T_norm.cross(x_axis).normalized();
+        double angle = acos( T_norm.dot(x_axis) );
+        AngleAxisd R_prev(angle, axis);
+        Quaterniond q_prev(R_prev);
 
-    // TODO: initalize the Q and R matrix
-    Q.topLeftCorner(3, 3)     = gyro_weight * MatrixXd::Identity(3, 3); // gyro noise
-    Q.bottomRightCorner(3, 3) = acc_weight  * MatrixXd::Identity(3, 3); // accl noise
-    R.topLeftCorner(3, 3)     = visual_q_weight * MatrixXd::Identity(3, 3); // measurement orientation
-    R.bottomRightCorner(3, 3) = visual_t_weight * MatrixXd::Identity(3, 3); // measurement position
+        camera_T_shield[0] = pnp->twist.linear.x;
+        camera_T_shield[1] = pnp->twist.linear.y;
+        camera_T_shield[2] = pnp->twist.linear.z;
+        imu_T_shield = imu_R_camera * camera_T_shield;
 
-    // TODO: check rotation matrix
-    imu_R_camera <<  0, 0, 1,
-                    -1, 0, 0,
-                     0,-1, 0;
+        T_norm = imu_T_shield.normalized();
+    //    axis = x_axis.cross(T_norm).normalized();
+    //    angle = acos( x_axis.dot(T_norm) );
+        axis = T_norm.cross(x_axis).normalized();
+        angle = acos( T_norm.dot(x_axis) );
+        AngleAxisd R_now(angle, axis);
+        Quaterniond q_now(R_now);
 
-    imu_T_camera << 160, 240, -40; // in millimeter
+        Quaterniond dq = q_prev.conjugate() * q_now;
+        // Quaterniond dq = q_now.conjugate() * q_prev;
+        Vector3d d_theta = 2 * dq.vec();
+        double dt_omg = pnp->header.stamp.toSec() - prev_pnp->header.stamp.toSec();
+        Vector3d omg = d_theta / dt_omg;
 
-    cout << "imu_R_camera" << endl << imu_R_camera << endl;
+        geometry_msgs::Vector3Stamped gyro_debug;
+        gyro_debug.header = pnp->header;
+        gyro_debug.vector.x = omg[0];
+        gyro_debug.vector.y = omg[1];
+        gyro_debug.vector.z = omg[2];
+        propagate( gyro_debug );
+        t_prev = pnp->header.stamp.toSec();
+        debug_gyro_pub.publish(gyro_debug);
 
-    ros::Rate r(100);
-    while (ros::ok())
-    {
-        ros::spinOnce();
-        state_machine_process();
-        r.sleep();
-    }
-}
- */
+        visual_buf.pop();
+
+        */

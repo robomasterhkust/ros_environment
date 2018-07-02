@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="rosbag" type="play" name="static_target_moving_chassis"
+          output="screen" args="-s 10 /home/ros/Downloads/2018-06-21-12-11-35.bag"/>
+</launch>
