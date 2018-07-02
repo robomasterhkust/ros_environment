@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rm_self_aiming)
+project(self_aiming)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   dynamic_reconfigure
+  can_receive_msg
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,10 +105,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES rm_tracking_pid
-#  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs
-#  DEPENDS system_lib
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs can_receive_msg
+  DEPENDS system_lib can_receive_msg
 )
 
 ###########

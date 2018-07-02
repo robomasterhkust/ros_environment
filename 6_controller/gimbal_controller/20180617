@@ -1,0 +1,39 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  center_x: 0.0
+  center_y: 0.0
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      center_x: 0.0
+      center_y: 0.0
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      image_center_x: 640
+      image_center_y: 360
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      type: ''
+      x_kd: 0.0
+      x_kp: 1.0
+      y_kd: 0.0
+      y_kp: 0.0
+      y_limit: 0.0
+      z_kd: 4.0
+      z_kp: 15.0
+      z_limit: 0.0
+    state: []
+  image_center_x: 640
+  image_center_y: 360
+  x_kd: 0.0
+  x_kp: 1.0
+  y_kd: 0.0
+  y_kp: 0.0
+  y_limit: 0.0
+  z_kd: 4.0
+  z_kp: 15.0
+  z_limit: 0.0
+state: []
