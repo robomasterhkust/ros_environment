@@ -44,6 +44,8 @@ class armor_frame_pid:
         self.z_err = 0
         self.prev_y_err = 0
         self.prev_z_err = 0
+        self.y_err_int = 0
+        self.z_err_int = 0
 
         # self.time_queue = deque()
         # self.imu_queue = deque()
@@ -68,8 +70,6 @@ class armor_frame_pid:
         if abs(subArmorRecord.armorPose.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
-            vel_msg.linear.y = 0.0
-            vel_msg.linear.z = 0.0
         else:
             # image_time = subArmorRecord.header.stamp
             # rospy.loginfo("cv time: %s" % (image_time.to_sec()))
@@ -101,23 +101,25 @@ class armor_frame_pid:
             # diff_rotation_matrix = diff_rotation_matrix[0:3, 0:3]
             # print "The quaternion representation is %s %s %s %s." % (
             #     diff_quaternion[0], diff_quaternion[1], diff_quaternion[2], diff_quaternion[3])
-            y_pos_kp = 0.0
-            z_pos_kp = 0.0
             y_kp = 0.0
             y_kd = 0.0
+            y_ki = 0.0
             z_kp = 0.0
             z_kd = 0.0
-            image_center_y = 300
-            image_center_x = 400
+            z_ki = 0.0
+            y_err_int_max = 0
+            z_err_int_max = 0
             if rospy.has_param('/server_node/y_kp'):
-                y_pos_kp = rospy.get_param('/server_node/y_pos_kp')
-                z_pos_kp = rospy.get_param('/server_node/z_pos_kp')
                 y_kp = rospy.get_param('/server_node/y_kp')
                 y_kd = rospy.get_param('/server_node/y_kd')
+                y_ki = rospy.get_param('/server_node/y_ki')
                 z_kp = rospy.get_param('/server_node/z_kp')
                 z_kd = rospy.get_param('/server_node/z_kd')
+                z_ki = rospy.get_param('/server_node/z_ki')
                 image_center_x = rospy.get_param('/server_node/center_x')
                 image_center_y = rospy.get_param('/server_node/center_y')
+                y_err_int_max = rospy.get_param('/server_node/y_err_int_max')
+                z_err_int_max = rospy.get_param('/server_node/z_err_int_max')
 
             shield_T_camera = np.array(
                 [subArmorRecord.armorPose.linear.x, subArmorRecord.armorPose.linear.y, subArmorRecord.armorPose.linear.z])
@@ -133,7 +135,7 @@ class armor_frame_pid:
 
             camera_T_gimbal = np.array([135, -45, 0])
             T = shield_T_camera_rot + camera_T_gimbal
-            print "before: %s %s %s" % (T[0], T[1], T[2])
+            # print "before: %s %s %s" % (T[0], T[1], T[2])
             # T = diff_rotation_matrix.dot(T)
             # print "after: %s %s %s" % (T[0], T[1], T[2])
 
@@ -157,20 +159,38 @@ class armor_frame_pid:
 
             self.y_err = T_euler1 - image_center_y
             self.z_err = T_euler0 - image_center_x
-            vy = y_kp * self.y_err + y_kd * (self.y_err - self.prev_y_err)
-            vz = z_kp * self.z_err + z_kd * (self.z_err - self.prev_z_err)
+            self.y_err_int += self.y_err
+            self.z_err_int += self.z_err
+            if(abs(self.y_err_int) > y_err_int_max):
+                if (self.y_err_int > 0):
+                    self.y_err_int = y_err_int_max
+                else:
+                    self.y_err_int = -y_err_int_max
+            if(abs(self.z_err_int) > z_err_int_max):
+                if (self.z_err_int > 0):
+                    self.z_err_int = z_err_int_max
+                else:
+                    self.z_err_int = -z_err_int_max
+            print 'y:%s' %(self.y_err_int)
+            print 'z:%s'%(self.z_err_int)
+            vy = y_kp * self.y_err + y_kd * \
+                (self.y_err - self.prev_y_err) + y_ki * self.y_err_int
+            vz = z_kp * self.z_err + z_kd * \
+                (self.z_err - self.prev_z_err) + z_ki * self.z_err_int
             self.prev_y_err = self.y_err
             self.prev_z_err = self.z_err
 
             vel_msg.angular.y = vy
             vel_msg.angular.z = vz
-            vel_msg.linear.y = y_pos_kp * T_euler0
-            vel_msg.linear.z = z_pos_kp * T_euler1
         self.cmd_pub.publish(vel_msg)
 
     def shutdown_function(self):
         # self.imu_queue.clear()
         # self.time_queue.clear()
+        vel_msg = Twist()
+        vel_msg.angular.y = 0
+        vel_msg.angular.z = 0
+        self.cmd_pub.publish(vel_msg)
         rospy.loginfo("shutting down armor frame pid node")
 
 
