@@ -1,0 +1,7 @@
+<launch>
+
+    <node pkg="attitude_estimator" type="attitude_estimator_node" name="attitude_estimator_node" output="screen"/>
+  
+    <node pkg="rosbag" type="play" name="static_target_moving_chassis"
+          output="screen" args="-s 0 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>
+</launch>
