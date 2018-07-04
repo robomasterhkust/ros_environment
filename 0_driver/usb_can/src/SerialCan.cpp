@@ -202,7 +202,6 @@ void SerialCan::receiveCB(uint32_t id,
            (extended) ? "extended" : "standard",
            (remote) ? "remote" : "data",
            numBytes);
-
     printf("data:");
     for (int i = 0; i < numBytes; i++)
     {
@@ -215,6 +214,7 @@ void SerialCan::receiveCB(uint32_t id,
     temp.is_extended = extended;
     temp.is_rtr = remote;
     temp.is_error = false;
+    temp.dlc = numBytes;
     temp.header.stamp = ros::Time::now();
     pub.publish(temp);
 };
@@ -328,7 +328,18 @@ void SerialCan::readThdFunc()
                             numBytes |= msgBody[4];
                         }
 
-                        receiveCB(id, extended, remote, numBytes, &msgBody[5]);
+                        if (numBytes > 8)
+                        {
+                            ROS_INFO("Wrong data:");
+                            for (int i = 0; i < 13; i++)
+                            {
+                                printf("%x ", msgBody[i]);
+                            }
+                            printf("\n");
+                        }
+                        else
+                            receiveCB(id, extended, remote, numBytes, &msgBody[5]);
+
                         printf("startpos: %d\n", startPos);
 
                         foundAT = false;
