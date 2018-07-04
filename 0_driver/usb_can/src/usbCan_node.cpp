@@ -66,6 +66,7 @@ int main(int argc, char **argv)
     nh = new ros::NodeHandle("~");
     ros::Publisher pub = nh->advertise<can_msgs::Frame>("canRx", 20);
     ros::Subscriber sub = nh->subscribe("/cmd_vel", 20, cmd_cb);
+    ros::Subscriber subFrame = nh->subscribe("/canRx", 20, subCB);
     ros::AsyncSpinner spinner(1);
     std::string path;
     nh->getParam("path", path);
@@ -84,4 +85,5 @@ int main(int argc, char **argv)
     }
 
     ros::spin();
+    comObj->stopReadThd();
 }

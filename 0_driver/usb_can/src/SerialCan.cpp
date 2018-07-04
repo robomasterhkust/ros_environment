@@ -214,6 +214,7 @@ void SerialCan::receiveCB(uint32_t id,
     temp.is_extended = extended;
     temp.is_rtr = remote;
     temp.is_error = false;
+    temp.dlc = numBytes;
     temp.header.stamp = ros::Time::now();
     pub.publish(temp);
 };
