@@ -9,7 +9,7 @@
 #include <thread>
 #include "ros/ros.h"
 
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE 2048
 
 //masks for the 6th byte
 #define EXTENTED_MASK 0b100

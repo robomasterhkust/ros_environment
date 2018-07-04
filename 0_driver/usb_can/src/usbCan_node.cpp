@@ -8,13 +8,13 @@
 #include <unistd.h>
 #include <thread>
 #include "SerialCan.hpp"
-#include "usb_can/can_frame.h"
+#include "can_msgs/Frame.h"
 #include "ros/ros.h"
 
 ros::NodeHandle *nh;
 SerialCan *comObj = NULL;
 
-void subCB(const usb_can::can_frame &msg)
+void subCB(const can_msgs::Frame &msg)
 {
     comObj->sendCanMsg(msg.id,
                        msg.is_extended,
@@ -25,9 +25,9 @@ void subCB(const usb_can::can_frame &msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "canusb0");
+    ros::init(argc, argv, "usb_can");
     nh = new ros::NodeHandle("~");
-    ros::Publisher pub = nh->advertise<usb_can::can_frame>("canRx", 20);
+    ros::Publisher pub = nh->advertise<can_msgs::Frame>("canRx", 20);
     ros::Subscriber sub = nh->subscribe("canTx", 20, subCB);
     ros::AsyncSpinner spinner(1);
     std::string path;
@@ -46,25 +46,5 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    while (ros::ok())
-    {
-        uint8_t temp[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-        comObj->sendCanMsg(1234,
-                           0,
-                           0,
-                           8,
-                           temp);
-        sleep(1);
-    }
-
-    // int i = 0;
-    // while (1)
-    // {
-    //     char data[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-    //     comObj->sendCanMsg(i, true, false, 8, (uint8_t *)data);
-    //     i++;
-    //     if (i > 9999)
-    //         i = 0;
-    //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    // }
+    ros::spin();
 }
