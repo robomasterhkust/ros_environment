@@ -1,6 +1,6 @@
 <launch>
 
-    <node pkg="visual_ekf" type="visual_ekf_node" name="visual_ekf_node" output="screen">
+    <node pkg="visual_ekf" type="visual_ekf_node_rotation" name="visual_ekf_rotation" output="screen">
         <param name="angular_fused" type="string" value="/dji_sdk/angular_velocity_fused"/>
         <param name="visual_topic" type="string" value="/pnp_twist"/>
         <param name="publisher_topic" type="string" value="/visual_ekf/shield_pose_fused"/>

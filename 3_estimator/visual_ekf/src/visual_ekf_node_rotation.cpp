@@ -4,6 +4,7 @@
  * to get an estimate of the pose of the shield
  * fusing visual information with the gyroscope
  * With IMU fused reading comes in 100Hz and camera translation in 30Hz
+ * V1: works for rotation only
  */
 #include <iostream>
 #include <ros/ros.h>
@@ -45,6 +46,7 @@ queue<geometry_msgs::Vector3Stamped::ConstPtr> gyro_buf;
 queue<geometry_msgs::TwistStamped::ConstPtr> visual_buf;
 queue<Matrix<double, 4, 1>> x_history;
 queue<Matrix<double, 3, 3>> P_history;
+Vector3d G_body = {0, 0, 9.8}; // Consider to add initialization later
 
 // previous propagated time
 double t_prev;
@@ -166,7 +168,7 @@ static void update(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield[0] = pnp->twist.linear.x;
     camera_T_shield[1] = pnp->twist.linear.y;
     camera_T_shield[2] = pnp->twist.linear.z;
-    Vector3d imu_T_shield = imu_R_camera * camera_T_shield;
+    Vector3d imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
 
     Vector3d T_norm = imu_T_shield.normalized();
     Vector3d x_axis = Vector3d::UnitX();
@@ -246,7 +248,7 @@ static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield[0] = pnp->twist.linear.x;
     camera_T_shield[1] = pnp->twist.linear.y;
     camera_T_shield[2] = pnp->twist.linear.z;
-    Vector3d imu_T_shield = imu_R_camera * camera_T_shield;
+    Vector3d imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
 
     Vector3d T_norm = imu_T_shield.normalized();
     Vector3d x_axis = Vector3d::UnitX();
@@ -397,10 +399,8 @@ int main(int argc, char **argv)
     imu_R_camera <<  0, 0, 1,
                     -1, 0, 0,
                      0,-1, 0;
-//    imu_R_camera <<  0,-1, 0,
-//                     0, 0,-1,
-//                     1, 0, 0;
-    imu_T_camera <<  0, 0, 0; // in millimeter
+
+    imu_T_camera <<  200, 50, 0; // in millimeter
 
     ros::Subscriber s2 = n.subscribe(visual_topic, 10, visual_callback);
     ros::Subscriber s3 = n.subscribe(omg_topic, 100, gyro_callback);

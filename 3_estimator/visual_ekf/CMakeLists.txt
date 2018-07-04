@@ -60,7 +60,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/visual_ekf_node.cpp)
+add_executable(${PROJECT_NAME}_node src/visual_ekf_node_translation.cpp)
+# add_executable(${PROJECT_NAME}_node_rotation src/visual_ekf_node_rotation.cpp)
 add_executable(${PROJECT_NAME}_test src/visual_ekf_test.cpp)
 
 ## Rename C++ executable without prefix
@@ -72,6 +73,7 @@ add_executable(${PROJECT_NAME}_test src/visual_ekf_test.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node_rotation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
