@@ -28,9 +28,10 @@
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
   <build_depend>message_generation</build_depend>
-  <exec_depend>message_runtime</exec_depend> 
+  <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
   <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>roscpp</depend>
 
 
