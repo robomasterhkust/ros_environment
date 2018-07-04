@@ -25,7 +25,7 @@ void subCB(const usb_can::can_frame &msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "usb_can");
+    ros::init(argc, argv, "canusb0");
     nh = new ros::NodeHandle("~");
     ros::Publisher pub = nh->advertise<usb_can::can_frame>("canRx", 20);
     ros::Subscriber sub = nh->subscribe("canTx", 20, subCB);
