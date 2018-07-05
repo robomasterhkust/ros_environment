@@ -62,11 +62,11 @@ void cmd_cb(const geometry_msgs::Twist &t){
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "canusb1");
+    ros::init(argc, argv, "canusb");
     nh = new ros::NodeHandle("~");
     ros::Publisher pub = nh->advertise<can_msgs::Frame>("canRx", 20);
     ros::Subscriber sub = nh->subscribe("/cmd_vel", 20, cmd_cb);
-    ros::Subscriber subFrame = nh->subscribe("/canRx", 20, subCB);
+    // ros::Subscriber subFrame = nh->subscribe("/canTx", 20, subCB);
     ros::AsyncSpinner spinner(1);
     std::string path;
     nh->getParam("path", path);
