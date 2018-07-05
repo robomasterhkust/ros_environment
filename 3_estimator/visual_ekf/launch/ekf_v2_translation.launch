@@ -8,12 +8,12 @@
         <!--<param name="imu_raw" type="string" value="/dji_sdk/imu"/>-->
         <param name="imu_pose" type="string" value="/attitude_estimator/imu"/>
         <param name="visual_topic" type="string" value="/pnp_twist"/>
-        <param name="publisher_topic" type="string" value="/visual_ekf/shield_pose_fused"/>
+        <param name="publisher_topic" type="string" value="/visual_ekf/shield_T_world"/>
         <param name="debug_topic" type="string" value="/visual_ekf/debug_pose"/>
-        <param name="accelerometer_noise_weight" type="double" value="10000.0"/>
+        <param name="accelerometer_noise_weight" type="double" value="0.001"/>
         <param name="visual_pose_weight" type="double" value="10.0"/>
         <param name="node_sleep_time" type="int" value="0"/>
     </node>
     <node pkg="rosbag" type="play" name="static_target_moving_chassis"
-          output="screen" args="-s 12.5 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>
+          output="screen" args="-s 0 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>
 </launch>

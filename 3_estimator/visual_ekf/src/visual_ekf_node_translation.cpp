@@ -174,7 +174,7 @@ static void repropagate()
     while (!P_history.empty()) P_history.pop();
 
     queue <sensor_msgs::Imu::ConstPtr> temp_imu_buf;
-    while (!imu_buf.empty())
+    while (!imu_buf.empty() && imu_buf.size() > 1)
     {
         propagate(*imu_buf.front());
         temp_imu_buf.push(imu_buf.front());
@@ -198,6 +198,8 @@ static void update(const geometry_msgs::TwistStamped &pnp)
     camera_T_shield[2] = pnp.twist.linear.z;
     Vector3d imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
 
+    imu_T_shield *= 0.001; // Convert millimeter to meter
+
     throwState(cur_t);
 
     ROS_INFO("Update, at time %f", cur_t);
@@ -212,7 +214,7 @@ static void update(const geometry_msgs::TwistStamped &pnp)
                                   imu_buf.front()->orientation.y,
                                   imu_buf.front()->orientation.z);
     }
-    Vector3d world_T_shield = world_R_imu * imu_T_shield;
+    Vector3d world_T_shield = world_R_imu.toRotationMatrix() * imu_T_shield;
     pub_debug_update(pnp.header, world_T_shield, world_R_imu);
 
 //    VectorXd z(6);
@@ -224,8 +226,10 @@ static void update(const geometry_msgs::TwistStamped &pnp)
     C.block<3, 3>(0, 0) = MatrixXd::Identity(3, 3);
 //    cout << "C " << endl << C << endl;
 
+    Matrix3d W = MatrixXd::Identity(3, 3);
+
     MatrixXd K(6, 3);
-    K = P * C.transpose() * (C * P* C.transpose() + Q).inverse();
+    K = P * C.transpose() * (C * P* C.transpose() + W * Q * W.transpose()).inverse();
 //    cout << "K " << endl << K << endl;
 
     x = x + K * (world_T_shield - C * x);
@@ -233,7 +237,12 @@ static void update(const geometry_msgs::TwistStamped &pnp)
 //    cout << "P " << endl << P << endl;
 //    cout << "x " << endl << x.transpose() << endl;
 
-    repropagate();
+    if (imu_buf.size() == 1 || imu_buf.empty()) {
+        t_prev = cur_t;
+    }
+    else {
+        repropagate();
+    }
 }
 
 /**
@@ -267,6 +276,8 @@ static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield[2] = pnp->twist.linear.z;
     Vector3d imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
 
+    imu_T_shield *= 0.001; // Convert millimeter to meter
+
     throwState(cur_t);
 
     Quaterniond world_R_imu;
@@ -280,9 +291,10 @@ static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
                                   imu_buf.front()->orientation.y,
                                   imu_buf.front()->orientation.z);
     }
-    Vector3d world_T_shield = world_R_imu * imu_T_shield;
+    Vector3d world_T_shield = world_R_imu.toRotationMatrix() * imu_T_shield;
     pub_debug_update(pnp->header, world_T_shield, world_R_imu);
 
+    x.setZero();
     x.segment<3>(0) = world_T_shield;
     x.segment<3>(3) << 0, 0, 0;
 
