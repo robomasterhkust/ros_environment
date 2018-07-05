@@ -12,6 +12,7 @@
 #include <std_msgs/String.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
@@ -22,8 +23,10 @@
 
 using namespace std;
 using namespace Eigen;
-ros::Publisher pose_pub, debug_pub, debug_gyro_pub, odom_pub;
-string imu_topic, pose_topic, visual_topic, publisher_topic;
+
+ros::Publisher pose_pub, debug_pub, odom_pub, debug_propagate_pub;
+string imu_topic, pose_topic, visual_topic;
+string debug_topic, publisher_topic;
 double acc_weight;
 double visual_q_weight, visual_t_weight;
 int sleep_time;
@@ -53,7 +56,7 @@ double t_prev;
 
 // Initialization
 const int IMU_INIT_COUNT = 10;
-const int MAX_GYRO_QUEUE_SIZE = 2000;
+const int MAX_GYRO_QUEUE_SIZE = 400;
 int imu_count  = 0;
 bool imu_initialized = false;
 bool visual_initialized = false;
@@ -61,62 +64,8 @@ bool visual_valid = false;
 MatrixXd imu_R_camera = MatrixXd::Identity(3, 3); // rotation matrix from camera to imu
 Vector3d imu_T_camera = MatrixXd::Zero(3, 1);
 
-void pub_fused_pose(std_msgs::Header header)
-{
-    geometry_msgs::PoseWithCovarianceStamped pose;
-    pose.header = header;
-    pose.pose.pose.orientation.w = x(0);
-    pose.pose.pose.orientation.x = x(1);
-    pose.pose.pose.orientation.y = x(2);
-    pose.pose.pose.orientation.z = x(3);
-    pose.pose.covariance[0] = P(0, 0);
-    pose.pose.covariance[1] = P(1, 1);
-    pose.pose.covariance[2] = P(2, 2);
 
-    pose_pub.publish(pose);
-}
-
-void pub_debug_pose(std_msgs::Header header, const Quaterniond& q)
-{
-    geometry_msgs::PoseStamped pose;
-    pose.header = header;
-    pose.pose.orientation.w = q.w();
-    pose.pose.orientation.x = q.x();
-    pose.pose.orientation.y = q.y();
-    pose.pose.orientation.z = q.z();
-    debug_pub.publish(pose);
-}
-
-void pub_fused_angleAxis(std_msgs::Header header)
-{
-    geometry_msgs::PoseWithCovarianceStamped angleAxis;
-    angleAxis.header = header;
-
-    Quaterniond pose_state(x(0), x(1), x(2), x(3));
-    AngleAxisd angle_state(pose_state);
-
-    angleAxis.pose.pose.orientation.w = angle_state.angle();
-    angleAxis.pose.pose.orientation.x = angle_state.axis()[0];
-    angleAxis.pose.pose.orientation.y = angle_state.axis()[1];
-    angleAxis.pose.pose.orientation.z = angle_state.axis()[2];
-    angleAxis.pose.covariance[0] = P(0, 0);
-    angleAxis.pose.covariance[1] = P(1, 1);
-    angleAxis.pose.covariance[2] = P(2, 2);
-    pose_pub.publish(angleAxis);
-}
-
-void pub_debug_angleAxis(std_msgs::Header header, const Eigen::Vector3d axis, const double angle)
-{
-    geometry_msgs::PoseStamped angleAxis;
-    angleAxis.header = header;
-    angleAxis.pose.orientation.w = angle;
-    angleAxis.pose.orientation.x = axis.x();
-    angleAxis.pose.orientation.y = axis.y();
-    angleAxis.pose.orientation.z = axis.z();
-    debug_pub.publish(angleAxis);
-}
-
-void pub_shield_odom(const std_msgs::Header &header)
+void pub_shield_odom(const std_msgs::Header& header)
 {
     nav_msgs::Odometry odom;
     odom.header = header;
@@ -128,18 +77,51 @@ void pub_shield_odom(const std_msgs::Header &header)
     odom.twist.twist.linear.y = x(4);
     odom.twist.twist.linear.z = x(5);
 
+    odom.pose.covariance[0]  = P(0, 0);
+    odom.pose.covariance[7]  = P(1, 1);
+    odom.pose.covariance[14] = P(2, 2);
+    odom.pose.covariance[21] = P(3, 3);
+    odom.pose.covariance[28] = P(4, 4);
+    odom.pose.covariance[35] = P(5, 5);
+    odom.pose.covariance[3]  = P(0, 3);
+    odom.pose.covariance[10] = P(1, 4);
+    odom.pose.covariance[17] = P(2, 5);
+    odom.pose.covariance[18] = P(3, 0);
+    odom.pose.covariance[25] = P(4, 1);
+    odom.pose.covariance[32] = P(5, 2);
     odom_pub.publish(odom);
+}
+
+void pub_debug_update(const std_msgs::Header& header,
+                      const Ref<const Vector3d> p,
+                      const Quaterniond& q)
+{
+    geometry_msgs::PoseStamped pose;
+    pose.header = header;
+    pose.pose.position.x = p[0];
+    pose.pose.position.y = p[1];
+    pose.pose.position.z = p[2];
+    pose.pose.orientation.w = q.w();
+    pose.pose.orientation.x = q.x();
+    pose.pose.orientation.y = q.y();
+    pose.pose.orientation.z = q.z();
+    debug_pub.publish(pose);
+}
+
+void pub_debug_propagate(const std_msgs::Header& header, const Ref<const Vector3d> v )
+{
+    geometry_msgs::Vector3Stamped acc_with_noise;
+    acc_with_noise.header = header;
+    acc_with_noise.vector.x = v[0];
+    acc_with_noise.vector.y = v[1];
+    acc_with_noise.vector.z = v[2];
+    debug_propagate_pub.publish(acc_with_noise);
 }
 
 void propagate(const sensor_msgs::Imu &imu)
 {
     double cur_t = imu.header.stamp.toSec();
-    // ROS_INFO("propagate");
-    Vector3d w;
-    Vector3d a;
-    w(0) = imu.angular_velocity.x;
-    w(1) = imu.angular_velocity.y;
-    w(2) = imu.angular_velocity.z;
+    Vector3d a, acc_wo_g;
     a(0) = imu.linear_acceleration.x;
     a(1) = imu.linear_acceleration.y;
     a(2) = imu.linear_acceleration.z;
@@ -147,10 +129,10 @@ void propagate(const sensor_msgs::Imu &imu)
 
     double dt = cur_t - t_prev;
     ROS_INFO("dt in propagate is %f, at the cur_t %f", dt, cur_t);
-	// ROS_INFO("propagate, with dt %f", dt);
-
-    x.segment<3>(0) += x.segment<3>(3) * dt + 0.5 * (world_R_imu * (a - G)) * dt * dt;
-    x.segment<3>(3) += (world_R_imu * (a - G)) * dt;
+    acc_wo_g = world_R_imu.toRotationMatrix() * a - G;
+    x.segment<3>(0) += x.segment<3>(3) * dt + 0.5 * acc_wo_g * dt * dt;
+    x.segment<3>(3) += acc_wo_g * dt;
+    pub_debug_propagate(imu.header, acc_wo_g);
 
     MatrixXd A = MatrixXd::Zero(6, 6);
     A.block<3, 3>(0, 3) = MatrixXd::Identity(3, 3);
@@ -200,6 +182,9 @@ static void repropagate()
         P_history.push(P);
         imu_buf.pop();
     }
+    if (!temp_imu_buf.empty()) {
+        pub_shield_odom(temp_imu_buf.back()->header);
+    }
     swap(imu_buf, temp_imu_buf);
 }
 
@@ -216,11 +201,19 @@ static void update(const geometry_msgs::TwistStamped &pnp)
     throwState(cur_t);
 
     ROS_INFO("Update, at time %f", cur_t);
-    Quaterniond world_R_imu(imu_buf.front()->orientation.w,
-                            imu_buf.front()->orientation.x,
-                            imu_buf.front()->orientation.y,
-                            imu_buf.front()->orientation.z);
+    Quaterniond world_R_imu;
+
+    if (imu_buf.empty()) {
+        world_R_imu.setIdentity();
+    }
+    else {
+        world_R_imu = Quaterniond(imu_buf.front()->orientation.w,
+                                  imu_buf.front()->orientation.x,
+                                  imu_buf.front()->orientation.y,
+                                  imu_buf.front()->orientation.z);
+    }
     Vector3d world_T_shield = world_R_imu * imu_T_shield;
+    pub_debug_update(pnp.header, world_T_shield, world_R_imu);
 
 //    VectorXd z(6);
 //    z.setZero();
@@ -229,16 +222,16 @@ static void update(const geometry_msgs::TwistStamped &pnp)
 
     MatrixXd C = MatrixXd::Zero(3, 6);
     C.block<3, 3>(0, 0) = MatrixXd::Identity(3, 3);
-    cout << "C " << endl << C << endl;
+//    cout << "C " << endl << C << endl;
 
     MatrixXd K(6, 3);
     K = P * C.transpose() * (C * P* C.transpose() + Q).inverse();
-    cout << "K " << endl << K << endl;
+//    cout << "K " << endl << K << endl;
 
     x = x + K * (world_T_shield - C * x);
     P = P - K * C * P;
-    cout << "P " << endl << P << endl;
-    cout << "x " << endl << x.transpose() << endl;
+//    cout << "P " << endl << P << endl;
+//    cout << "x " << endl << x.transpose() << endl;
 
     repropagate();
 }
@@ -276,11 +269,19 @@ static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
 
     throwState(cur_t);
 
-    Quaterniond world_R_imu(imu_buf.front()->orientation.w,
-                            imu_buf.front()->orientation.x,
-                            imu_buf.front()->orientation.y,
-                            imu_buf.front()->orientation.z);
+    Quaterniond world_R_imu;
+
+    if (imu_buf.empty()) {
+        world_R_imu.setIdentity();
+    }
+    else {
+        world_R_imu = Quaterniond(imu_buf.front()->orientation.w,
+                                  imu_buf.front()->orientation.x,
+                                  imu_buf.front()->orientation.y,
+                                  imu_buf.front()->orientation.z);
+    }
     Vector3d world_T_shield = world_R_imu * imu_T_shield;
+    pub_debug_update(pnp->header, world_T_shield, world_R_imu);
 
     x.segment<3>(0) = world_T_shield;
     x.segment<3>(3) << 0, 0, 0;
@@ -311,7 +312,6 @@ void visual_callback(const geometry_msgs::TwistStamped::ConstPtr &pnp)
         else {
             initialize_visual(pnp);
         }
-        // pub_shield_odom(pnp->header);
     }
 }
 
@@ -334,6 +334,7 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &imu)
 			P_history.pop();
 			imu_buf.pop();
 		}
+        pub_shield_odom(imu->header);
     }
 }
 
@@ -346,6 +347,7 @@ int main(int argc, char **argv)
     n.param("imu_pose", pose_topic, string("/attitude_estimator/imu")); // 400Hz
     n.param("visual_topic", visual_topic, string("/pnp_twist"));
     n.param("publisher_topic", publisher_topic, string("/visual_ekf/shield_T_world"));
+    n.param("debug_topic", debug_topic, string("/visual_ekf/debug_pose"));
     n.param("accelerometer_noise_weight", acc_weight, 1000.0);
     n.param("visual_pose_weight", visual_q_weight, 10.0);
     n.param("node_sleep_time", sleep_time, 0);
@@ -368,8 +370,8 @@ int main(int argc, char **argv)
     ros::Subscriber s3 = n.subscribe(pose_topic, 100, imu_callback);
 //    pose_pub = n.advertise<geometry_msgs::PoseStamped>(publisher_topic, 100);
     odom_pub = n.advertise<nav_msgs::Odometry>(publisher_topic, 100);
-    debug_pub= n.advertise<geometry_msgs::PoseStamped>(string("/visual_ekf/visual_ekf_debug"), 100);
-//    debug_gyro_pub= n.advertise<geometry_msgs::Vector3Stamped>(string("/visual_ekf/gyro_debug"), 100);
+    debug_pub= n.advertise<geometry_msgs::PoseStamped>(debug_topic, 100);
+    debug_propagate_pub = n.advertise<geometry_msgs::Vector3Stamped>(string("/visual_ekf/propagate"), 100);
 
     ros::Rate r(100);
     ros::spin();
