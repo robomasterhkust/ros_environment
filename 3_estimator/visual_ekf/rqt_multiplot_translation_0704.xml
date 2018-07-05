@@ -35,11 +35,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/dji_sdk/angular_velocity_fused</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/visual_ekf/shield_T_world</topic>
+                                    <type>nav_msgs/Odometry</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vector/x</field>
+                                    <field>pose/pose/position/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -48,13 +48,13 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/dji_sdk/angular_velocity_fused</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/visual_ekf/shield_T_world</topic>
+                                    <type>nav_msgs/Odometry</type>
                                 </y_axis>
                             </axes>
                             <color>
                                 <custom_color>#0055ff</custom_color>
-                                <type>1</type>
+                                <type>0</type>
                             </color>
                             <data>
                                 <circular_buffer_capacity>1000</circular_buffer_capacity>
@@ -72,7 +72,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>gyro x fused angular velocity</title>
+                            <title>x</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -86,11 +86,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/dji_sdk/angular_velocity_fused</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/visual_ekf/shield_T_world</topic>
+                                    <type>nav_msgs/Odometry</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vector/y</field>
+                                    <field>pose/pose/position/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -99,8 +99,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/dji_sdk/angular_velocity_fused</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/visual_ekf/shield_T_world</topic>
+                                    <type>nav_msgs/Odometry</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -123,7 +123,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>gyro y fused angular velocity</title>
+                            <title>y</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -137,11 +137,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/dji_sdk/angular_velocity_fused</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/visual_ekf/shield_T_world</topic>
+                                    <type>nav_msgs/Odometry</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>vector/z</field>
+                                    <field>pose/pose/position/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -150,13 +150,13 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/dji_sdk/angular_velocity_fused</topic>
-                                    <type>geometry_msgs/Vector3Stamped</type>
+                                    <topic>/visual_ekf/shield_T_world</topic>
+                                    <type>nav_msgs/Odometry</type>
                                 </y_axis>
                             </axes>
                             <color>
                                 <custom_color>#ff0000</custom_color>
-                                <type>1</type>
+                                <type>0</type>
                             </color>
                             <data>
                                 <circular_buffer_capacity>1000</circular_buffer_capacity>
@@ -174,14 +174,14 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>gyro z fused angular velocity</title>
+                            <title>z</title>
                         </curve_2>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>100</plot_rate>
-                    <title>gyro Input</title>
+                    <title>filtered output</title>
                 </column_0>
                 <column_1>
                     <axes>
@@ -211,11 +211,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
+                                    <topic>/visual_ekf/debug_pose</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>pose/pose/orientation/w</field>
+                                    <field>pose/position/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -224,8 +224,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
+                                    <topic>/visual_ekf/debug_pose</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -248,7 +248,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>angle</title>
+                            <title>position x</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -262,11 +262,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
+                                    <topic>/visual_ekf/debug_pose</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>pose/pose/orientation/x</field>
+                                    <field>pose/position/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -275,8 +275,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
+                                    <topic>/visual_ekf/debug_pose</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -296,10 +296,10 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
+                                <type>1</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>x axis</title>
+                            <title>y</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -313,11 +313,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
+                                    <topic>/visual_ekf/debug_pose</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>pose/pose/orientation/y</field>
+                                    <field>pose/position/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -326,8 +326,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
+                                    <topic>/visual_ekf/debug_pose</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -350,65 +350,14 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>y axis</title>
+                            <title>z</title>
                         </curve_2>
-                        <curve_3>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>pose/pose/orientation/z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/visual_ekf/shield_pose_fused</topic>
-                                    <type>geometry_msgs/PoseWithCovarianceStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>z axis</title>
-                        </curve_3>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>filter angle axis</title>
+                    <title>debug position</title>
                 </column_1>
             </row_0>
             <row_1>
@@ -590,8 +539,8 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
+                                        <relative_minimum>-7</relative_minimum>
+                                        <type>2</type>
                                     </scale>
                                     <topic>/attitude_estimator/imu</topic>
                                     <type>sensor_msgs/Imu</type>
@@ -637,7 +586,7 @@
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>orientation</title>
+                    <title>attitude estimator</title>
                 </column_0>
                 <column_1>
                     <axes>
@@ -667,11 +616,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
+                                    <topic>/pnp_twist</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>pose/orientation/w</field>
+                                    <field>twist/linear/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -680,161 +629,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>angle</title>
-                        </curve_0>
-                        <curve_1>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>pose/orientation/x</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>x axis</title>
-                        </curve_1>
-                        <curve_2>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>pose/orientation/y</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>y axis</title>
-                        </curve_2>
-                        <curve_3>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>pose/orientation/z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/visual_ekf/visual_ekf_debug</topic>
-                                    <type>geometry_msgs/PoseStamped</type>
+                                    <topic>/pnp_twist</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -857,14 +653,116 @@
                                 <type>1</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>z axis</title>
-                        </curve_3>
+                            <title>x</title>
+                        </curve_0>
+                        <curve_1>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-7</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/pnp_twist</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>twist/linear/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/pnp_twist</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>y</title>
+                        </curve_1>
+                        <curve_2>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-7</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/pnp_twist</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>twist/linear/z</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/pnp_twist</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>z</title>
+                        </curve_2>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>visual angle axis</title>
+                    <title>visual raw</title>
                 </column_1>
             </row_1>
         </plots>
