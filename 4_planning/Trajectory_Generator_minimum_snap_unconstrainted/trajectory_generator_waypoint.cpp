@@ -21,8 +21,10 @@ Eigen::MatrixXd TrajectoryGeneratorWaypoint::PolyQPGeneration(
             const Eigen::Vector3d &Acc,
             const Eigen::VectorXd &Time) 
 {     
-      /*   Get initial trajectory which is a straight line( 0 zero end velocity and acceleration ) minimum snap trajectory or truly minumum snap trajectory  */
-      /*ros::Time time_1 = ros::Time::now();
+      /*   Get initial trajectory
+       * which is a straight line( 0 zero end velocity and acceleration ) minimum snap trajectory
+       * or truly minumum snap trajectory  */
+      /* ros::Time time_1 = ros::Time::now();
       ros::Time time_2, time_3;*/
 
       int m = Time.size();
