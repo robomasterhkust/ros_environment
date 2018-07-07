@@ -10,7 +10,7 @@
         <param name="visual_topic" type="string" value="/visual_ekf/test_visual"/>
         <param name="publisher_topic" type="string" value="/visual_ekf/shield_T_world"/>
         <param name="debug_topic" type="string" value="/visual_ekf/debug_odom"/>
-        <param name="accelerometer_noise_weight" type="double" value="1.0"/>
+        <param name="accelerometer_noise_weight" type="double" value="1000.0"/>
         <param name="visual_pose_weight" type="double" value="10.0"/>
         <param name="node_sleep_time" type="int" value="0"/>
     </node>
