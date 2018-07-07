@@ -83,17 +83,12 @@ std::string exec(const char* cmd) {
 int main(int argc, char **argv)
 {
         std::string usb_can = "/dev/ttyUSB";
-        std::string usb_video = "/dev/video";
-        std::string result = exec("bash /home/victory/catkin_ws/src/0_driver/usb_can/src/lsusb.sh");
+        std::string result = exec("bash /etc/lsusb.sh");
         std::cout << result;
         std::size_t found = result.find(usb_can);
         if (found != std::string::npos) {
                 std::cout << "usb can: "<<result[found+usb_can.length()]<<std::endl;
                 usb_can.push_back(result[found+usb_can.length()]);
-        }
-        found = result.find(usb_video);
-        if(found!=std::string::npos) {
-                std::cout<<"usb video: "<<result[found+usb_video.length()]<<std::endl;
         }
 
         ros::init(argc, argv, "canusb");
