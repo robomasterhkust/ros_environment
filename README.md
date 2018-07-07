@@ -5,10 +5,14 @@ System: Ubuntu 16.04 LTS
 
 ROS Version: Kinetic
 
+## Network setting
+-- rmsoldierX uses ip 192.168.1.22X in ASUS wifi network. All usernames are victory.
+-- copy the file tools/lsusb.sh to /etc
+
 ## Attention
 1. Never add CMakeList.txt to git repo.
 2. Never add CMakeList.txt to git ignore.
-3. There will be reminder that CMakeList.txt is not tracked in git. Just leave it there. Every computer has different src CMakeList.txt which linked to the place where ros is installed. 
+3. There will be reminder that CMakeList.txt is not tracked in git. Just leave it there. Every computer has different src CMakeList.txt which linked to the place where ros is installed.
 
 ## Software architecture
 

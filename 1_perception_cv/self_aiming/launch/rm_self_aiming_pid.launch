@@ -1,5 +1,5 @@
 <launch>
-    <include file="$(find rm_cv)/launch/detector.launch"/>
+    <!-- <include file="$(find rm_cv)/launch/detector.launch"/> -->
     <node pkg="self_aiming" name="server_node" type="server_node.py" output="screen"/>
     <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>
     <node pkg="self_aiming" name="armor_frame_pid_node" type="armor_frame_pid_node.py" output="screen"/>

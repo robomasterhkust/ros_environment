@@ -171,8 +171,8 @@ class armor_frame_pid:
                     self.z_err_int = z_err_int_max
                 else:
                     self.z_err_int = -z_err_int_max
-            print 'y:%s' %(self.y_err_int)
-            print 'z:%s'%(self.z_err_int)
+            # print 'y:%s' %(self.y_err_int)
+            # print 'z:%s'%(self.z_err_int)
             vy = y_kp * self.y_err + y_kd * \
                 (self.y_err - self.prev_y_err) + y_ki * self.y_err_int
             vz = z_kp * self.z_err + z_kd * \
