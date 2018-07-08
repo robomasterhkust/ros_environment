@@ -10,9 +10,10 @@
         <param name="visual_topic" type="string" value="/pnp_twist"/>
         <param name="publisher_topic" type="string" value="/visual_ekf/shield_T_world"/>
         <param name="debug_topic" type="string" value="/visual_ekf/debug_odom"/>
-        <param name="accelerometer_noise_weight" type="double" value="1000.0"/>
+        <param name="accelerometer_noise_weight" type="double" value="10000.0"/>
         <param name="accelerometer_bias_noise_weight" type="double" value="100.0"/>
-        <param name="visual_pose_weight" type="double" value="10.0"/>
+        <param name="gravity_pose_weight" type="double" value="10.0"/>
+        <param name="visual_translation_weight" type="double" value="1.0"/>
         <param name="node_sleep_time" type="int" value="0"/>
     </node>
     <!--<node pkg="rosbag" type="play" name="static_target_moving_chassis"-->
