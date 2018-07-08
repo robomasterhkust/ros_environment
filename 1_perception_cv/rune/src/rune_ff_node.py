@@ -62,7 +62,7 @@ class rune_feedforward:
             rune_T_camera_rot = opencv_rotation.dot(rune_T_camera)
             # to be modified
             # depends on the location of camera
-            camera_T_gimbal = np.array([-85, -125, -190])
+            camera_T_gimbal = np.array([125,140,-295])
             T = rune_T_camera_rot + camera_T_gimbal
 
             normalized_T = T / np.linalg.norm(T)
