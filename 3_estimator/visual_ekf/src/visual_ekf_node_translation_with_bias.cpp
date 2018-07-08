@@ -5,6 +5,7 @@
  * With imu in 400Hz and camera translation in 30Hz
  * V1: estimation for rotation only
  * V2: give the translation of the shield, added acc bias
+ * V3: estimate the translation and rotation
  */
 #include <iostream>
 #include <ros/ros.h>
@@ -32,11 +33,11 @@ int sleep_time;
 
 /**
  * Define states:
- *      x = [translation_x, y, z; velocity_x, y, z; acc bias]
+ *      x = [quaternion w, x, y, z; translation_x, y, z; velocity_x, y, z; acc bias; gyro bias]
  * Define inputs:
- *      u = [acc], raw accelerometer
+ *      u = [acc; gyro], raw accelerometer, gyroscope
  * Define noises:
- *      n = [n_acc, n_bias_acc]
+ *      n = [n_acc, n_gyro, n_bias_acc, n_bias_gyro]
  */
 VectorXd x(9);         // state
 MatrixXd P = MatrixXd::Identity(9, 9); // covariance
@@ -66,6 +67,8 @@ Vector3d imu_T_camera = MatrixXd::Zero(3, 1);
 //// DEBUG only
 double t_prev_update;   // previous update time
 Vector3d world_T_shield_prev = MatrixXd::Zero(3, 1); // previous visual translation
+Vector3d a_int = MatrixXd::Zero(3, 1);
+Vector3d a_int_int = MatrixXd::Zero(3, 1);
 
 void pub_shield_odom(const std_msgs::Header& header)
 {
@@ -144,9 +147,7 @@ void pub_debug_propagate(const std_msgs::Header& header,
     debug_propagate_pub.publish(acc_compare);
 }
 
-// DEBUG only
-Vector3d a_int = MatrixXd::Zero(3, 1);
-Vector3d a_int_int = MatrixXd::Zero(3, 1);
+
 void propagate(const sensor_msgs::Imu &imu)
 {
     double cur_t = imu.header.stamp.toSec();
@@ -159,7 +160,8 @@ void propagate(const sensor_msgs::Imu &imu)
     double dt = cur_t - t_prev;
     dt = (dt < IMU_UPDATE_TIME * 5) ? dt : IMU_UPDATE_TIME * 5;
     ROS_INFO("dt in propagate is %f, at the cur_t %f", dt, cur_t);
-    acc_wo_g = world_R_imu.toRotationMatrix() * (a - x.segment<3>(6)) - G;
+    // acc_wo_g = world_R_imu.toRotationMatrix() * (a - x.segment<3>(6)) - G;
+    acc_wo_g = (a - x.segment<3>(6)) - world_R_imu.toRotationMatrix().transpose() * G;
     x.segment<3>(0) += x.segment<3>(3) * dt + 0.5 * acc_wo_g * dt * dt;
     x.segment<3>(3) += acc_wo_g * dt;
 
@@ -249,7 +251,8 @@ static void update(const geometry_msgs::TwistStamped &pnp)
                                   imu_buf.front()->orientation.z);
     }
     Vector3d world_T_shield = world_R_imu.toRotationMatrix() * imu_T_shield;
-    pub_debug_update(pnp.header, world_T_shield, world_R_imu, cur_t);
+    // pub_debug_update(pnp.header, world_T_shield, world_R_imu, cur_t);
+    pub_debug_update(pnp.header, imu_T_shield, world_R_imu, cur_t);
 
     MatrixXd C = MatrixXd::Zero(3, 9);
     C.block<3, 3>(0, 0) = MatrixXd::Identity(3, 3);
@@ -261,7 +264,8 @@ static void update(const geometry_msgs::TwistStamped &pnp)
     cout << "C " << endl << C << endl;
     cout << "K " << endl << K << endl;
     cout << "Q " << endl << Q << endl;
-    x = x + K * (world_T_shield - C * x);
+    // x = x + K * (world_T_shield - C * x);
+    x = x + K * (imu_T_shield - C * x);
     P = P - K * C * P;
     cout << "P " << endl << P << endl;
     cout << "x " << endl << x.transpose() << endl;
@@ -317,11 +321,11 @@ static void initialize_visual(const geometry_msgs::TwistStamped::ConstPtr &pnp)
                                   imu_buf.front()->orientation.y,
                                   imu_buf.front()->orientation.z);
     }
-    Vector3d world_T_shield = world_R_imu.toRotationMatrix() * imu_T_shield;
-    pub_debug_update(pnp->header, world_T_shield, world_R_imu, cur_t);
+    // Vector3d world_T_shield = world_R_imu.toRotationMatrix() * imu_T_shield;
+    pub_debug_update(pnp->header, imu_T_shield, world_R_imu, cur_t);
 
     x.setZero();
-    x.segment<3>(0) = world_T_shield;
+    x.segment<3>(0) = imu_T_shield;
     x.segment<3>(3) << 0, 0, 0;
     x.segment<3>(6) << 0, 0, 0;
 
