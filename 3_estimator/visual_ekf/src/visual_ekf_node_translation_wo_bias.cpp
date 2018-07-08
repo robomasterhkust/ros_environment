@@ -146,6 +146,7 @@ void pub_debug_propagate(const std_msgs::Header& header,
 
 // DEBUG only
 Vector3d a_int = MatrixXd::Zero(3, 1);
+Vector3d a_int_int = MatrixXd::Zero(3, 1);
 void propagate(const sensor_msgs::Imu &imu)
 {
     double cur_t = imu.header.stamp.toSec();
@@ -161,8 +162,10 @@ void propagate(const sensor_msgs::Imu &imu)
     acc_wo_g = world_R_imu.toRotationMatrix() * a - G;
     x.segment<3>(0) += x.segment<3>(3) * dt + 0.5 * acc_wo_g * dt * dt;
     x.segment<3>(3) += acc_wo_g * dt;
+
+    a_int_int += a_int * dt + 0.5 * acc_wo_g * dt * dt;
     a_int += acc_wo_g * dt;
-    pub_debug_propagate(imu.header, acc_wo_g, a_int);
+    pub_debug_propagate(imu.header, acc_wo_g, a_int_int);
 
     MatrixXd A = MatrixXd::Zero(6, 6);
     A.block<3, 3>(0, 3) = MatrixXd::Identity(3, 3);
@@ -254,7 +257,7 @@ static void update(const geometry_msgs::TwistStamped &pnp)
     MatrixXd K(6, 3);
     K = P * C.transpose() * (C * P * C.transpose() + W * Q * W.transpose()).inverse();
 //    cout << "C " << endl << C << endl;
-    cout << "K " << endl << K << endl;
+//    cout << "K " << endl << K << endl;
 //    cout << "Q " << endl << Q << endl;
     x = x + K * (world_T_shield - C * x);
     P = P - K * C * P;
