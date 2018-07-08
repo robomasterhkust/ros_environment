@@ -1330,11 +1330,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf_tester/odom</topic>
-                                    <type>nav_msgs/Odometry</type>
+                                    <topic>/visual_ekf/test_imu</topic>
+                                    <type>sensor_msgs/Imu</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/twist/angular/x</field>
+                                    <field>linear_acceleration/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -1343,8 +1343,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf_tester/odom</topic>
-                                    <type>nav_msgs/Odometry</type>
+                                    <topic>/visual_ekf/test_imu</topic>
+                                    <type>sensor_msgs/Imu</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -1381,11 +1381,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf_tester/odom</topic>
-                                    <type>nav_msgs/Odometry</type>
+                                    <topic>/visual_ekf/test_imu</topic>
+                                    <type>sensor_msgs/Imu</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/twist/angular/y</field>
+                                    <field>linear_acceleration/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -1394,8 +1394,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf_tester/odom</topic>
-                                    <type>nav_msgs/Odometry</type>
+                                    <topic>/visual_ekf/test_imu</topic>
+                                    <type>sensor_msgs/Imu</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -1432,11 +1432,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf_tester/odom</topic>
-                                    <type>nav_msgs/Odometry</type>
+                                    <topic>/visual_ekf/test_imu</topic>
+                                    <type>sensor_msgs/Imu</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/twist/angular/z</field>
+                                    <field>linear_acceleration/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -1445,8 +1445,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf_tester/odom</topic>
-                                    <type>nav_msgs/Odometry</type>
+                                    <topic>/visual_ekf/test_imu</topic>
+                                    <type>sensor_msgs/Imu</type>
                                 </y_axis>
                             </axes>
                             <color>
