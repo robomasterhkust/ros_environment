@@ -60,7 +60,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/visual_ekf_node_translation.cpp)
+add_executable(${PROJECT_NAME}_node src/visual_ekf_node_translation_with_bias.cpp)
 # add_executable(${PROJECT_NAME}_node_rotation src/visual_ekf_node_rotation.cpp)
 add_executable(${PROJECT_NAME}_test src/visual_ekf_test_rotation.cpp)
 
