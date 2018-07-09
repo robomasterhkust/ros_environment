@@ -44,25 +44,29 @@ class rune_feedforward:
         else:
             k_y = 0.0
             k_z = 0.0
+            center_x = 0.0
+            center_y = 0.0
             if rospy.has_param('/server_node/k_y'):
                 k_y = rospy.get_param('/server_node/k_y')
                 k_z = rospy.get_param('/server_node/k_z')
+                center_x = rospy.get_param('/server_node/center_x')
+                center_y = rospy.get_param('/server_node/center_y')
+            theta =  math.pi /9
             rune_T_camera = np.array(
-                [point.x, point.y, point.z])
-            # theta = 3 * math.pi / 34
+                [point.x, point.y*np.cos(theta)-point.z*np.sin(theta), point.z*np.cos(theta)+point.y*np.sin(theta)])
             # yangjiao = np.array([[1, 0, 0],
-            #                      [0, np.cos(theta), np.sin(theta)],
-            #                      [0, -np.sin(theta), np.cos(theta)]])
+            #                      [0, np.cos(theta), -np.sin(theta)],
+            #                      [0, np.sin(theta), np.cos(theta)]])
             # rune_T_camera = yangjiao.dot(rune_T_camera)
-            # rospy.loginfo(
-            #     "rune center temp: %f, %f, %f", rune_T_camera[0], rune_T_camera[1], rune_T_camera[2])
+            rospy.loginfo(
+                "rune center temp: %f, %f, %f", rune_T_camera[0], rune_T_camera[1], rune_T_camera[2])
             opencv_rotation = np.array([[0, 0, 1],
                                         [-1, 0, 0],
                                         [0, -1, 0]])
             rune_T_camera_rot = opencv_rotation.dot(rune_T_camera)
             # to be modified
             # depends on the location of camera
-            camera_T_gimbal = np.array([125,140,-295])
+            camera_T_gimbal = np.array([119, 135, -275])
             T = rune_T_camera_rot + camera_T_gimbal
 
             normalized_T = T / np.linalg.norm(T)
@@ -83,8 +87,8 @@ class rune_feedforward:
             rospy.loginfo("rune center euler angle zyx: %f, %f, %f",
                           T_euler0, T_euler1, T_euler2)
 
-            vel_msg.angular.y = T_euler1 * k_y
-            vel_msg.angular.z = T_euler0 * k_z
+            vel_msg.angular.y = T_euler1 * k_y + center_y
+            vel_msg.angular.z = T_euler0 * k_z + center_x 
         self.cmd_pub.publish(vel_msg)
 
 
