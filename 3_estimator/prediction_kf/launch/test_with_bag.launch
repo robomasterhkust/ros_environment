@@ -6,6 +6,7 @@
         <param name="debug_topic" type="string" value="/prediction_kf/debug"/>
         <param name="position_weight" type="double" value="2000.0"/>
         <param name="velocity_weight" type="double" value="10000.0"/>
+        <param name="chi_square_threshold" type="double" value="1000.0"/>
         <param name="repropagate_time" type="int" value="5"/>
     </node>
     <node pkg="rosbag" type="play" name="static_target_moving_chassis"

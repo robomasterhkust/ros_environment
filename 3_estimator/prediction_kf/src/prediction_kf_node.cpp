@@ -31,9 +31,11 @@ ros::Time t_prev;
 double pos_weight, vel_weight;
 const double CV_UPDATE_TIME_MAX = 0.1; // maxium allowed update time
 const int ROS_FREQ = 100;
-const int REPROPAGATE_TIME = 4; // repropagate after the update
+int REPROPAGATE_TIME = 4; // repropagate after the update
 int propagate_count = 0;
+double velocity_threshold = 100;
 Vector3d imu_T_shield_prev = MatrixXd::Zero(3, 1);
+bool vel_is_outlier = false;
 
 static void pub_result(const ros::Time &stamp)
 {
@@ -61,6 +63,21 @@ static void pub_debug(const std_msgs::Header &header,
     debug_pub.publish(debug);
 }
 
+// Chi-square test for outlier rejection
+static bool velocity_is_outlier(const double *vel_x, const double *vel_y)
+{
+    Vector2d r = MatrixXd(2, 1);
+    MatrixXd S = MatrixXd(2, 2);
+    // r = z - H * x, residual
+    // S = H P H' + R, residual covariance
+    r << *vel_x - x(2), *vel_y - x(3);
+    S = P.bottomRightCorner(2, 2) + R.bottomRightCorner(2, 2);
+    MatrixXd chi_square = r.transpose() * S * r;
+    cout << "chi_square " << endl << chi_square << endl;
+
+    return (chi_square(0, 0) > velocity_threshold);
+}
+
 static void preprocess_visual(const geometry_msgs::TwistStamped &pnp,
                               double *pos_x, double *pos_y,
                               double *vel_x, double *vel_y)
@@ -78,7 +95,8 @@ static void preprocess_visual(const geometry_msgs::TwistStamped &pnp,
     // calculate and check the velocity
     dt_update = (dt_update < CV_UPDATE_TIME_MAX) ? dt_update : CV_UPDATE_TIME_MAX;
     imu_vel_shield = (imu_T_shield - imu_T_shield_prev) / dt_update;
-    // TODO: Outlier rejection
+    vel_is_outlier = velocity_is_outlier(vel_x, vel_y);
+    if (vel_is_outlier) { imu_vel_shield.setZero(); }
 
     *pos_x = imu_T_shield(0);
     *pos_y = imu_T_shield(1);
@@ -101,12 +119,26 @@ static void propagate(const double &dt) {
 static void update(const double *pos_x, const double *pos_y,
                    const double *vel_x, const double *vel_y)
 {
-    MatrixXd H = MatrixXd::Identity(4, 4); // observation matrix
-
+    MatrixXd H, K, z;
+    // if (!*vel_is_outlier) {
+    H = MatrixXd::Identity(4, 4); // observation matrix
     // MatrixXd K = P * H.transpose() * (H * P * H.transpose() + R).inverse();
-    MatrixXd K = (H * P * H.transpose() + R).ldlt().solve(P * H.transpose());
-    VectorXd z = MatrixXd::Zero(4, 1);
+    K = (H * P * H.transpose() + R).ldlt().solve(P * H.transpose());
+    z = MatrixXd::Zero(4, 1);
     z << *pos_x, *pos_y, *vel_x, *vel_y;
+    // }
+
+/*
+    else {
+        H = MatrixXd::Identity(2, 4); // observation matrix
+        cout << "H in outlier" << endl << H << endl;
+        K = P * H.transpose() * (H * P * H.transpose() + R.topLeftCorner(2, 2)).inverse();
+        cout << "K in outlier" << endl << K << endl;
+        z = MatrixXd::Zero(2, 1);
+        z << *pos_x, *pos_y;
+    }
+*/
+
     x = x + K * (z - H * x);
     P = P - K * H * P;
 }
@@ -162,9 +194,11 @@ void visual_callback(const geometry_msgs::TwistStamped::ConstPtr &pnp)
         else {
             double pos_x = 0, pos_y = 0, vel_x = 0, vel_y = 0;
             preprocess_visual(*pnp, &pos_x, &pos_y, &vel_x, &vel_y);
-            update(&pos_x, &pos_y, &vel_x, &vel_y);
-            propagate_count = 0;
-            repropagate();
+            if (!vel_is_outlier) {
+                update(&pos_x, &pos_y, &vel_x, &vel_y);
+                propagate_count = 0;
+                repropagate();
+            }
             pub_result(pnp->header.stamp);
         }
     }
@@ -179,6 +213,7 @@ int main(int argc, char **argv)
     n.param("publisher_topic", publisher_topic, string("/prediction_kf/predict"));
     n.param("debug_topic", debug_topic, string("/prediction_kf/debug"));
     n.param("repropagate_time", REPROPAGATE_TIME, 5);
+    n.param("chi_square_threshold", velocity_threshold, 100.0);
     n.param("position_weight", pos_weight, 2000.0);
     n.param("velocity_weight", vel_weight, 10000.0);
     imu_R_camera <<  0, 0, 1,
