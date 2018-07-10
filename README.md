@@ -53,6 +53,9 @@ http://wiki.ros.org/ROS/Installation
 
 `sudo apt-get install terminator cmake vim htop libmuparser-dev ntp* -y`
 
+install these for rqt_multiplot
+`sudo apt-get install ros-kinetic-rqt libqwt-dev ros-kinetic-rqt-multiplot -y`
+
 2. set up the .bashrc for speed up the development process
 
 `vim ~/.bashrc`
