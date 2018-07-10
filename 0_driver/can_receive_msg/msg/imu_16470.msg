@@ -1,5 +1,2 @@
-Header header1
-Header header2
-Header header3
+Header header
 float32[4] quaternion
-uint32 timestamp
