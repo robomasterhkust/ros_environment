@@ -43,12 +43,12 @@ ros::Publisher location_zyaw_publisher;
 ros::Publisher imu_16470_publisher;
 ros::Publisher motor_debug_publisher;
 
-float temp0_speed;
-float temp1_speed;
-float temp2_speed;
-float temp0_speed_curve;
-float temp1_speed_curve;
-float temp2_speed_curve;
+int16_t temp0_speed;
+int16_t temp1_speed;
+int16_t temp2_speed;
+int16_t temp0_speed_curve;
+int16_t temp1_speed_curve;
+int16_t temp2_speed_curve;
 
 
 float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
@@ -183,34 +183,36 @@ void msgCallback(const can_msgs::Frame &f) {
   }
 
   case CAN_CHASSIS_DEBUG_FR: {
-    temp0_speed = data_to_float(f, 0, 1, 2, 3);
-    temp0_speed_curve = data_to_float(f, 4, 5, 6, 7);
+    temp0_speed       = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
+    temp0_speed_curve = (int16_t)((uint16_t)f.data[3] << 8 | (uint16_t)f.data[2]);
     break;
   }
 
   case CAN_CHASSIS_DEBUG_FL: {
-    temp1_speed = data_to_float(f, 0, 1, 2, 3);
-    temp1_speed_curve = data_to_float(f, 4, 5, 6, 7);
+    temp1_speed       = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
+    temp1_speed_curve = (int16_t)((uint16_t)f.data[3] << 8 | (uint16_t)f.data[2]);
     break;
   }
 
   case CAN_CHASSIS_DEBUG_BL: {
-    temp2_speed = data_to_float(f, 0, 1, 2, 3);
-    temp2_speed_curve = data_to_float(f, 4, 5, 6, 7);
+    temp2_speed       = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
+    temp2_speed_curve = (int16_t)((uint16_t)f.data[3] << 8 | (uint16_t)f.data[2]);
     break;
   }
 
   case CAN_CHASSIS_DEBUG_BR: {
     can_receive_msg::motor_debug motor_debug_msg;
-    motor_debug_msg.speed_[0] = temp0_speed;
-    motor_debug_msg.speed_[1] = temp1_speed;
-    motor_debug_msg.speed_[2] = temp2_speed;
-    motor_debug_msg.speed_curve[0] = temp0_speed_curve;
-    motor_debug_msg.speed_curve[1] = temp1_speed_curve;
-    motor_debug_msg.speed_curve[2] = temp2_speed_curve;
+    motor_debug_msg.speed_[0] = temp0_speed / 60.0f;
+    motor_debug_msg.speed_[1] = temp1_speed / 60.0f;
+    motor_debug_msg.speed_[2] = temp2_speed / 60.0f;
+    motor_debug_msg.speed_curve[0] = temp0_speed_curve / 60.0f;
+    motor_debug_msg.speed_curve[1] = temp1_speed_curve / 60.0f;
+    motor_debug_msg.speed_curve[2] = temp2_speed_curve / 60.0f;
+    int16_t tem3_speed        = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
+    int16_t temp3_speed_curve = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
 
-    motor_debug_msg.speed_[3] = data_to_float(f, 0, 1, 2, 3);
-    motor_debug_msg.speed_curve[3] = data_to_float(f, 4, 5, 6, 7);
+    motor_debug_msg.speed_[3] = tem3_speed / 60.0f;
+    motor_debug_msg.speed_curve[3] = temp3_speed_curve / 60.0f;
     motor_debug_msg.header = f.header;
     motor_debug_publisher.publish(motor_debug_msg);
     break;

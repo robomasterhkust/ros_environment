@@ -1,8 +1,8 @@
 <launch>
     <node pkg="socketcan_bridge" type="socketcan_to_topic_node" name="socketcan_to_topic_node" output="screen">
-        <param name="can_device" value="can1"/>
+        <param name="can_device" value="can0"/>
     </node>
     <node pkg="can_receive" type="can_receive_node" name="can_receive_1" output="screen">
-        <param name="can_device" value="can1"/>
+        <param name="can_device" value="can0"/>
     </node>
 </launch>
