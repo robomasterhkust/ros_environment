@@ -4,6 +4,7 @@
 #include <can_receive_msg/imu_16470.h>
 #include <can_receive_msg/location_xy.h>
 #include <can_receive_msg/location_zyaw.h>
+#include <can_receive_msg/motor_debug.h>
 #include <can_receive_msg/power_buffer.h>
 #include <can_receive_msg/power_shooter_rfid_bufferinfo.h>
 #include <can_receive_msg/power_vol_cur.h>
@@ -26,6 +27,11 @@
 #define CAN_CHASSIS_BOARD_LOCATION_Z_YAW_ID 0x009
 #define CAN_GIMBAL_SEND_16470_ID 0x010
 
+#define CAN_CHASSIS_DEBUG_FR 0x211
+#define CAN_CHASSIS_DEBUG_FL 0x212
+#define CAN_CHASSIS_DEBUG_BL 0x213
+#define CAN_CHASSIS_DEBUG_BR 0x214
+
 ros::Publisher dbus_publisher;
 ros::Publisher gameinfo_publisher;
 ros::Publisher projectile_hlth_publisher;
@@ -35,6 +41,7 @@ ros::Publisher power_shooter_rfid_bufferinfo_publisher;
 ros::Publisher location_xy_publisher;
 ros::Publisher location_zyaw_publisher;
 ros::Publisher imu_16470_publisher;
+ros::Publisher motor_debug_publisher;
 
 float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
   uint32_t hehe = ((uint32_t)(f.data[d] << 24) |
@@ -45,6 +52,7 @@ float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
 }
 
 void msgCallback(const can_msgs::Frame &f) {
+  can_receive_msg::motor_debug motor_debug_msg;
   switch (f.id) {
   case CAN_GIMBAL_BOARD_ID: {
     can_receive_msg::dbus dbus_msg;
@@ -149,7 +157,7 @@ void msgCallback(const can_msgs::Frame &f) {
     break;
   }
 
-  case CAN_GIMBAL_SEND_16470_ID:
+  case CAN_GIMBAL_SEND_16470_ID: {
     can_receive_msg::imu_16470 imu_16470_msg;
     imu_16470_msg.header = f.header;
     int16_t a = (int16_t)f.data[1] << 8 | (int16_t)f.data[0];
@@ -165,17 +173,40 @@ void msgCallback(const can_msgs::Frame &f) {
 
     break;
   }
+
+  case CAN_CHASSIS_DEBUG_FR: {
+    motor_debug_msg.speed_[0] = data_to_float(f, 0, 1, 2, 3);
+    motor_debug_msg.speed_curve[0] = data_to_float(f, 4, 5, 6, 7);
+    break;
+  }
+
+  case CAN_CHASSIS_DEBUG_FL: {
+    motor_debug_msg.speed_[1] = data_to_float(f, 0, 1, 2, 3);
+    motor_debug_msg.speed_curve[1] = data_to_float(f, 4, 5, 6, 7);
+    break;
+  }
+
+  case CAN_CHASSIS_DEBUG_BL: {
+    motor_debug_msg.speed_[2] = data_to_float(f, 0, 1, 2, 3);
+    motor_debug_msg.speed_curve[2] = data_to_float(f, 4, 5, 6, 7);
+    break;
+  }
+
+  case CAN_CHASSIS_DEBUG_BR: {
+    motor_debug_msg.speed_[3] = data_to_float(f, 0, 1, 2, 3);
+    motor_debug_msg.speed_curve[3] = data_to_float(f, 4, 5, 6, 7);
+    motor_debug_msg.header = f.header;
+    motor_debug_publisher.publish(motor_debug_msg);
+    break;
+  }
+  }
 }
 
 int main(int argc, char *argv[]) {
   ros::init(argc, argv, "can_receive_node");
   ros::NodeHandle nh("~"), nh_param("~");
 
-  std::string can_device;
-  nh_param.param<std::string>("can_device", can_device, "can1");
-
   dbus_publisher = nh.advertise<can_receive_msg::dbus>("dbus", 100);
-
   gameinfo_publisher = nh.advertise<can_receive_msg::gameinfo>("gameinfo", 100);
   projectile_hlth_publisher =
       nh.advertise<can_receive_msg::projectile_hlth>("projectile_hlth", 100);
@@ -192,6 +223,8 @@ int main(int argc, char *argv[]) {
       nh.advertise<can_receive_msg::power_buffer>("power_buffer", 100);
   imu_16470_publisher =
       nh.advertise<can_receive_msg::imu_16470>("imu_16470", 100);
+  motor_debug_publisher =
+      nh.advertise<can_receive_msg::motor_debug>("motor_debug", 100);
 
   ros::Subscriber can_subscriber =
       nh.subscribe("/canusb/canRx", 100, msgCallback);

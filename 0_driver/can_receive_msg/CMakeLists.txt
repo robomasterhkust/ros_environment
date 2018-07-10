@@ -17,7 +17,8 @@ add_message_files(DIRECTORY msg
         power_shooter_rfid_bufferinfo.msg
         power_vol_cur.msg
         projectile_hlth.msg
-		imu_16470.msg
+		    imu_16470.msg
+        motor_debug.msg
         )
 
 generate_messages(
