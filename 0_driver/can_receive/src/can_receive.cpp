@@ -43,6 +43,14 @@ ros::Publisher location_zyaw_publisher;
 ros::Publisher imu_16470_publisher;
 ros::Publisher motor_debug_publisher;
 
+float temp0_speed;
+float temp1_speed;
+float temp2_speed;
+float temp0_speed_curve;
+float temp1_speed_curve;
+float temp2_speed_curve;
+
+
 float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
   uint32_t hehe = ((uint32_t)(f.data[d] << 24) |
                    ((uint32_t)(f.data[c] << 16) |
@@ -52,7 +60,7 @@ float data_to_float(const can_msgs::Frame &f, int a, int b, int c, int d) {
 }
 
 void msgCallback(const can_msgs::Frame &f) {
-  can_receive_msg::motor_debug motor_debug_msg;
+
   switch (f.id) {
   case CAN_GIMBAL_BOARD_ID: {
     can_receive_msg::dbus dbus_msg;
@@ -175,24 +183,32 @@ void msgCallback(const can_msgs::Frame &f) {
   }
 
   case CAN_CHASSIS_DEBUG_FR: {
-    motor_debug_msg.speed_[0] = data_to_float(f, 0, 1, 2, 3);
-    motor_debug_msg.speed_curve[0] = data_to_float(f, 4, 5, 6, 7);
+    temp0_speed = data_to_float(f, 0, 1, 2, 3);
+    temp0_speed_curve = data_to_float(f, 4, 5, 6, 7);
     break;
   }
 
   case CAN_CHASSIS_DEBUG_FL: {
-    motor_debug_msg.speed_[1] = data_to_float(f, 0, 1, 2, 3);
-    motor_debug_msg.speed_curve[1] = data_to_float(f, 4, 5, 6, 7);
+    temp1_speed = data_to_float(f, 0, 1, 2, 3);
+    temp1_speed_curve = data_to_float(f, 4, 5, 6, 7);
     break;
   }
 
   case CAN_CHASSIS_DEBUG_BL: {
-    motor_debug_msg.speed_[2] = data_to_float(f, 0, 1, 2, 3);
-    motor_debug_msg.speed_curve[2] = data_to_float(f, 4, 5, 6, 7);
+    temp2_speed = data_to_float(f, 0, 1, 2, 3);
+    temp2_speed_curve = data_to_float(f, 4, 5, 6, 7);
     break;
   }
 
   case CAN_CHASSIS_DEBUG_BR: {
+    can_receive_msg::motor_debug motor_debug_msg;
+    motor_debug_msg.speed_[0] = temp0_speed;
+    motor_debug_msg.speed_[1] = temp1_speed;
+    motor_debug_msg.speed_[2] = temp2_speed;
+    motor_debug_msg.speed_[0] = temp0_speed_curve;
+    motor_debug_msg.speed_[1] = temp1_speed_curve;
+    motor_debug_msg.speed_[2] = temp2_speed_curve;
+
     motor_debug_msg.speed_[3] = data_to_float(f, 0, 1, 2, 3);
     motor_debug_msg.speed_curve[3] = data_to_float(f, 4, 5, 6, 7);
     motor_debug_msg.header = f.header;
