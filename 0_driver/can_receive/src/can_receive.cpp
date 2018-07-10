@@ -205,9 +205,9 @@ void msgCallback(const can_msgs::Frame &f) {
     motor_debug_msg.speed_[0] = temp0_speed;
     motor_debug_msg.speed_[1] = temp1_speed;
     motor_debug_msg.speed_[2] = temp2_speed;
-    motor_debug_msg.speed_[0] = temp0_speed_curve;
-    motor_debug_msg.speed_[1] = temp1_speed_curve;
-    motor_debug_msg.speed_[2] = temp2_speed_curve;
+    motor_debug_msg.speed_curve[0] = temp0_speed_curve;
+    motor_debug_msg.speed_curve[1] = temp1_speed_curve;
+    motor_debug_msg.speed_curve[2] = temp2_speed_curve;
 
     motor_debug_msg.speed_[3] = data_to_float(f, 0, 1, 2, 3);
     motor_debug_msg.speed_curve[3] = data_to_float(f, 4, 5, 6, 7);
