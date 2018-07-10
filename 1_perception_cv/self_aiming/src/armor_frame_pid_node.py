@@ -36,8 +36,8 @@ class armor_frame_pid:
     def __init__(self):
         self.armor_subscriber = rospy.Subscriber(
             "/detected_armor", ArmorRecord, self.cv_callback, queue_size=1)
-        # self.imu_16470_subscriber = rospy.Subscriber(
-        #     "/can_receive_1/imu_16470", imu_16470, self.imu_callback, queue_size=1)
+        self.imu_16470_subscriber = rospy.Subscriber(
+            "/can_receive_node/imu_16470", imu_16470, self.imu_callback, queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
 
         self.y_err = 0
@@ -47,23 +47,16 @@ class armor_frame_pid:
         self.y_err_int = 0
         self.z_err_int = 0
 
-        # self.time_queue = deque()
-        # self.imu_queue = deque()
+        self.time_queue = deque()
+        self.imu_queue = deque()
 
-    # def imu_callback(self, subImu_16470):
-    #     current_quaternion = np.array([
-    #         subImu_16470.quaternion[1], subImu_16470.quaternion[2], subImu_16470.quaternion[3], subImu_16470.quaternion[0]])
-    #     current_time = subImu_16470.header3.stamp
-    #     self.imu_queue.append(current_quaternion)
-    #     self.time_queue.append(current_time)
-    #     rospy.loginfo("imu callback -- queue length: %d", len(self.imu_queue))
-    #
-    # def print_imu_queue(self):
-    #     for i in range(len(self.time_queue)):
-    #         # rospy.loginfo("The quaternion representation is %s %s %s %s." % (
-    #         #     self.imu_queue[i][0], self.imu_queue[i][1], self.imu_queue[i][2], self.imu_queue[i][3]))
-    #         rospy.loginfo("time:%s " %
-    #                       (self.time_queue[i].to_sec()))
+    def imu_callback(self, subImu_16470):
+        current_quaternion = np.array([
+            subImu_16470.quaternion[1], subImu_16470.quaternion[2], subImu_16470.quaternion[3], subImu_16470.quaternion[0]])
+        current_time = subImu_16470.header.stamp
+        self.imu_queue.append(current_quaternion)
+        self.time_queue.append(current_time)
+        rospy.loginfo("imu callback -- queue length: %d", len(self.imu_queue))
 
     def cv_callback(self, subArmorRecord):
         vel_msg = Twist()
@@ -71,36 +64,40 @@ class armor_frame_pid:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
         else:
-            # image_time = subArmorRecord.header.stamp
+            image_time = subArmorRecord.header.stamp
             # rospy.loginfo("cv time: %s" % (image_time.to_sec()))
-            # rospy.loginfo("begin: length %d", len(self.imu_queue))
-            # # self.print_imu_queue()
-            # start_index = 1
-            # for i in range(len(self.time_queue)):
-            #     if self.time_queue[i] < image_time:
-            #         continue
-            #     else:
-            #         start_index = i
-            #         break
-            #
-            # for _ in range(start_index - 1):
-            #     rospy.loginfo("pop left")
-            #     self.imu_queue.popleft()
-            #     self.time_queue.popleft()
-            # rospy.loginfo("after: length %d", len(self.imu_queue))
-            # # self.print_imu_queue()
-            #
-            # start_quaternion = self.imu_queue[0]
-            # end_quaternion = self.imu_queue[len(self.imu_queue) - 1]
-            #
-            # start_quaternion[3] = -start_quaternion[3]
-            #
-            # diff_quaternion = quaternion_multiply(
-            #     end_quaternion, start_quaternion)
-            # diff_rotation_matrix = quaternion_matrix(diff_quaternion)
-            # diff_rotation_matrix = diff_rotation_matrix[0:3, 0:3]
-            # print "The quaternion representation is %s %s %s %s." % (
-            #     diff_quaternion[0], diff_quaternion[1], diff_quaternion[2], diff_quaternion[3])
+            rospy.loginfo("begin: length %d", len(self.imu_queue))
+            start_index = 1
+            for i in range(len(self.time_queue)):
+                if self.time_queue[i] < image_time:
+                    continue
+                else:
+                    start_index = i
+                    break
+
+            for _ in range(start_index - 1):
+                # rospy.loginfo("pop left")
+                self.imu_queue.popleft()
+                self.time_queue.popleft()
+            rospy.loginfo("after: length %d", len(self.imu_queue))
+
+            start_quaternion = self.imu_queue[0]
+            print "The starting quaternion is %s %s %s %s." % (
+                start_quaternion[0], start_quaternion[1], start_quaternion[2], start_quaternion[3])
+
+            end_quaternion = self.imu_queue[len(self.imu_queue) - 1]
+            print "The ending quaternion is %s %s %s %s." % (
+                end_quaternion[0], end_quaternion[1], end_quaternion[2], end_quaternion[3])
+
+            start_quaternion[3] = -start_quaternion[3]
+
+            diff_quaternion = quaternion_multiply(
+                end_quaternion, start_quaternion)
+            diff_rotation_matrix = quaternion_matrix(diff_quaternion)
+            diff_rotation_matrix = diff_rotation_matrix[0:3, 0:3]
+            print "The quaternion representation is %s %s %s %s." % (
+                diff_quaternion[0], diff_quaternion[1], diff_quaternion[2], diff_quaternion[3])
+            print diff_rotation_matrix
             y_kp = 0.0
             y_kd = 0.0
             y_ki = 0.0
@@ -109,6 +106,8 @@ class armor_frame_pid:
             z_ki = 0.0
             y_err_int_max = 0
             z_err_int_max = 0
+            image_center_x = 0
+            image_center_y = 0
             if rospy.has_param('/server_node/y_kp'):
                 y_kp = rospy.get_param('/server_node/y_kp')
                 y_kd = rospy.get_param('/server_node/y_kd')
@@ -133,9 +132,9 @@ class armor_frame_pid:
             # for soldier 1
             # camera_T_gimbal = np.array([185, 0, 0])
 
-            camera_T_gimbal = np.array([135, -45, 0])
+            camera_T_gimbal = np.array([150, 45, -30])
             T = shield_T_camera_rot + camera_T_gimbal
-            # print "before: %s %s %s" % (T[0], T[1], T[2])
+            print "before: %s %s %s" % (T[0], T[1], T[2])
             # T = diff_rotation_matrix.dot(T)
             # print "after: %s %s %s" % (T[0], T[1], T[2])
 
@@ -185,8 +184,8 @@ class armor_frame_pid:
         self.cmd_pub.publish(vel_msg)
 
     def shutdown_function(self):
-        # self.imu_queue.clear()
-        # self.time_queue.clear()
+        self.imu_queue.clear()
+        self.time_queue.clear()
         vel_msg = Twist()
         vel_msg.angular.y = 0
         vel_msg.angular.z = 0
