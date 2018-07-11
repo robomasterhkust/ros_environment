@@ -168,10 +168,10 @@ void msgCallback(const can_msgs::Frame &f) {
   case CAN_GIMBAL_SEND_16470_ID: {
     can_receive_msg::imu_16470 imu_16470_msg;
     imu_16470_msg.header = f.header;
-    int16_t a = (int16_t)f.data[1] << 8 | (int16_t)f.data[0];
-    int16_t b = (int16_t)f.data[3] << 8 | (int16_t)f.data[2];
-    int16_t c = (int16_t)f.data[5] << 8 | (int16_t)f.data[4];
-    int16_t d = (int16_t)f.data[7] << 8 | (int16_t)f.data[6];
+    int16_t a = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
+    int16_t b = (int16_t)((uint16_t)f.data[3] << 8 | (uint16_t)f.data[2]);
+    int16_t c = (int16_t)((uint16_t)f.data[5] << 8 | (uint16_t)f.data[4]);
+    int16_t d = (int16_t)((uint16_t)f.data[7] << 8 | (uint16_t)f.data[6]);
     imu_16470_msg.quaternion[0] = a * 0.001;
     imu_16470_msg.quaternion[1] = b * 0.001;
     imu_16470_msg.quaternion[2] = c * 0.001;
