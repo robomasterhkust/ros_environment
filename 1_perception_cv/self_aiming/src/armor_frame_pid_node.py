@@ -63,6 +63,8 @@ class armor_frame_pid:
         if abs(subArmorRecord.armorPose.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
+            vel_msg.linear.y = 0
+            vel_msg.linear.z = 0
         else:
             # image_time = subArmorRecord.header.stamp
             # # rospy.loginfo("cv time: %s" % (image_time.to_sec()))
@@ -108,7 +110,11 @@ class armor_frame_pid:
             z_err_int_max = 0
             image_center_x = 0
             image_center_y = 0
+            k_y = 0.0
+            k_z = 0.0
             if rospy.has_param('/server_node/y_kp'):
+                k_y = rospy.get_param('/server_node/k_y')
+                k_z = rospy.get_param('/server_node/k_z')
                 y_kp = rospy.get_param('/server_node/y_kp')
                 y_kd = rospy.get_param('/server_node/y_kd')
                 y_ki = rospy.get_param('/server_node/y_ki')
@@ -134,7 +140,7 @@ class armor_frame_pid:
 
             camera_T_gimbal = np.array([150, 45, -30])
             T = shield_T_camera_rot + camera_T_gimbal
-            print "before: %s %s %s" % (T[0], T[1], T[2])
+            # print "before: %s %s %s" % (T[0], T[1], T[2])
             # T = diff_rotation_matrix.dot(T)
             # print "after: %s %s %s" % (T[0], T[1], T[2])
 
@@ -151,10 +157,10 @@ class armor_frame_pid:
             T_euler1 = np.arcsin(-R[2, 0])
             T_euler2 = np.arctan2(R[2, 1], R[2, 2])
 
-            # rospy.loginfo(
-            #     "armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
-            # rospy.loginfo("armor center euler angle zyx: %f, %f, %f",
-            #               T_euler0, T_euler1, T_euler2)
+            rospy.loginfo(
+                "armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
+            rospy.loginfo("armor center euler angle zyx: %f, %f, %f",
+                          T_euler0, T_euler1, T_euler2)
 
             self.y_err = T_euler1 - image_center_y
             self.z_err = T_euler0 - image_center_x
@@ -181,6 +187,8 @@ class armor_frame_pid:
 
             vel_msg.angular.y = vy
             vel_msg.angular.z = vz
+            vel_msg.linear.y = T_euler1 * k_y
+            vel_msg.linear.z = T_euler0 * k_z
         self.cmd_pub.publish(vel_msg)
 
     def shutdown_function(self):
@@ -189,6 +197,8 @@ class armor_frame_pid:
         vel_msg = Twist()
         vel_msg.angular.y = 0
         vel_msg.angular.z = 0
+        vel_msg.linear.y = 0
+        vel_msg.linear.z = 0
         self.cmd_pub.publish(vel_msg)
         rospy.loginfo("shutting down armor frame pid node")
 
