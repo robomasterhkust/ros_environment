@@ -38,6 +38,7 @@ double OUTLIER_THRESHOLD = 10000.0;
 Vector3d imu_T_shield_prev = MatrixXd::Zero(3, 1);
 bool vel_is_outlier = false;
 double chi_square = 0;
+double outlier_l2_norm_ratio = 1.5;
 
 static void pub_result(const ros::Time &stamp)
 {
@@ -52,7 +53,7 @@ static void pub_result(const ros::Time &stamp)
     filter_pub.publish(odom);
 }
 
-static void pub_debug(const std_msgs::Header &header,
+static void pub_preprocessed(const std_msgs::Header &header,
                       const Ref<const Vector3d> p,
                       const Ref<const Vector3d> v)
 {
@@ -79,7 +80,7 @@ static bool velocity_is_outlier(const Vector3d &pos,
     double pos_norm   = z.segment<3>(0).norm();
     double state_norm = x.segment<3>(0).norm();
     ROS_INFO("pos_norm %f, state_norm %f", pos_norm, state_norm);
-    if (pos_norm > state_norm * 2) {
+    if (pos_norm > state_norm * outlier_l2_norm_ratio) {
         return true;
     }
 
@@ -130,7 +131,7 @@ static void preprocess_visual(const std_msgs::Header &header,
 
 
     // store the state
-    pub_debug(header, imu_T_shield, imu_vel_shield);
+    pub_preprocessed(header, imu_T_shield, imu_vel_shield);
     imu_T_shield_prev = imu_T_shield;
     t_prev = t_update;
 }
@@ -258,9 +259,10 @@ int main(int argc, char **argv)
     n.param("visual_topic", visual_topic, string("/pnp_twist"));
     n.param("real_visual_topic", real_visual_topic, string("/detected_armor"));
     n.param("publisher_topic", publisher_topic, string("/prediction_kf/predict"));
-    n.param("debug_topic", debug_topic, string("/prediction_kf/debug"));
+    n.param("debug_topic", debug_topic, string("/prediction_kf/preprocessed"));
     n.param("repropagate_time", REPROPAGATE_TIME, 5);
     n.param("chi_square_threshold", OUTLIER_THRESHOLD, 10000.0);
+    n.param("outlier_l2_norm_ratio", outlier_l2_norm_ratio, 1.5);
     n.param("position_weight", pos_weight, 2000.0);
     n.param("velocity_weight", vel_weight, 10000.0);
 /*
