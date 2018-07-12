@@ -42,14 +42,15 @@ double outlier_l2_norm_ratio = 1.5;
 
 static void pub_result(const ros::Time &stamp)
 {
-    geometry_msgs::TwistStamped odom;
+//    geometry_msgs::TwistStamped odom;
+    rm_cv::ArmorRecord odom;
     odom.header.stamp = stamp;
-    odom.twist.linear.x  = x(0);
-    odom.twist.linear.y  = x(1);
-    odom.twist.linear.z  = x(2);
-    odom.twist.angular.x = x(3);
-    odom.twist.angular.y = x(4);
-    odom.twist.angular.z = chi_square / OUTLIER_THRESHOLD; // DEBUG_only
+    odom.armorPose.linear.x  = x(0);
+    odom.armorPose.linear.y  = x(1);
+    odom.armorPose.linear.z  = x(2);
+    odom.armorPose.angular.x = x(3);
+    odom.armorPose.angular.y = x(4);
+    odom.armorPose.angular.z = chi_square / OUTLIER_THRESHOLD; // DEBUG_only
     filter_pub.publish(odom);
 }
 
@@ -280,7 +281,7 @@ int main(int argc, char **argv)
 
     ros::Subscriber s1 = n.subscribe(visual_topic, 40, visual_callback);
     ros::Subscriber s2 = n.subscribe(real_visual_topic, 40, real_visual_cb);
-    filter_pub = n.advertise<geometry_msgs::TwistStamped>(publisher_topic, 40);
+    filter_pub = n.advertise<rm_cv::ArmorRecord>(publisher_topic, 40);
     debug_pub  = n.advertise<geometry_msgs::TwistStamped>(debug_topic, 40);
 
     ros::Rate r(ROS_FREQ);

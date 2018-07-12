@@ -22,6 +22,7 @@ using namespace Eigen;
 string predict_topic_in, preprocess_topic_in;
 string publisher_topic, predict_pub_topic, preprocess_pub_topic;
 ros::Publisher pose_pub, predict_pub, preprocess_pub;
+Matrix3d rotate_for_aiming;
 Vector3d imu_T_camera = MatrixXd::Zero(3, 1);
 
 /*
@@ -44,7 +45,7 @@ void predict_callback(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield_rot <<  pnp->twist.linear.x,
                             pnp->twist.linear.y,
                             pnp->twist.linear.z;
-    Vector3d imu_T_shield = imu_T_camera + camera_T_shield_rot;
+    Vector3d imu_T_shield = imu_T_camera + rotate_for_aiming * camera_T_shield_rot;
     Vector3d T_norm = imu_T_shield.normalized();
     Vector3d x_axis = Vector3d::UnitX();
     Vector3d axis = T_norm.cross(x_axis).normalized();
@@ -61,7 +62,7 @@ void preprocess_callback(const geometry_msgs::TwistStamped::ConstPtr &pnp)
     camera_T_shield_rot <<  pnp->twist.linear.x,
             pnp->twist.linear.y,
             pnp->twist.linear.z;
-    Vector3d imu_T_shield = imu_T_camera + camera_T_shield_rot;
+    Vector3d imu_T_shield = imu_T_camera + rotate_for_aiming * camera_T_shield_rot;
     Vector3d T_norm = imu_T_shield.normalized();
     Vector3d x_axis = Vector3d::UnitX();
     Vector3d axis = T_norm.cross(x_axis).normalized();
@@ -89,6 +90,9 @@ int main(int argc, char **argv)
     predict_pub = n.advertise<geometry_msgs::PoseStamped>(predict_pub_topic, 100);
     preprocess_pub = n.advertise<geometry_msgs::PoseStamped>(preprocess_pub_topic, 100);
 
+    rotate_for_aiming << 0, 0, 1,
+       -1, 0, 0,
+        0, 1, 0;
     imu_T_camera << 150, 45, -30;
 
     ros::Rate r(100);
