@@ -9,6 +9,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from rm_cv.msg import ArmorRecord
 from can_receive_msg.msg import imu_16470
+from self_aiming.msg import Pid
 import numpy as np
 import math
 from collections import deque
@@ -39,6 +40,7 @@ class armor_frame_pid:
         # self.imu_16470_subscriber = rospy.Subscriber(
         #     "/can_receive_node/imu_16470", imu_16470, self.imu_callback, queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+        self.debug_pub = rospy.Publisher('/debug', Pid, queue_size=1)
 
         self.y_err = 0
         self.z_err = 0
@@ -60,6 +62,7 @@ class armor_frame_pid:
 
     def cv_callback(self, subArmorRecord):
         vel_msg = Twist()
+        pid_msg = Pid()
         if abs(subArmorRecord.armorPose.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
@@ -164,6 +167,8 @@ class armor_frame_pid:
 
             self.y_err = T_euler1 - image_center_y
             self.z_err = T_euler0 - image_center_x
+            print 'y_p:%s' % (self.y_err)
+            print 'z_p:%s' % (self.z_err)
             self.y_err_int += self.y_err
             self.z_err_int += self.z_err
             if(abs(self.y_err_int) > y_err_int_max):
@@ -176,8 +181,19 @@ class armor_frame_pid:
                     self.z_err_int = z_err_int_max
                 else:
                     self.z_err_int = -z_err_int_max
-            # print 'y:%s' %(self.y_err_int)
-            # print 'z:%s'%(self.z_err_int)
+            print 'y_i:%s' % (self.y_err_int)
+            print 'z_i:%s' % (self.z_err_int)
+
+            print 'y_d:%s' % (self.y_err - self.prev_y_err)
+            print 'z_d:%s' % (self.z_err - self.prev_z_err)
+
+            pid_msg.header.stamp = rospy.get_rostime()
+            pid_msg.y_p = self.y_err
+            pid_msg.y_d = self.y_err - self.prev_y_err
+            pid_msg.y_i = self.y_err_int
+            pid_msg.z_p = self.z_err
+            pid_msg.z_d = self.z_err - self.prev_z_err
+            pid_msg.z_i = self.z_err_int
             vy = y_kp * self.y_err + y_kd * \
                 (self.y_err - self.prev_y_err) + y_ki * self.y_err_int
             vz = z_kp * self.z_err + z_kd * \
@@ -189,11 +205,14 @@ class armor_frame_pid:
             vel_msg.angular.z = vz
             vel_msg.linear.y = T_euler1 * k_y
             vel_msg.linear.z = T_euler0 * k_z
+
+
+            self.debug_pub.publish(pid_msg)
         self.cmd_pub.publish(vel_msg)
 
     def shutdown_function(self):
-        self.imu_queue.clear()
-        self.time_queue.clear()
+        # self.imu_queue.clear()
+        # self.time_queue.clear()
         vel_msg = Twist()
         vel_msg.angular.y = 0
         vel_msg.angular.z = 0
