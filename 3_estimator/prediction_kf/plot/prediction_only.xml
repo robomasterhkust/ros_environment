@@ -696,10 +696,10 @@
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/x</field>
+                                    <field>armorPose/linear/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -709,7 +709,7 @@
                                         <type>0</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -747,10 +747,10 @@
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/y</field>
+                                    <field>armorPose/linear/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -760,7 +760,7 @@
                                         <type>0</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -798,10 +798,10 @@
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/z</field>
+                                    <field>armorPose/linear/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -811,7 +811,7 @@
                                         <type>0</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -848,7 +848,7 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
+                                    <topic>/prediction_kf/preprocessed</topic>
                                     <type>geometry_msgs/TwistStamped</type>
                                 </x_axis>
                                 <y_axis>
@@ -861,7 +861,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
+                                    <topic>/prediction_kf/preprocessed</topic>
                                     <type>geometry_msgs/TwistStamped</type>
                                 </y_axis>
                             </axes>
@@ -899,7 +899,7 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
+                                    <topic>/prediction_kf/preprocessed</topic>
                                     <type>geometry_msgs/TwistStamped</type>
                                 </x_axis>
                                 <y_axis>
@@ -912,7 +912,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
+                                    <topic>/prediction_kf/preprocessed</topic>
                                     <type>geometry_msgs/TwistStamped</type>
                                 </y_axis>
                             </axes>
@@ -950,7 +950,7 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
+                                    <topic>/prediction_kf/preprocessed</topic>
                                     <type>geometry_msgs/TwistStamped</type>
                                 </x_axis>
                                 <y_axis>
@@ -963,7 +963,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
+                                    <topic>/prediction_kf/preprocessed</topic>
                                     <type>geometry_msgs/TwistStamped</type>
                                 </y_axis>
                             </axes>
@@ -998,14 +998,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
+                                        <relative_minimum>-7</relative_minimum>
+                                        <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/angular/z</field>
+                                    <field>armorPose/angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -1015,7 +1015,7 @@
                                         <type>0</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <type>rm_cv/ArmorRecord</type>
                                 </y_axis>
                             </axes>
                             <color>

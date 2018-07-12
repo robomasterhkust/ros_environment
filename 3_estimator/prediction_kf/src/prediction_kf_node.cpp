@@ -39,15 +39,16 @@ Vector3d imu_T_shield_prev = MatrixXd::Zero(3, 1);
 bool vel_is_outlier = false;
 double chi_square = 0;
 double outlier_l2_norm_ratio = 1.5;
+Vector3d OUTPUT_BOUND = MatrixXd::Zero(3, 1);;
 
 static void pub_result(const ros::Time &stamp)
 {
 //    geometry_msgs::TwistStamped odom;
     rm_cv::ArmorRecord odom;
     odom.header.stamp = stamp;
-    odom.armorPose.linear.x  = x(0);
-    odom.armorPose.linear.y  = x(1);
-    odom.armorPose.linear.z  = x(2);
+    odom.armorPose.linear.x  = (x(0) < OUTPUT_BOUND[0]) ? x(0) * 1000 : OUTPUT_BOUND[0] * 1000;
+    odom.armorPose.linear.y  = (x(1) < OUTPUT_BOUND[1]) ? x(1) * 1000 : OUTPUT_BOUND[1] * 1000;
+    odom.armorPose.linear.z  = (x(2) < OUTPUT_BOUND[2]) ? x(2) * 1000 : OUTPUT_BOUND[2] * 1000;
     odom.armorPose.angular.x = x(3);
     odom.armorPose.angular.y = x(4);
     odom.armorPose.angular.z = chi_square / OUTLIER_THRESHOLD; // DEBUG_only
@@ -129,7 +130,6 @@ static void preprocess_visual(const std_msgs::Header &header,
         pos = imu_T_shield;
         vel = imu_vel_shield;
     }
-
 
     // store the state
     pub_preprocessed(header, imu_T_shield, imu_vel_shield);
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
                      0,-1, 0;
     imu_T_camera <<  200, 50, 0; // in millimeter
     */
-
+    OUTPUT_BOUND << 1.0, 0.5, 4.0;
 
     x.setZero();
     R.topLeftCorner(3, 3)     = pos_weight * MatrixXd::Identity(3, 3);
