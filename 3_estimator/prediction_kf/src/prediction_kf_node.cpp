@@ -32,6 +32,7 @@ ros::Time t_prev;
 double pos_weight, vel_weight;
 const double CV_UPDATE_TIME_MAX = 0.1; // maxium allowed update time
 const int ROS_FREQ = 100;
+const int REPROPAGATE_SEC = 5;
 int REPROPAGATE_TIME = 4; // repropagate after the update
 int propagate_count = 0;
 double OUTLIER_THRESHOLD = 10000.0;
@@ -61,12 +62,12 @@ static void pub_preprocessed(const std_msgs::Header &header,
 {
     geometry_msgs::TwistStamped debug;
     debug.header = header;
-    debug.twist.linear.x  = p[0];
-    debug.twist.linear.y  = p[1];
-    debug.twist.linear.z  = p[2];
-    debug.twist.angular.x = v[0];
-    debug.twist.angular.y = v[1];
-    debug.twist.angular.z = v[2];
+    debug.twist.linear.x  = p[0] * 1000;
+    debug.twist.linear.y  = p[1] * 1000;
+    debug.twist.linear.z  = p[2] * 1000;
+    debug.twist.angular.x = v[0] * 1000;
+    debug.twist.angular.y = v[1] * 1000;
+    debug.twist.angular.z = v[2] * 1000;
     debug_pub.publish(debug);
 }
 
@@ -207,7 +208,6 @@ void visual_callback(const geometry_msgs::TwistStamped::ConstPtr &pnp)
             initialize_visual(pnp->header, pnp->twist);
         }
         else {
-//            double pos_x = 0, pos_y = 0, vel_x = 0, vel_y = 0;
             Vector3d pos, vel;
 
             preprocess_visual(pnp->header, pnp->twist, pos, vel);
@@ -237,7 +237,6 @@ void real_visual_cb(const rm_cv::ArmorRecord::ConstPtr &armor)
             initialize_visual(armor->header, armor->armorPose);
         }
         else {
-//            double pos_x = 0, pos_y = 0, vel_x = 0, vel_y = 0;
             Vector3d pos, vel;
 
             preprocess_visual(armor->header, armor->armorPose, pos, vel);
@@ -293,7 +292,10 @@ int main(int argc, char **argv)
             ros::Time t_propagate = t_prev + delta_propagate;
             // ROS_INFO("propagate at %f", t_propagate.toSec());
             pub_result(t_propagate);
-
+            if (propagate_count > REPROPAGATE_SEC * ROS_FREQ) {
+                visual_initialized = false;
+                propagate_count = 0;
+            }
         }
         r.sleep();
         ros::spinOnce();

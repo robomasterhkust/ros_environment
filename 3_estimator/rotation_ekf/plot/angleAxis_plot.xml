@@ -1272,7 +1272,7 @@
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>real cv input</title>
+                    <title>raw cv input</title>
                 </column_1>
             </row_1>
         </plots>
