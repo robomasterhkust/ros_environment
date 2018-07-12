@@ -361,14 +361,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rosout</topic>
+                                    <type>rosgraph_msgs/Log</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/x</field>
+                                    <field>angular/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -377,8 +377,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/cmd_vel</topic>
+                                    <type>geometry_msgs/Twist</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -393,15 +393,15 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
+                                <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>pos_x</title>
+                            <title>cmd_vel y</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -412,14 +412,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rosout</topic>
+                                    <type>rosgraph_msgs/Log</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/y</field>
+                                    <field>angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -428,8 +428,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/cmd_vel</topic>
+                                    <type>geometry_msgs/Twist</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -444,226 +444,22 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
+                                <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>y</title>
+                            <title>cmd_vel z</title>
                         </curve_1>
-                        <curve_2>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>twist/linear/z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>z</title>
-                        </curve_2>
-                        <curve_3>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>twist/angular/x</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>vx</title>
-                        </curve_3>
-                        <curve_4>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>twist/angular/y</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>vy</title>
-                        </curve_4>
-                        <curve_5>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>twist/angular/z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>vz</title>
-                        </curve_5>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>update position, velocity</title>
+                    <title>cmd val</title>
                 </column_1>
             </row_0>
             <row_1>
@@ -702,8 +498,8 @@
                                     <field>armorPose/linear/x</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -724,7 +520,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>3</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -753,8 +549,8 @@
                                     <field>armorPose/linear/y</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -775,7 +571,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>3</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -804,8 +600,8 @@
                                     <field>armorPose/linear/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -826,7 +622,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>3</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -855,8 +651,8 @@
                                     <field>twist/linear/x</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -906,8 +702,8 @@
                                     <field>twist/linear/y</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -957,8 +753,8 @@
                                     <field>twist/linear/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -1008,8 +804,8 @@
                                     <field>armorPose/angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
@@ -1040,6 +836,108 @@
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>chi-square</title>
                         </curve_6>
+                        <curve_7>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-7</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/prediction_kf/predict</topic>
+                                    <type>rm_cv/ArmorRecord</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>armorPose/angular/x</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/prediction_kf/predict</topic>
+                                    <type>rm_cv/ArmorRecord</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>1</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>vx</title>
+                        </curve_7>
+                        <curve_8>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-7</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/prediction_kf/predict</topic>
+                                    <type>rm_cv/ArmorRecord</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>armorPose/angular/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>100</absolute_maximum>
+                                        <absolute_minimum>-100</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/prediction_kf/predict</topic>
+                                    <type>rm_cv/ArmorRecord</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>1</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>vy</title>
+                        </curve_8>
                     </curves>
                     <legend>
                         <visible>true</visible>
@@ -1109,7 +1007,7 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
+                                <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>x</title>
@@ -1160,7 +1058,7 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
+                                <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>y</title>
@@ -1195,8 +1093,8 @@
                                 </y_axis>
                             </axes>
                             <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
+                                <custom_color>#5500ff</custom_color>
+                                <type>1</type>
                             </color>
                             <data>
                                 <circular_buffer_capacity>1000</circular_buffer_capacity>
@@ -1211,7 +1109,7 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
+                                <type>1</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>z</title>

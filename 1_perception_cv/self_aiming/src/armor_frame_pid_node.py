@@ -35,8 +35,9 @@ def rotation_matrix(direction, angle):
 
 class armor_frame_pid:
     def __init__(self):
+        # "/detected_armor"
         self.armor_subscriber = rospy.Subscriber(
-            "/detected_armor", ArmorRecord, self.cv_callback, queue_size=1)
+            "/prediction_kf/predict", ArmorRecord, self.cv_callback, queue_size=1)
         # self.imu_16470_subscriber = rospy.Subscriber(
         #     "/can_receive_node/imu_16470", imu_16470, self.imu_callback, queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
