@@ -5,11 +5,13 @@
         <param name="real_visual_topic" type="string" value="/detected_armor"/>
         <param name="publisher_topic" type="string" value="/prediction_kf/predict"/>
         <param name="debug_topic" type="string" value="/prediction_kf/preprocessed"/>
-        <param name="position_weight" type="double" value="2000.0"/>
-        <param name="velocity_weight" type="double" value="10000.0"/>
-        <param name="chi_square_threshold" type="double" value="1000000.0"/>
-        <param name="outlier_l2_norm_ratio" type="double" value="1.3"/>
-        <param name="repropagate_time" type="int" value="8"/>
+        <param name="R_pos" type="double" value="8.0"/>
+        <param name="Q_pos" type="double" value="1.0"/>
+        <param name="Q_vel" type="double" value="128.0"/>
+        <param name="P_matrix_weight" type="double" value="65.0"/>
+        <param name="chi_square_threshold" type="double" value="1000.0"/>
+        <param name="outlier_l2_norm_ratio" type="double" value="1.5"/>
+        <param name="repropagate_time" type="int" value="0"/>
     </node>
 
     <node pkg="rotation_ekf" type="rotation_ekf_node" name="rotation_ekf_node" output="screen">
@@ -18,10 +20,11 @@
         <param name="publisher_topic" type="string" value="/rotation_ekf/filtered"/>
         <param name="predict_topic" type="string" value="/rotation_ekf/predict"/>
         <param name="preprocess_topic" type="string" value="/rotation_ekf/preprocess"/>
+        <param name="imu_topic" type="string" value="/can_receive_node/imu_16470"/>
     </node>
 
     <node pkg="rosbag" type="play" name="static_target_moving_chassis" output="screen"
-          args="-s 0 -u 25 /home/ros/Downloads/2018-07-11-22-30-50.bag -q"/>
+          args="-s 0 -u 25 /home/ros/Downloads/2018-07-11-22-28-44.bag -q"/>
     <!--args="-s 0 -u 10 /home/ros/Downloads/2018-07-10-14-25-42.bag -q"/>-->
     <!--args="-s 0 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>-->
 </launch>

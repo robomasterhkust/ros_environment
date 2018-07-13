@@ -35,11 +35,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/x</field>
+                                    <field>quaternion/0</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -48,8 +48,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -86,11 +86,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/y</field>
+                                    <field>quaternion/1</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -99,8 +99,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -123,7 +123,7 @@
                                 <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>ay</title>
+                            <title>Copy of ax</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -137,11 +137,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/z</field>
+                                    <field>quaternion/2</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -150,8 +150,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -174,7 +174,7 @@
                                 <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>az</title>
+                            <title>Copy of Copy of ax</title>
                         </curve_2>
                         <curve_3>
                             <axes>
@@ -188,11 +188,11 @@
                                         <relative_minimum>-7</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/angular/x</field>
+                                    <field>quaternion/3</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -201,8 +201,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/can_receive_node/imu_16470</topic>
+                                    <type>can_receive_msg/imu_16470</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -217,118 +217,16 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
+                                <pen_width>2</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>1</type>
+                                <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>ax_int</title>
+                            <title>Copy of Copy of Copy of ax</title>
                         </curve_3>
-                        <curve_4>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>twist/angular/y</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#0055ff</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>ay_int</title>
-                        </curve_4>
-                        <curve_5>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>twist/angular/z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/visual_ekf/propagate</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#0055ff</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>az_int</title>
-                        </curve_5>
                     </curves>
                     <legend>
                         <visible>true</visible>
@@ -361,14 +259,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/x</field>
+                                    <field>pose/orientation/w</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -377,8 +275,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -393,15 +291,15 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
+                                <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>pos_x</title>
+                            <title>predict angle</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -412,14 +310,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/y</field>
+                                    <field>pose/orientation/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -428,8 +326,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -444,15 +342,15 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
+                                <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>y</title>
+                            <title>axis x</title>
                         </curve_1>
                         <curve_2>
                             <axes>
@@ -463,14 +361,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/linear/z</field>
+                                    <field>pose/orientation/y</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -479,8 +377,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -495,7 +393,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -503,7 +401,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>z</title>
+                            <title>y</title>
                         </curve_2>
                         <curve_3>
                             <axes>
@@ -514,14 +412,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/angular/x</field>
+                                    <field>pose/orientation/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -530,8 +428,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/predict</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -546,15 +444,15 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
+                                <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>vx</title>
+                            <title>z</title>
                         </curve_3>
                         <curve_4>
                             <axes>
@@ -565,14 +463,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/angular/y</field>
+                                    <field>pose/orientation/w</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -581,8 +479,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -597,7 +495,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -605,7 +503,7 @@
                                 <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>vy</title>
+                            <title>end result w</title>
                         </curve_4>
                         <curve_5>
                             <axes>
@@ -616,14 +514,14 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>twist/angular/z</field>
+                                    <field>pose/orientation/x</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -632,8 +530,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/prediction_kf/debug</topic>
-                                    <type>geometry_msgs/TwistStamped</type>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -648,7 +546,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>2</pen_width>
+                                <pen_width>1</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -656,8 +554,110 @@
                                 <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>vz</title>
+                            <title>x</title>
                         </curve_5>
+                        <curve_6>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-10</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/orientation/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>3</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>y</title>
+                        </curve_6>
+                        <curve_7>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-10</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>pose/orientation/z</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/rotation_ekf/filtered</topic>
+                                    <type>geometry_msgs/PoseStamped</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>3</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>z</title>
+                        </curve_7>
                     </curves>
                     <legend>
                         <visible>true</visible>
@@ -1096,7 +1096,7 @@
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>filtered result</title>
+                    <title>predict result</title>
                 </column_0>
                 <column_1>
                     <axes>
