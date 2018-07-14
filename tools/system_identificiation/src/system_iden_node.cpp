@@ -31,6 +31,7 @@ int main(int argc, char* argv[]){
 
     nh.param("cmd_topic", cmd_topic, string("/system_iden_cmd_vel"));
     nh.param("gain", gain, 0.1);
+    nh.param("Period", P, 5);
 
 	cmd_vel_publisher = nh.advertise<geometry_msgs::Twist>(cmd_topic, 10);
 
