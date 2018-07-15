@@ -31,7 +31,7 @@ class rune_feedforward:
     def __init__(self):
         self.armor_subscriber = rospy.Subscriber(
             "/rune_locations", Point, self.callback, queue_size=1)
-        self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+        self.cmd_pub = rospy.Publisher('/rune_cmd', Twist, queue_size=1)
 
         self.last_angular_y = 0.0
         self.last_angular_z = 0.0
@@ -51,7 +51,7 @@ class rune_feedforward:
                 k_z = rospy.get_param('/server_node/k_z')
                 center_x = rospy.get_param('/server_node/center_x')
                 center_y = rospy.get_param('/server_node/center_y')
-            theta =  math.pi /9
+            theta =  math.pi / 30
             rune_T_camera = np.array(
                 [point.x, point.y*np.cos(theta)-point.z*np.sin(theta), point.z*np.cos(theta)+point.y*np.sin(theta)])
             # yangjiao = np.array([[1, 0, 0],
@@ -66,7 +66,8 @@ class rune_feedforward:
             rune_T_camera_rot = opencv_rotation.dot(rune_T_camera)
             # to be modified
             # depends on the location of camera
-            camera_T_gimbal = np.array([119, 135, -275])
+            # old board gimbal, numer one infrantry
+            camera_T_gimbal = np.array([126, -115, -281])
             T = rune_T_camera_rot + camera_T_gimbal
 
             normalized_T = T / np.linalg.norm(T)
@@ -88,7 +89,7 @@ class rune_feedforward:
                           T_euler0, T_euler1, T_euler2)
 
             vel_msg.angular.y = T_euler1 * k_y + center_y
-            vel_msg.angular.z = T_euler0 * k_z + center_x 
+            vel_msg.angular.z = T_euler0 * k_z + center_x
         self.cmd_pub.publish(vel_msg)
 
 

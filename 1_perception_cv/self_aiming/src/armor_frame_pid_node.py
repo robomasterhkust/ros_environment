@@ -9,6 +9,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from rm_cv.msg import ArmorRecord
 from can_receive_msg.msg import imu_16470
+from self_aiming.msg import Pid
 import numpy as np
 import math
 from collections import deque
@@ -34,11 +35,13 @@ def rotation_matrix(direction, angle):
 
 class armor_frame_pid:
     def __init__(self):
+        # "/detected_armor"
         self.armor_subscriber = rospy.Subscriber(
-            "/detected_armor", ArmorRecord, self.cv_callback, queue_size=1)
+            "/prediction_kf/predict", ArmorRecord, self.cv_callback, queue_size=1)
         # self.imu_16470_subscriber = rospy.Subscriber(
         #     "/can_receive_node/imu_16470", imu_16470, self.imu_callback, queue_size=1)
         self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+        self.debug_pub = rospy.Publisher('/debug', Pid, queue_size=1)
 
         self.y_err = 0
         self.z_err = 0
@@ -60,9 +63,12 @@ class armor_frame_pid:
 
     def cv_callback(self, subArmorRecord):
         vel_msg = Twist()
+        pid_msg = Pid()
         if abs(subArmorRecord.armorPose.linear.x) < sys.float_info.epsilon:
             vel_msg.angular.y = 0.0
             vel_msg.angular.z = 0.0
+            vel_msg.linear.y = 0
+            vel_msg.linear.z = 0
         else:
             # image_time = subArmorRecord.header.stamp
             # # rospy.loginfo("cv time: %s" % (image_time.to_sec()))
@@ -108,7 +114,11 @@ class armor_frame_pid:
             z_err_int_max = 0
             image_center_x = 0
             image_center_y = 0
+            k_y = 0.0
+            k_z = 0.0
             if rospy.has_param('/server_node/y_kp'):
+                k_y = rospy.get_param('/server_node/k_y')
+                k_z = rospy.get_param('/server_node/k_z')
                 y_kp = rospy.get_param('/server_node/y_kp')
                 y_kd = rospy.get_param('/server_node/y_kd')
                 y_ki = rospy.get_param('/server_node/y_ki')
@@ -134,7 +144,7 @@ class armor_frame_pid:
 
             camera_T_gimbal = np.array([150, 45, -30])
             T = shield_T_camera_rot + camera_T_gimbal
-            print "before: %s %s %s" % (T[0], T[1], T[2])
+            # print "before: %s %s %s" % (T[0], T[1], T[2])
             # T = diff_rotation_matrix.dot(T)
             # print "after: %s %s %s" % (T[0], T[1], T[2])
 
@@ -151,13 +161,15 @@ class armor_frame_pid:
             T_euler1 = np.arcsin(-R[2, 0])
             T_euler2 = np.arctan2(R[2, 1], R[2, 2])
 
-            # rospy.loginfo(
-            #     "armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
-            # rospy.loginfo("armor center euler angle zyx: %f, %f, %f",
-            #               T_euler0, T_euler1, T_euler2)
+            rospy.loginfo(
+                "armor center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
+            rospy.loginfo("armor center euler angle zyx: %f, %f, %f",
+                          T_euler0, T_euler1, T_euler2)
 
             self.y_err = T_euler1 - image_center_y
             self.z_err = T_euler0 - image_center_x
+            print 'y_p:%s' % (self.y_err)
+            print 'z_p:%s' % (self.z_err)
             self.y_err_int += self.y_err
             self.z_err_int += self.z_err
             if(abs(self.y_err_int) > y_err_int_max):
@@ -170,8 +182,19 @@ class armor_frame_pid:
                     self.z_err_int = z_err_int_max
                 else:
                     self.z_err_int = -z_err_int_max
-            # print 'y:%s' %(self.y_err_int)
-            # print 'z:%s'%(self.z_err_int)
+            print 'y_i:%s' % (self.y_err_int)
+            print 'z_i:%s' % (self.z_err_int)
+
+            print 'y_d:%s' % (self.y_err - self.prev_y_err)
+            print 'z_d:%s' % (self.z_err - self.prev_z_err)
+
+            pid_msg.header.stamp = rospy.get_rostime()
+            pid_msg.y_p = self.y_err
+            pid_msg.y_d = self.y_err - self.prev_y_err
+            pid_msg.y_i = self.y_err_int
+            pid_msg.z_p = self.z_err
+            pid_msg.z_d = self.z_err - self.prev_z_err
+            pid_msg.z_i = self.z_err_int
             vy = y_kp * self.y_err + y_kd * \
                 (self.y_err - self.prev_y_err) + y_ki * self.y_err_int
             vz = z_kp * self.z_err + z_kd * \
@@ -181,14 +204,21 @@ class armor_frame_pid:
 
             vel_msg.angular.y = vy
             vel_msg.angular.z = vz
+            vel_msg.linear.y = T_euler1 * k_y
+            vel_msg.linear.z = T_euler0 * k_z
+
+
+            self.debug_pub.publish(pid_msg)
         self.cmd_pub.publish(vel_msg)
 
     def shutdown_function(self):
-        self.imu_queue.clear()
-        self.time_queue.clear()
+        # self.imu_queue.clear()
+        # self.time_queue.clear()
         vel_msg = Twist()
         vel_msg.angular.y = 0
         vel_msg.angular.z = 0
+        vel_msg.linear.y = 0
+        vel_msg.linear.z = 0
         self.cmd_pub.publish(vel_msg)
         rospy.loginfo("shutting down armor frame pid node")
 

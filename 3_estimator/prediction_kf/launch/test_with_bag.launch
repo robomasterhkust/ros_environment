@@ -2,13 +2,17 @@
 
     <node pkg="prediction_kf" type="prediction_kf_node" name="prediction_kf_node" output="screen">
         <param name="visual_topic" type="string" value="/pnp_twist"/>
+        <param name="real_visual_topic" type="string" value="/detected_armor"/>
         <param name="publisher_topic" type="string" value="/prediction_kf/predict"/>
-        <param name="debug_topic" type="string" value="/prediction_kf/debug"/>
+        <param name="debug_topic" type="string" value="/prediction_kf/preprocessed"/>
         <param name="position_weight" type="double" value="2000.0"/>
         <param name="velocity_weight" type="double" value="10000.0"/>
-        <param name="chi_square_threshold" type="double" value="1000.0"/>
-        <param name="repropagate_time" type="int" value="5"/>
+        <param name="chi_square_threshold" type="double" value="100000.0"/>
+        <param name="outlier_l2_norm_ratio" type="double" value="1.3"/>
+        <param name="repropagate_time" type="int" value="8"/>
     </node>
-    <node pkg="rosbag" type="play" name="static_target_moving_chassis"
-        output="screen" args="-s 0 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>
+    <node pkg="rosbag" type="play" name="static_target_moving_chassis" output="screen"
+          args="-s 0 -u 25 /home/ros/Downloads/2018-07-11-22-34-05.bag -q"/>
+    <!--args="-s 0 -u 10 /home/ros/Downloads/2018-07-10-14-25-42.bag -q"/>-->
+    <!--args="-s 0 /home/ros/Downloads/2018-06-21-12-11-35.bag -q"/>-->
 </launch>

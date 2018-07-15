@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(prediction_kf)
+project(rotation_ekf)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 set(CMAKE_BUILD_TYPE "Release")
@@ -10,14 +10,36 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+    can_receive_msg
     geometry_msgs
-    roscpp
-    std_msgs
     rm_cv
+    roscpp
+    sensor_msgs
+    std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Eigen3 REQUIRED)
+
+################################################
+## Declare ROS dynamic reconfigure parameters ##
+################################################
+
+## To declare and build dynamic reconfigure parameters within this
+## package, follow these steps:
+## * In the file package.xml:
+##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
+## * In this file (CMakeLists.txt):
+##   * add "dynamic_reconfigure" to
+##     find_package(catkin REQUIRED COMPONENTS ...)
+##   * uncomment the "generate_dynamic_reconfigure_options" section below
+##     and list every .cfg file to be processed
+
+## Generate dynamic reconfigure parameters in the 'cfg' folder
+# generate_dynamic_reconfigure_options(
+#   cfg/DynReconf1.cfg
+#   cfg/DynReconf2.cfg
+# )
 
 ###################################
 ## catkin specific configuration ##
@@ -30,9 +52,9 @@ find_package(Eigen3 REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES prediction_kf
-    CATKIN_DEPENDS geometry_msgs roscpp std_msgs
-    DEPENDS rm_cv
+#  LIBRARIES rotation_ekf
+  CATKIN_DEPENDS can_receive_msg geometry_msgs rm_cv roscpp sensor_msgs std_msgs
+  DEPENDS rm_cv system_lib can_receive_msg
 )
 
 ###########
@@ -49,7 +71,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/prediction_kf.cpp
+#   src/${PROJECT_NAME}/rotation_ekf.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -60,7 +82,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/prediction_kf_node.cpp)
+add_executable(${PROJECT_NAME}_node src/rotation_ekf_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
