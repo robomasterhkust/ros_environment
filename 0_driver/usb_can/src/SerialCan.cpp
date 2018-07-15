@@ -36,6 +36,7 @@ SerialCan *createSerialCom(std::string path,
         }
 
         cfsetospeed(&tty, baudRate);
+        cfsetispeed(&tty, baudRate);
 
         tty.c_cflag |= (CLOCAL | CREAD); /* ignore modem controls */
         tty.c_cflag &= ~CSIZE;
@@ -49,9 +50,9 @@ SerialCan *createSerialCom(std::string path,
         tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
         tty.c_oflag &= ~OPOST;
 
-        //read until one byte availables or return 0 when 100ms used
-        tty.c_cc[VMIN] = 0;
-        tty.c_cc[VTIME] = 1;
+        //blocking read until at least one byte availables
+        tty.c_cc[VMIN] = 1;
+        tty.c_cc[VTIME] = 0;
 
         if (tcsetattr(fd, TCSANOW, &tty) != 0)
         {
@@ -101,15 +102,12 @@ bool SerialCan::startReadThd()
 
 bool SerialCan::stopReadThd()
 {
-    std::cout << "stopping read thread...\n";
     if (shouldRead)
     {
         shouldRead = false;
         readThd->join();
         delete readThd;
         readThd = NULL;
-
-        std::cout << "read thread stopped\n";
         return true;
     }
     else
@@ -167,14 +165,14 @@ bool SerialCan::sendCanMsg(uint32_t id,
         msgSize = 9 + numBytes;
     }
 
-    // printf("sent: ");
-    // for (int i = 0;; i++)
-    // {
-    //     printf("%x ", msg[i]);
-    //     if (msg[i] == '\n')
-    //         break;
-    // }
-    // printf("\n");
+    printf("sent: ");
+    for (int i = 0;; i++)
+    {
+        printf("%x ", msg[i]);
+        if (msg[i] == '\n')
+            break;
+    }
+    printf("\n");
 
     int wlen = write(fd, msg, msgSize);
     if (wlen != msgSize)
@@ -199,17 +197,17 @@ void SerialCan::receiveCB(uint32_t id,
                           uint8_t numBytes,
                           const uint8_t data[])
 {
-    // printf("received id: %d, %s, %s, number of data: %d\n",
-    //        id,
-    //        (extended) ? "extended" : "standard",
-    //        (remote) ? "remote" : "data",
-    //        numBytes);
-    // printf("data:");
-    // for (int i = 0; i < numBytes; i++)
-    // {
-    //     printf(" %x", data[i]);
-    // }
-    // printf("\n");
+    printf("received id: %d, %s, %s, number of data: %d\n",
+           id,
+           (extended) ? "extended" : "standard",
+           (remote) ? "remote" : "data",
+           numBytes);
+    printf("data:");
+    for (int i = 0; i < numBytes; i++)
+    {
+        printf(" %x", data[i]);
+    }
+    printf("\n");
     usb_can::can_frame temp;
     memcpy(temp.data.begin(), data, numBytes);
     temp.id = id;
@@ -223,7 +221,6 @@ void SerialCan::receiveCB(uint32_t id,
 
 void SerialCan::readThdFunc()
 {
-    std::cout << "readThdFunc thread created\n";
     while (shouldRead)
     {
         int readSize;
@@ -237,13 +234,6 @@ void SerialCan::readThdFunc()
             readSize = read(fd, &buf[endPos], (BUFFER_SIZE - endPos));
         else
             readSize = read(fd, &buf[endPos], (startPos - endPos - 1));
-
-        if (readSize <= 0)
-        {
-            continue;
-        }
-        else
-            printf("R: %d B\n", readSize);
 
         endPos += readSize;
         if (endPos == BUFFER_SIZE)
@@ -364,7 +354,6 @@ void SerialCan::readThdFunc()
             }
         } while (popedMsg);
     }
-    std::cout << "readThdFunc thread quit\n";
 };
 
 bool SerialCan::waitWord(const char *word, size_t waitNumChar)

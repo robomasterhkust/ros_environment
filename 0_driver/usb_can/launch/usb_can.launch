@@ -1,8 +1,4 @@
 <launch>
-  <node ns="usb_can_0" name="usb_can" pkg="usb_can" type="usb_can_node" respawn="false" output="screen" cwd="ROS_HOME" launch-prefix="sudo -E bash -c">
-    <rosparam>
-            force_ttyUSB_index:   -1
-            buad_rate:   115200
-    </rosparam>
+  <node name="canusb" pkg="usb_can" type="usb_can_node" respawn="false" output="screen" cwd="ROS_HOME" launch-prefix="sudo -E bash -c">
   </node>
 </launch>
