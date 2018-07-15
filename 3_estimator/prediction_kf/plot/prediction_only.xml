@@ -1109,7 +1109,7 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>3</type>
+                                <type>1</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>z</title>
