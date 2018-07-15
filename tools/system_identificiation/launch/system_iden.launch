@@ -1,14 +1,17 @@
 <launch>
     <node pkg="system_identification" type="system_identification_node" name="system_iden_node" output="screen">
-        <param name="cmd_topic" type="string" value="/system_iden_cmd_vel"/>
-        <param name="gain" type="double" value="3"/>
+        <param name="cmd_topic" type="string" value="/cmd_vel"/>
+        <param name="gain" type="double" value="0.1"/>
+        <param name="Period" type="double" value="10"/>
     </node>
 
-	<node pkg="can_transmit" type="can_transmit_node" name="can_transmit_test" output="screen">
-		<param name="cmd_topic" type="string" value="/system_iden_cmd_vel"/>
-	</node>
+	<!--<include file="$(find usb_can)/launch/usb_can.launch"/>-->
 
-	<node pkg="socketcan_bridge" type="topic_to_socketcan_node" name="topic_to_socketcan_test" output="screen">
-		<param name="can_device" value="can1"/>
-	</node>
+	<!--<node pkg="can_transmit" type="can_transmit_node" name="can_transmit_test" output="screen">-->
+		<!--<param name="cmd_topic" type="string" value="/system_iden_cmd_vel"/>-->
+	<!--</node>-->
+
+	<!--<node pkg="socketcan_bridge" type="topic_to_socketcan_node" name="topic_to_socketcan_test" output="screen">-->
+		<!--<param name="can_device" value="can1"/>-->
+	<!--</node>-->
 </launch>
