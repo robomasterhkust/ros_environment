@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <thread>
+#include <chrono>
 #include "SerialCan.hpp"
 #include "ros/ros.h"
 #include "usb_can/can_frame.h"
@@ -83,7 +84,7 @@ SerialCan::SerialCan(int fd,
         sendStr("AT+AT\r\n");
 
     } while (!waitWord("OK", 100));
-    printf("AT+AT received OK\n");
+    printf("AT+AT received OK, set usb to can module to command mode\n");
 };
 
 bool SerialCan::startReadThd()
@@ -197,17 +198,17 @@ void SerialCan::receiveCB(uint32_t id,
                           uint8_t numBytes,
                           const uint8_t data[])
 {
-    printf("received id: %d, %s, %s, number of data: %d\n",
-           id,
-           (extended) ? "extended" : "standard",
-           (remote) ? "remote" : "data",
-           numBytes);
-    printf("data:");
-    for (int i = 0; i < numBytes; i++)
-    {
-        printf(" %x", data[i]);
-    }
-    printf("\n");
+    // printf("received id: %d, %s, %s, number of data: %d\n",
+    //        id,
+    //        (extended) ? "extended" : "standard",
+    //        (remote) ? "remote" : "data",
+    //        numBytes);
+    // printf("data:");
+    // for (int i = 0; i < numBytes; i++)
+    // {
+    //     printf(" %x", data[i]);
+    // }
+    // printf("\n");
     usb_can::can_frame temp;
     memcpy(temp.data.begin(), data, numBytes);
     temp.id = id;
@@ -235,6 +236,8 @@ void SerialCan::readThdFunc()
         else
             readSize = read(fd, &buf[endPos], (startPos - endPos - 1));
 
+        if (readSize <= 0)
+            std::this_thread::sleep_for(std::chrono::microseconds(5));
         endPos += readSize;
         if (endPos == BUFFER_SIZE)
         {
@@ -331,16 +334,16 @@ void SerialCan::readThdFunc()
                         if (numBytes > 8)
                         {
                             ROS_INFO("Wrong data:");
-                            for (int i = 0; i < 13; i++)
-                            {
-                                printf("%x ", msgBody[i]);
-                            }
-                            printf("\n");
+                            // for (int i = 0; i < 13; i++)
+                            // {
+                            //     printf("%x ", msgBody[i]);
+                            // }
+                            // printf("\n");
                         }
                         else
                             receiveCB(id, extended, remote, numBytes, &msgBody[5]);
 
-                        printf("startpos: %d\n", startPos);
+                        // printf("startpos: %d\n", startPos);
 
                         foundAT = false;
                         startPos = ATseekPos = EOLseekPos;
