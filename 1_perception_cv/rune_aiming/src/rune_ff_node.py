@@ -51,6 +51,7 @@ class rune_feedforward:
                 k_z = rospy.get_param('/server_node/k_z')
                 center_x = rospy.get_param('/server_node/center_x')
                 center_y = rospy.get_param('/server_node/center_y')
+            #theta should be modified for different sentries
             theta =  math.pi / 30
             rune_T_camera = np.array(
                 [point.x, point.y*np.cos(theta)-point.z*np.sin(theta), point.z*np.cos(theta)+point.y*np.sin(theta)])
@@ -67,7 +68,7 @@ class rune_feedforward:
             # to be modified
             # depends on the location of camera
             # old board gimbal, numer one infrantry
-            camera_T_gimbal = np.array([126, -115, -281])
+            camera_T_gimbal = np.array([130, -110, -250])
             T = rune_T_camera_rot + camera_T_gimbal
 
             normalized_T = T / np.linalg.norm(T)
