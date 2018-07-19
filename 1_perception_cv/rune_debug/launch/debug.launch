@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="rune_debug" name="rune_debug" type="rune_debug.py" output="screen"/>
+    <node name="canusb" pkg="usb_can" type="usb_can_node" respawn="false" output="screen" cwd="ROS_HOME" launch-prefix="sudo -E bash -c">
+    </node>
+</launch>
