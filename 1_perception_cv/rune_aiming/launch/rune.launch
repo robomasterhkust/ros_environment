@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>
-    <node pkg="self_aiming" name="server_node" type="server_node.py" output="screen"/>
     <node pkg="rune_aiming" name="rune_ff_node" type="rune_ff_node.py" output="screen"/>
+    <node name="canusb" pkg="usb_can" type="usb_can_node" respawn="false" output="screen" cwd="ROS_HOME" launch-prefix="sudo -E bash -c">
+    </node>
 </launch>

@@ -52,15 +52,15 @@ class rune_feedforward:
                 center_x = rospy.get_param('/server_node/center_x')
                 center_y = rospy.get_param('/server_node/center_y')
             #theta should be modified for different sentries
-            theta =  math.pi / 30
+            theta =  2*math.pi / 45
             rune_T_camera = np.array(
                 [point.x, point.y*np.cos(theta)-point.z*np.sin(theta), point.z*np.cos(theta)+point.y*np.sin(theta)])
             # yangjiao = np.array([[1, 0, 0],
             #                      [0, np.cos(theta), -np.sin(theta)],
             #                      [0, np.sin(theta), np.cos(theta)]])
             # rune_T_camera = yangjiao.dot(rune_T_camera)
-            rospy.loginfo(
-                "rune center temp: %f, %f, %f", rune_T_camera[0], rune_T_camera[1], rune_T_camera[2])
+            # rospy.loginfo(
+            #     "rune center temp: %f, %f, %f", rune_T_camera[0], rune_T_camera[1], rune_T_camera[2])
             opencv_rotation = np.array([[0, 0, 1],
                                         [-1, 0, 0],
                                         [0, -1, 0]])
@@ -84,13 +84,13 @@ class rune_feedforward:
             T_euler1 = np.arcsin(-R[2, 0])
             T_euler2 = np.arctan2(R[2, 1], R[2, 2])
 
-            rospy.loginfo(
-                "rune center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
-            rospy.loginfo("rune center euler angle zyx: %f, %f, %f",
-                          T_euler0, T_euler1, T_euler2)
+            # rospy.loginfo(
+            #     "rune center in gimbal rotation center: %f, %f, %f", T[0], T[1], T[2])
+            # rospy.loginfo("rune center euler angle zyx: %f, %f, %f",
+            #               T_euler0, T_euler1, T_euler2)
 
-            vel_msg.angular.y = T_euler1 * k_y + center_y
-            vel_msg.angular.z = T_euler0 * k_z + center_x
+            vel_msg.angular.y = T_euler1
+            vel_msg.angular.z = T_euler0
         self.cmd_pub.publish(vel_msg)
 
 
