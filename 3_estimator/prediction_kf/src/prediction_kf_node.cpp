@@ -15,8 +15,8 @@
 using namespace std;
 using namespace Eigen;
 
-string visual_topic, publisher_topic, debug_topic, real_visual_topic;
-ros::Publisher filter_pub, debug_pub;
+string visual_topic, publisher_topic, debug_topic, real_visual_topic, transform_topic;
+ros::Publisher filter_pub, debug_pub, transform_pub;
 MatrixXd imu_R_camera = MatrixXd::Identity(3, 3); // rotation matrix from camera to imu
 Vector3d imu_T_camera = MatrixXd::Zero(3, 1);
 
@@ -35,10 +35,13 @@ const double DELAY_MAX = 0.05;
 const int ROS_FREQ = 100;
 double OUTLIER_THRESHOLD = 10000.0;
 
+Vector3d camera_T_shield_prev = MatrixXd::Zero(3, 1);
 Vector3d imu_T_shield_prev = MatrixXd::Zero(3, 1);
 bool vel_is_outlier = false;
 double chi_square = 0;
 double outlier_l2_norm_ratio = 1.5;
+double yaw_delay = 0.0;
+double pitch_delay = 0.0;
 Vector3d OUTPUT_BOUND = MatrixXd::Zero(3, 1);;
 
 static void pub_result(const ros::Time &stamp, double delay_dt)
@@ -46,8 +49,8 @@ static void pub_result(const ros::Time &stamp, double delay_dt)
 //    geometry_msgs::TwistStamped odom;
     rm_cv::ArmorRecord odom;
     odom.header.stamp = stamp;
-    double predict_x = x(0) + delay_dt * x(3);
-    double predict_y = x(1) + delay_dt * x(4);
+    double predict_x = x(0) + (delay_dt + yaw_delay)   * x(3);
+    double predict_y = x(1) + (delay_dt + pitch_delay) * x(4);
     double predict_z = x(2) + delay_dt * x(5);
     odom.armorPose.linear.x  = (predict_x < OUTPUT_BOUND[0]) ? predict_x * 1000 : OUTPUT_BOUND[0] * 1000;
     odom.armorPose.linear.y  = (predict_y < OUTPUT_BOUND[1]) ? predict_y * 1000 : OUTPUT_BOUND[1] * 1000;
@@ -60,7 +63,8 @@ static void pub_result(const ros::Time &stamp, double delay_dt)
 
 static void pub_preprocessed(const std_msgs::Header &header,
                       const Ref<const Vector3d> p,
-                      const Ref<const Vector3d> v)
+                      const Ref<const Vector3d> v,
+                      ros::Publisher &publisher)
 {
     geometry_msgs::TwistStamped debug;
     debug.header = header;
@@ -70,7 +74,7 @@ static void pub_preprocessed(const std_msgs::Header &header,
     debug.twist.angular.x = v[0] * 1000;
     debug.twist.angular.y = v[1] * 1000;
     debug.twist.angular.z = v[2] * 1000;
-    debug_pub.publish(debug);
+    publisher.publish(debug);
 }
 
 // Chi-square test for outlier rejection
@@ -83,8 +87,10 @@ static bool velocity_is_outlier(const Vector3d &pos)
 
     double pos_norm   = z.segment<3>(0).norm();
     double state_norm = x.segment<3>(0).norm();
-    // ROS_INFO("pos_norm %f, state_norm %f", pos_norm, state_norm);
+    ROS_INFO("pos_norm %f, state_norm %f", pos_norm, state_norm);
     if (pos_norm > state_norm * outlier_l2_norm_ratio) {
+        return true;
+    } else if (pos_norm < state_norm / outlier_l2_norm_ratio) {
         return true;
     }
 
@@ -109,30 +115,35 @@ static void preprocess_visual(const std_msgs::Header &header,
                               Vector3d &pos, double dt_update)
 {
 
-    Vector3d camera_T_shield, imu_T_shield, imu_vel_shield;
+    Vector3d camera_T_shield, camera_vel_shield, imu_T_shield, imu_vel_shield;
 
     camera_T_shield[0] = twist.linear.x;
     camera_T_shield[1] = twist.linear.y;
     camera_T_shield[2] = twist.linear.z;
-    imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
-    imu_T_shield *= 0.001; // Convert millimeter to meter
+
+    camera_T_shield *= 0.001; // Convert millimeter to meter
 
     // calculate and check the velocity
-    imu_vel_shield = (imu_T_shield - imu_T_shield_prev) / dt_update;
+    camera_vel_shield = (camera_T_shield - camera_T_shield_prev) / dt_update;
+    camera_T_shield_prev = camera_T_shield;
 
-    vel_is_outlier = velocity_is_outlier(imu_T_shield);
+    vel_is_outlier = velocity_is_outlier(camera_T_shield);
 
     if (vel_is_outlier) {
         pos = x.segment<3>(0);
+        ROS_INFO("outlier rejected");
     }
     else {
-        pos = imu_T_shield;
+        pos = camera_T_shield;
     }
 
     // store the state
-    pub_preprocessed(header, imu_T_shield, imu_vel_shield);
-    imu_T_shield_prev = imu_T_shield;
+    pub_preprocessed(header, camera_T_shield, camera_vel_shield, debug_pub);
 
+    imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera * 0.001;
+    imu_vel_shield = (imu_T_shield - imu_T_shield_prev) / dt_update;
+    imu_T_shield_prev = imu_T_shield;
+    pub_preprocessed(header, imu_T_shield, imu_vel_shield, transform_pub);
 }
 
 static void propagate(const double &dt) {
@@ -171,14 +182,14 @@ static void initialize_visual(const std_msgs::Header &header,
     camera_T_shield[0] = twist.linear.x;
     camera_T_shield[1] = twist.linear.y;
     camera_T_shield[2] = twist.linear.z;
-    imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
-    imu_T_shield *= 0.001; // Convert millimeter to meter
+    // imu_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
+    camera_T_shield *= 0.001; // Convert millimeter to meter
 
-    x.segment<3>(0) = imu_T_shield; // init velocity with zero
+    x.segment<3>(0) = camera_T_shield; // init velocity with zero
     x.segment<3>(3).setZero(); // init velocity with zero
 
     cout << "DEBUG: x initialized with " << endl << x.transpose() << endl;
-    imu_T_shield_prev = imu_T_shield;
+    camera_T_shield_prev = camera_T_shield;
     t_prev = t_update;
     visual_initialized = true;
 }
@@ -266,34 +277,37 @@ int main(int argc, char **argv)
     n.param("real_visual_topic", real_visual_topic, string("/detected_armor"));
     n.param("publisher_topic", publisher_topic, string("/prediction_kf/predict"));
     n.param("debug_topic", debug_topic, string("/prediction_kf/preprocessed"));
+    n.param("transform_topic", transform_topic, string("/prediction_kf/transformed"));
     n.param("chi_square_threshold", OUTLIER_THRESHOLD, 10000.0);
     n.param("outlier_l2_norm_ratio", outlier_l2_norm_ratio, 1.5);
     n.param("R_pos", R_pos, 16.0);
     n.param("Q_pos", Q_pos, 0.2);
     n.param("Q_vel", Q_vel, 1.0);
     n.param("P_matrix_weight", P_weight, 1.0);
-/*
+    n.param("yaw_delay", yaw_delay, 0.0);
+    n.param("pitch_delay", pitch_delay, 0.0);
+
     // For chassis reading only
     imu_R_camera <<  0, 0, 1,
                     -1, 0, 0,
                      0,-1, 0;
-    imu_T_camera <<  200, 50, 0; // in millimeter
-    */
+    imu_T_camera <<  110, -70, -40; // in millimeter
+
     OUTPUT_BOUND << 10.0, 10.0, 10.0;
 
     x.setZero();
     R = R_pos * MatrixXd::Identity(3, 3);
-    R(0, 1) = R_pos * 0.1;
-    R(0, 2) = R_pos * 0.1;
-    R(1, 2) = R_pos * 0.1;
-    R(1, 0) = R_pos * 0.1;
-    R(2, 0) = R_pos * 0.1;
-    R(2, 1) = R_pos * 0.1;
+    // R(0, 1) = R_pos * 0.1;
+    // R(0, 2) = R_pos * 0.1;
+    // R(1, 2) = R_pos * 0.1;
+    // R(1, 0) = R_pos * 0.1;
+    // R(2, 0) = R_pos * 0.1;
+    // R(2, 1) = R_pos * 0.1;
     Q.topLeftCorner(3, 3)     = Q_pos * MatrixXd::Identity(3, 3);
     Q.bottomRightCorner(3, 3) = Q_vel * MatrixXd::Identity(3, 3);
     P.topLeftCorner(3, 3)     = P_weight * MatrixXd::Identity(3, 3);
-    P.topRightCorner(3, 3)    = 0.5 * P_weight * MatrixXd::Identity(3, 3);
-    P.bottomLeftCorner(3, 3)  = 0.5 * P_weight * MatrixXd::Identity(3, 3);
+    // P.topRightCorner(3, 3)    = 0.5 * P_weight * MatrixXd::Identity(3, 3);
+    // P.bottomLeftCorner(3, 3)  = 0.5 * P_weight * MatrixXd::Identity(3, 3);
     P.bottomRightCorner(3, 3) = 2 * P_weight * MatrixXd::Identity(3, 3);
     cout << "R " << endl << R << endl;
     cout << "Q " << endl << Q << endl;
@@ -303,7 +317,7 @@ int main(int argc, char **argv)
     ros::Subscriber s2 = n.subscribe(real_visual_topic, 40, real_visual_cb);
     filter_pub = n.advertise<rm_cv::ArmorRecord>(publisher_topic, 40);
     debug_pub  = n.advertise<geometry_msgs::TwistStamped>(debug_topic, 40);
-
+    transform_pub = n.advertise<geometry_msgs::TwistStamped>(transform_topic, 40);
     ros::Rate r(ROS_FREQ);
     ros::spin();
 
