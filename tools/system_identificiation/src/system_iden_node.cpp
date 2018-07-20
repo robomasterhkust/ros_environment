@@ -23,7 +23,7 @@ volatile double stop_time_table[31];
 int P = 5;
 int N = 30;
 double gain;
-
+int YAW_or_PITCH = 0;
 
 int main(int argc, char* argv[]){
     ros::init(argc,argv,"system_identification_node");
@@ -32,6 +32,7 @@ int main(int argc, char* argv[]){
     nh.param("cmd_topic", cmd_topic, string("/system_iden_cmd_vel"));
     nh.param("gain", gain, 0.1);
     nh.param("Period", P, 5);
+    nh.param("YAW_or_PITCH", YAW_or_PITCH, 0);
 
 	cmd_vel_publisher = nh.advertise<geometry_msgs::Twist>(cmd_topic, 10);
 
@@ -76,7 +77,13 @@ int main(int argc, char* argv[]){
 
             // publish the message
             geometry_msgs::Twist cmd_vel;
-            cmd_vel.angular.y = excit_cmd;
+            switch( YAW_or_PITCH ) {
+                case 0: cmd_vel.angular.z = excit_cmd; break;
+                case 1: cmd_vel.angular.y = excit_cmd; break;
+                default:cmd_vel.angular.y = 0;
+                        cmd_vel.angular.z = 0; break;
+            }
+
             cmd_vel_publisher.publish(cmd_vel);
         }
         else
