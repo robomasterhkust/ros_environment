@@ -51,10 +51,10 @@ class rune_feedforward:
                 k_z = rospy.get_param('/server_node/k_z')
                 center_x = rospy.get_param('/server_node/center_x')
                 center_y = rospy.get_param('/server_node/center_y')
-            #theta should be modified for different sentries
-            theta =  2*math.pi / 45
+            # theta should be modified for different sentries
+            theta = 2 * math.pi / 45
             rune_T_camera = np.array(
-                [point.x, point.y*np.cos(theta)-point.z*np.sin(theta), point.z*np.cos(theta)+point.y*np.sin(theta)])
+                [point.x, point.y * np.cos(theta) - point.z * np.sin(theta), point.z * np.cos(theta) + point.y * np.sin(theta)])
             # yangjiao = np.array([[1, 0, 0],
             #                      [0, np.cos(theta), -np.sin(theta)],
             #                      [0, np.sin(theta), np.cos(theta)]])
@@ -89,8 +89,11 @@ class rune_feedforward:
             # rospy.loginfo("rune center euler angle zyx: %f, %f, %f",
             #               T_euler0, T_euler1, T_euler2)
 
-            vel_msg.angular.y = T_euler1
-            vel_msg.angular.z = T_euler0
+            vel_msg.angular.y = T_euler1 + center_y
+            vel_msg.angular.z = T_euler0 + center_x
+            if abs(vel_msg.angular.y > 0.4) or abs(vel_msg.angular.z > 0.4):
+                vel_msg.angular.y = 0.0
+                vel_msg.angular.z = 0.0
         self.cmd_pub.publish(vel_msg)
 
 
