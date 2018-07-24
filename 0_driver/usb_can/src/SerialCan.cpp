@@ -274,7 +274,7 @@ void SerialCan::readThdFunc()
             continue;
         }
 
-        while (((ATseekPos + 2) % BUFFER_SIZE) != endPos)
+        while ((((ATseekPos + 2) % BUFFER_SIZE) != endPos) && (((ATseekPos + 2) % BUFFER_SIZE) != endPos))
         {
             if (buf[ATseekPos] == 'A' && buf[(ATseekPos + 1) % BUFFER_SIZE] == 'T')
             {
@@ -354,7 +354,7 @@ void SerialCan::readThdFunc()
                     }
                 }
                 foundAT = true;
-                ATPos = ATseekPos;
+                startPos = ATPos = ATseekPos;
             }
             ATseekPos = (ATseekPos + 1) % BUFFER_SIZE;
         }
