@@ -152,9 +152,9 @@ int main(int argc, char **argv)
                 usb_can_path += std::to_string(force_ttyUSB_index);
         }
 
-        ros::Publisher pub = nh->advertise<can_msgs::Frame>("canRx", 20);
+        ros::Publisher pub = nh->advertise<can_msgs::Frame>("/canRx", 20);
         ros::Subscriber sub = nh->subscribe("/cmd_vel", 20, cmd_cb);
-        ros::Subscriber gimbalSub = nh->subscribe("gimbal_target_veloity", 20, sentryGimbalControlCB);
+        ros::Subscriber gimbalSub = nh->subscribe("/gimbal_target_veloity", 20, sentryGimbalControlCB);
         ros::Subscriber subFrame = nh->subscribe("/canTx", 20, subCB);
         ros::Subscriber testSentrySub = nh->subscribe("/test_sentry", 20, test_sentry_cb);
 
