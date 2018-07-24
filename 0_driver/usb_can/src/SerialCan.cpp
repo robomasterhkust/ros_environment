@@ -12,6 +12,8 @@
 #include "ros/ros.h"
 #include "usb_can/can_frame.h"
 
+using namespace std;
+
 SerialCan *createSerialCom(std::string path,
                            speed_t baudRate,
                            ros::Publisher &pub)
@@ -52,8 +54,8 @@ SerialCan *createSerialCom(std::string path,
         tty.c_oflag &= ~OPOST;
 
         //blocking read until at least one byte availables
-        tty.c_cc[VMIN] = 1;
-        tty.c_cc[VTIME] = 0;
+        tty.c_cc[VMIN] = 0;
+        tty.c_cc[VTIME] = 1;
 
         if (tcsetattr(fd, TCSANOW, &tty) != 0)
         {
@@ -73,11 +75,8 @@ SerialCan::SerialCan(int fd,
     : fd(fd),
       tty(tty),
       pub(pub),
-      startPos(0),
-      endPos(0),
       shouldRead(false)
 {
-    memset(buf, 0, sizeof(buf));
     do
     {
 
@@ -209,6 +208,7 @@ void SerialCan::receiveCB(uint32_t id,
     //     printf(" %x", data[i]);
     // }
     // printf("\n");
+    printf("\n");
     usb_can::can_frame temp;
     memcpy(temp.data.begin(), data, numBytes);
     temp.id = id;
@@ -217,11 +217,26 @@ void SerialCan::receiveCB(uint32_t id,
     temp.is_error = false;
     temp.dlc = numBytes;
     temp.header.stamp = ros::Time::now();
+
+    // if (id = 0x105)
+    // {
+    //     printf("received rail distance %f\n", *(float *)data);
+    // }
     pub.publish(temp);
 };
 
 void SerialCan::readThdFunc()
 {
+    bool foundAT = false;
+    unsigned int ATPos = 0;
+    unsigned int ATseekPos = 0;
+
+    unsigned int startPos = 0;
+    unsigned int endPos = 0;
+    //queue related
+    unsigned char buf[BUFFER_SIZE];
+    memset(buf, 0, sizeof(buf));
+
     while (shouldRead)
     {
         int readSize;
@@ -229,78 +244,73 @@ void SerialCan::readThdFunc()
         //  startPos=writePos => no data
         //  writePos 1 byte behine startPos => buffer full
         //  else => some data in the buffer
-        if (startPos == 0)
-            readSize = read(fd, &buf[endPos], (BUFFER_SIZE - endPos - 1));
-        if (startPos <= endPos)
-            readSize = read(fd, &buf[endPos], (BUFFER_SIZE - endPos));
-        else
-            readSize = read(fd, &buf[endPos], (startPos - endPos - 1));
-
-        if (readSize <= 0)
-            std::this_thread::sleep_for(std::chrono::microseconds(5));
-        endPos += readSize;
-        if (endPos == BUFFER_SIZE)
+        if (endPos >= startPos)
         {
-            endPos = 0;
-        }
-
-        if ((endPos == startPos - 1) ||
-            (startPos == 0 && endPos == BUFFER_SIZE - 1))
-        {
-            printf("BUFFER FULL!");
-        }
-
-        bool popedMsg;
-        do
-        {
-            popedMsg = false;
-            if (!foundAT)
+            //read till end of buffer
+            if (startPos == 0)
+                readSize = read(fd, &buf[endPos], (BUFFER_SIZE - 1 - endPos));
+            else
             {
-                //AT not found, serach for it
-                while (ATseekPos != endPos)
+                readSize = read(fd, &buf[endPos], (BUFFER_SIZE - endPos));
+                if (readSize == (BUFFER_SIZE - endPos))
                 {
-                    if (buf[ATseekPos] == 'A')
-                    {
-                        if (buf[(ATseekPos + 1) % BUFFER_SIZE] == 'T')
-                        {
-                            //found AT
-                            foundAT = true;
-                            EOLseekPos = (ATseekPos + 2) % BUFFER_SIZE;
-                            break;
-                        }
-                        else if ((ATseekPos + 1) % BUFFER_SIZE == endPos)
-                        {
-                            //things after 'A' not read, check again next time
-                            break;
-                        }
-                    }
-
-                    //"AT" not here
-                    ATseekPos = (ATseekPos + 1) % BUFFER_SIZE;
+                    readSize += read(fd, &buf[endPos], startPos - 1);
                 }
             }
+        }
+        else
+        {
+            readSize += read(fd, &buf[endPos], startPos - 1 - endPos);
+        }
 
-            if (foundAT)
+        endPos = (endPos + readSize) % BUFFER_SIZE;
+
+        if ((endPos == startPos - 1) || (startPos == 0 && endPos == BUFFER_SIZE - 1))
+        {
+            printf("BUFFER FULL!\n");
+            startPos = endPos = 0;
+            ATseekPos = 0;
+            foundAT = false;
+            continue;
+        }
+
+        while (((ATseekPos + 2) % BUFFER_SIZE) != endPos)
+        {
+            if (buf[ATseekPos] == 'A' && buf[(ATseekPos + 1) % BUFFER_SIZE] == 'T')
             {
-                //search for \r \n and perform receive callback if data valid
-                while (EOLseekPos != endPos)
+                if (foundAT)
                 {
-                    if (buf[EOLseekPos] == '\n' ||
-                        buf[EOLseekPos] == '\r')
-                    {
-                        //seems received something
+                    bool validLength = false;
+                    //seems reveived a message, between two AT
+                    unsigned char msgBody[15];
+                    memset(msgBody, 0, 13);
+                    unsigned int msgBodyPos = (ATPos + 2) % BUFFER_SIZE;
 
-                        unsigned char msgBody[13];
-                        unsigned int msgBodyPos = (ATseekPos + 2) % BUFFER_SIZE;
-                        if (EOLseekPos < msgBodyPos)
+                    int frameLength;
+                    if (ATseekPos < msgBodyPos)
+                    {
+                        frameLength = BUFFER_SIZE - msgBodyPos + ATseekPos;
+                        if (frameLength <= 15 && frameLength >= 5)
                         {
                             memcpy(msgBody, &buf[msgBodyPos], BUFFER_SIZE - msgBodyPos);
-                            memcpy(&msgBody[BUFFER_SIZE - msgBodyPos], buf, EOLseekPos);
+                            memcpy(&msgBody[BUFFER_SIZE - msgBodyPos], buf, ATseekPos);
+                            validLength = true;
+                            std::cout << "flag\n"
+                                      << std::endl;
                         }
-                        else
+                    }
+                    else
+                    {
+                        frameLength = ATseekPos - msgBodyPos;
+                        if (frameLength <= 15 && frameLength >= 5)
                         {
-                            memcpy(msgBody, &buf[msgBodyPos], EOLseekPos - msgBodyPos);
+                            memcpy(msgBody, &buf[msgBodyPos], frameLength);
+                            validLength = true;
                         }
+                    }
+                    if (validLength)
+                    {
+                        std::cout << "frame length " << frameLength << std::endl;
 
                         bool extended = msgBody[3] & EXTENTED_MASK;
                         bool remote = msgBody[3] & REMOTE_MASK;
@@ -333,29 +343,21 @@ void SerialCan::readThdFunc()
 
                         if (numBytes > 8)
                         {
-                            ROS_INFO("Wrong data:");
-                            // for (int i = 0; i < 13; i++)
-                            // {
-                            //     printf("%x ", msgBody[i]);
-                            // }
-                            // printf("\n");
+                            ROS_INFO("Wrong data: framLength = %d,numBytes = %d", frameLength, numBytes);
                         }
                         else
+                        {
+                            if (numBytes > frameLength - 5)
+                                numBytes = frameLength - 5;
                             receiveCB(id, extended, remote, numBytes, &msgBody[5]);
-
-                        // printf("startpos: %d\n", startPos);
-
-                        foundAT = false;
-                        startPos = ATseekPos = EOLseekPos;
-                        popedMsg = true;
-                        break;
+                        }
                     }
-
-                    //end of line not here
-                    EOLseekPos = (EOLseekPos + 1) % BUFFER_SIZE;
                 }
+                foundAT = true;
+                ATPos = ATseekPos;
             }
-        } while (popedMsg);
+            ATseekPos = (ATseekPos + 1) % BUFFER_SIZE;
+        }
     }
 };
 

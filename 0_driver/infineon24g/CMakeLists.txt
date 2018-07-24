@@ -52,7 +52,6 @@ find_package(Threads REQUIRED)
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  can_frame.msg
 )
 
 generate_messages(
