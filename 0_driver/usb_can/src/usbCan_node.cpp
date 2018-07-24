@@ -126,25 +126,39 @@ std::string exec(const char *cmd)
 
 int main(int argc, char **argv)
 {
-        std::string usb_can = "/dev/ttyUSB";
-        std::string result = exec("bash /etc/lsusb.sh");
-        std::cout << result;
-        std::size_t found = result.find(usb_can);
-        if (found != std::string::npos)
-        {
-                std::cout << "usb can: " << result[found + usb_can.length()] << std::endl;
-                usb_can.push_back(result[found + usb_can.length()]);
-        }
-
         ros::init(argc, argv, "canusb");
         nh = new ros::NodeHandle("~");
+
+        std::string usb_can_path = "/dev/ttyUSB";
+
+        int force_ttyUSB_index;
+        nh->getParam("force_ttyUSB_index", force_ttyUSB_index);
+
+        std::cout << "force_ttyUSB_index: " << force_ttyUSB_index << std::endl;
+
+        if (force_ttyUSB_index < 0)
+        {
+                std::string result = exec("bash /etc/lsusb.sh");
+                std::cout << result;
+                std::size_t found = result.find(usb_can_path);
+                if (found != std::string::npos)
+                {
+                        std::cout << "usb can: " << result[found + usb_can_path.length()] << std::endl;
+                        usb_can_path.push_back(result[found + usb_can_path.length()]);
+                }
+        }
+        else
+        {
+                usb_can_path += std::to_string(force_ttyUSB_index);
+        }
+
         ros::Publisher pub = nh->advertise<can_msgs::Frame>("canRx", 20);
         ros::Subscriber sub = nh->subscribe("/cmd_vel", 20, cmd_cb);
         ros::Subscriber gimbalSub = nh->subscribe("gimbal_target_veloity", 20, sentryGimbalControlCB);
         ros::Subscriber subFrame = nh->subscribe("/canTx", 20, subCB);
         ros::Subscriber testSentrySub = nh->subscribe("/test_sentry", 20, test_sentry_cb);
 
-        ROS_INFO("Opening %s as usb to can module ...", usb_can.c_str());
+        ROS_INFO("Opening %s as usb to can module ...", usb_can_path.c_str());
 
         int buad_rate;
         speed_t BaudR;
@@ -163,7 +177,7 @@ int main(int argc, char **argv)
                 ROS_INFO("Opening serial com with 115200 baud rate");
                 BaudR = B115200;
         }
-        comObj = createSerialCom(usb_can, BaudR, pub);
+        comObj = createSerialCom(usb_can_path, BaudR, pub);
 
         if (comObj)
         {
@@ -202,6 +216,6 @@ int main(int argc, char **argv)
                 std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         }
         comObj->stopReadThd();
-        delete comObj;
         spinner.stop();
+        delete comObj;
 }
