@@ -66,39 +66,39 @@ void cmd_cb(const geometry_msgs::Twist &t)
         subCB(f);
 }
 
-void sentryGimbalControlCB(const geometry_msgs::Twist &t)
-{
-        // void cmd_cb(const geometry_msgs::Vector3 &t){
-        static can_msgs::Frame f;
-        //gimabal control id: 0x111
+// void sentryGimbalControlCB(const geometry_msgs::Twist &t)
+// {
+//         // void cmd_cb(const geometry_msgs::Vector3 &t){
+//         static can_msgs::Frame f;
+//         //gimabal control id: 0x111
 
-        f.id = SENTRY_GIMBAL_CONTROL_ID;
-        f.dlc = 8;
-        f.is_extended = false;
-        f.is_rtr = false;
+//         f.id = SENTRY_GIMBAL_CONTROL_ID;
+//         f.dlc = 8;
+//         f.is_extended = false;
+//         f.is_rtr = false;
 
-        *(float *)&f.data.elems[0] = t.angular.z;
-        *(float *)&f.data.elems[4] = t.angular.y;
+//         *(float *)&f.data.elems[0] = t.angular.z;
+//         *(float *)&f.data.elems[4] = t.angular.y;
 
-        subCB(f);
-}
+//         subCB(f);
+// }
 
-void test_sentry_cb(const std_msgs::Int8 &in)
-{
-        ROS_INFO("test_sentry_cb");
-        static can_msgs::Frame f;
-        //gimabal control id: 0x111
+// void test_sentry_cb(const std_msgs::Int8 &in)
+// {
+//         ROS_INFO("test_sentry_cb");
+//         static can_msgs::Frame f;
+//         //gimabal control id: 0x111
 
-        f.id = SENTRY_SHOOT_RAIL_CONTROL_ID;
-        f.dlc = 8;
-        f.is_extended = false;
-        f.is_rtr = false;
+//         f.id = SENTRY_SHOOT_RAIL_CONTROL_ID;
+//         f.dlc = 8;
+//         f.is_extended = false;
+//         f.is_rtr = false;
 
-        f.data.fill(0);
-        f.data.elems[0] = in.data;
+//         f.data.fill(0);
+//         f.data.elems[0] = in.data;
 
-        subCB(f);
-}
+//         subCB(f);
+// }
 
 std::string exec(const char *cmd)
 {
@@ -154,9 +154,9 @@ int main(int argc, char **argv)
 
         ros::Publisher pub = nh->advertise<can_msgs::Frame>("/canRx", 20);
         ros::Subscriber sub = nh->subscribe("/cmd_vel", 20, cmd_cb);
-        ros::Subscriber gimbalSub = nh->subscribe("/gimbal_target_veloity", 20, sentryGimbalControlCB);
+        //ros::Subscriber gimbalSub = nh->subscribe("/gimbal_target_veloity", 20, sentryGimbalControlCB);
         ros::Subscriber subFrame = nh->subscribe("/canTx", 20, subCB);
-        ros::Subscriber testSentrySub = nh->subscribe("/test_sentry", 20, test_sentry_cb);
+        //ros::Subscriber testSentrySub = nh->subscribe("/test_sentry", 20, test_sentry_cb);
 
         ROS_INFO("Opening %s as usb to can module ...", usb_can_path.c_str());
 
@@ -211,9 +211,19 @@ int main(int argc, char **argv)
 
         while (ros::ok())
         {
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                // static can_msgs::Frame f;
+                // //gimabal control id: 0x111
 
-                std::cout << "usb to can running" << std::endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                // f.id = 0x111;
+                // f.dlc = 8;
+                // f.is_extended = false;
+                // f.is_rtr = false;
+
+                // *(float *)&f.data.elems[0] = 0.1;
+                // *(float *)&f.data.elems[4] = 0;
+
+                // subCB(f);
         }
         comObj->stopReadThd();
         spinner.stop();

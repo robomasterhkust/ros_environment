@@ -310,7 +310,7 @@ void SerialCan::readThdFunc()
                     }
                     if (validLength)
                     {
-                        std::cout << "frame length " << frameLength << std::endl;
+                        //std::cout << "frame length " << frameLength << std::endl;
 
                         bool extended = msgBody[3] & EXTENTED_MASK;
                         bool remote = msgBody[3] & REMOTE_MASK;
@@ -343,7 +343,7 @@ void SerialCan::readThdFunc()
 
                         if (numBytes > 8)
                         {
-                            ROS_INFO("Wrong data: framLength = %d,numBytes = %d", frameLength, numBytes);
+                          //  ROS_INFO("Wrong data: framLength = %d,numBytes = %d", frameLength, numBytes);
                         }
                         else
                         {
