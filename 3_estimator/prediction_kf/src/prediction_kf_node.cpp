@@ -57,7 +57,7 @@ static void pub_result(const ros::Time &stamp, double delay_dt)
     odom.armorPose.linear.z  = (predict_z < OUTPUT_BOUND[2]) ? predict_z * 1000 : OUTPUT_BOUND[2] * 1000;
     odom.armorPose.angular.x = x(3) * 1000;
     odom.armorPose.angular.y = x(4) * 1000;
-    odom.armorPose.angular.z = chi_square / OUTLIER_THRESHOLD; // DEBUG_only
+    odom.armorPose.angular.z = x(5) * 1000;
     filter_pub.publish(odom);
 }
 
