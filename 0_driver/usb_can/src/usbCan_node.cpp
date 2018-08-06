@@ -125,7 +125,8 @@ int main(int argc, char **argv)
 
         ROS_INFO("Opening %s as usb to can module ...", usb_can.c_str());
 
-        comObj = createSerialCom(usb_can, B115200, pub);
+        // comObj = createSerialCom(usb_can, B115200, pub);
+        comObj = createSerialCom(usb_can, B460800, pub);
 
         if (comObj)
         {
