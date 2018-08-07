@@ -116,10 +116,11 @@ class armor_frame_pid:
             # Calculate the relative angular velocity
             shield_vel_camera = np.array(
                 [subArmorRecord.armorPose.angular.x, subArmorRecord.armorPose.angular.y, subArmorRecord.armorPose.angular.z])
-            vel = opencv_rotation.dot(shield_vel_camera)
-            omega = vel / T_abs # small angle approximation
+            # vel = opencv_rotation.dot(shield_vel_camera)
+            # omega = vel / T_abs # small angle approximation
+            omega = shield_vel_camera / T_abs
             self.y_vel_err = omega[1]
-            self.z_vel_err = omega[2]
+            self.z_vel_err = omega[0]
 
             self.y_err = T_euler1 - image_center_y
             self.z_err = T_euler0 - image_center_x
