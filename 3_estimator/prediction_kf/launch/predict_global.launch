@@ -1,5 +1,5 @@
 <launch>
-
+    <node pkg="can_receive" type="can_receive_node" name="can_receive_node" output="screen"/>
     <node pkg="prediction_kf" type="prediction_kf_node_global" name="prediction_kf_node_global" output="screen">
         <param name="attitude_topic" type="string" value="/can_receive_node/attitude"/>
         <param name="real_visual_topic" type="string" value="/detected_armor"/>

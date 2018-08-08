@@ -39,7 +39,7 @@ double OUTLIER_THRESHOLD = 10000.0;
 
 Vector3d init_T_shield_prev = MatrixXd::Zero(3, 1);
 Vector3d imu_T_shield_prev = MatrixXd::Zero(3, 1);
-bool vel_is_outlier = false;
+bool pos_is_outlier = false;
 double chi_square = 0;
 double outlier_l2_norm_ratio = 1.5;
 double yaw_delay = 0.0;
@@ -70,17 +70,17 @@ static void pub_preprocessed(const std_msgs::Header &header,
 {
     geometry_msgs::TwistStamped debug;
     debug.header = header;
-    debug.twist.linear.x  = p[0] * 1000;
-    debug.twist.linear.y  = p[1] * 1000;
-    debug.twist.linear.z  = p[2] * 1000;
-    debug.twist.angular.x = v[0] * 1000;
-    debug.twist.angular.y = v[1] * 1000;
-    debug.twist.angular.z = v[2] * 1000;
+    debug.twist.linear.x  = p[0];
+    debug.twist.linear.y  = p[1];
+    debug.twist.linear.z  = p[2];
+    debug.twist.angular.x = v[0];
+    debug.twist.angular.y = v[1];
+    debug.twist.angular.z = v[2];
     publisher.publish(debug);
 }
 
 // Chi-square test for outlier rejection
-static bool velocity_is_outlier(const Vector3d &pos)
+static bool translation_is_outlier(const Vector3d &pos)
 {
     VectorXd r = MatrixXd::Zero(3, 1);
     VectorXd z = MatrixXd::Zero(3, 1);
@@ -129,9 +129,9 @@ static void preprocess_visual(const std_msgs::Header &header,
     init_vel_shield = (init_T_shield - init_T_shield_prev) / dt_update;
     init_T_shield_prev = init_T_shield;
 
-    vel_is_outlier = velocity_is_outlier(init_vel_shield);
+    pos_is_outlier = translation_is_outlier(init_T_shield);
 
-    if (vel_is_outlier) {
+    if (pos_is_outlier) {
         pos = x.segment<3>(0);
         ROS_INFO("outlier rejected");
     }
@@ -200,7 +200,6 @@ void attitude_cb(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
     // TODO: synchronize the timestamp
     Quaterniond q_now = Quaterniond( imu->quaternion.w, imu->quaternion.x, imu->quaternion.y, imu->quaternion.z );
     init_R_gimbal = q_now.toRotationMatrix();
-    cout << "DEBUG: R from IMU " << endl << init_R_gimbal << endl;
 }
 
 /**
