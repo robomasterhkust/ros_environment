@@ -33,6 +33,8 @@
 #define CAN_CHASSIS_DEBUG_BL 0x213
 #define CAN_CHASSIS_DEBUG_BR 0x214
 
+std::string receiver_topic;
+
 ros::Publisher dbus_publisher;
 ros::Publisher gameinfo_publisher;
 ros::Publisher projectile_hlth_publisher;
@@ -225,6 +227,8 @@ int main(int argc, char *argv[]) {
   ros::init(argc, argv, "can_receive_node");
   ros::NodeHandle nh("~"), nh_param("~");
 
+  nh.param("receiver_topic", receiver_topic, std::string("/canRx"));
+
   dbus_publisher = nh.advertise<can_receive_msg::dbus>("dbus", 100);
   gameinfo_publisher = nh.advertise<can_receive_msg::gameinfo>("gameinfo", 100);
   projectile_hlth_publisher =
@@ -246,7 +250,7 @@ int main(int argc, char *argv[]) {
       nh.advertise<can_receive_msg::motor_debug>("motor_debug", 100);
 
   ros::Subscriber can_subscriber =
-      nh.subscribe("/canusb/canRx", 100, msgCallback);
+      nh.subscribe(receiver_topic, 100, msgCallback);
 
   ros::spin();
 
