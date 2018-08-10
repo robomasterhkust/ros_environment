@@ -1,4 +1,11 @@
 <launch>
   <node name="canusb" pkg="usb_can" type="usb_can_node" respawn="false" output="screen" cwd="ROS_HOME" launch-prefix="sudo -E bash -c">
+    <rosparam>
+            buad_rate:   460800
+            force_ttyUSB_index:   -1
+    </rosparam>
+  </node>
+  <node name="can_receive_node" pkg="can_receive" type="can_receive_node" output="screen">
+    <param name="receiver_topic" type="string" value="/canRx"/>
   </node>
 </launch>
