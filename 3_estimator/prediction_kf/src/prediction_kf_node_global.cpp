@@ -54,12 +54,12 @@ static void pub_result(const ros::Time &stamp, double delay_dt)
     double predict_x = x(0) + (delay_dt + yaw_delay)   * x(3);
     double predict_y = x(1) + (delay_dt + pitch_delay) * x(4);
     double predict_z = x(2) + delay_dt * x(5);
-    odom.armorPose.linear.x  = (predict_x < OUTPUT_BOUND[0]) ? predict_x : OUTPUT_BOUND[0];
-    odom.armorPose.linear.y  = (predict_y < OUTPUT_BOUND[1]) ? predict_y : OUTPUT_BOUND[1];
-    odom.armorPose.linear.z  = (predict_z < OUTPUT_BOUND[2]) ? predict_z : OUTPUT_BOUND[2];
-    odom.armorPose.angular.x = x(3);
-    odom.armorPose.angular.y = x(4);
-    odom.armorPose.angular.z = x(5);
+    odom.armorPose.linear.x  = (predict_x < OUTPUT_BOUND[0]) ? predict_x * 1000 : OUTPUT_BOUND[0] * 1000;
+    odom.armorPose.linear.y  = (predict_y < OUTPUT_BOUND[1]) ? predict_y * 1000 : OUTPUT_BOUND[1] * 1000;
+    odom.armorPose.linear.z  = (predict_z < OUTPUT_BOUND[2]) ? predict_z * 1000 : OUTPUT_BOUND[2] * 1000;
+    odom.armorPose.angular.x = x(3) * 1000;
+    odom.armorPose.angular.y = x(4) * 1000;
+    odom.armorPose.angular.z = x(5) * 1000;
     filter_pub.publish(odom);
 }
 
