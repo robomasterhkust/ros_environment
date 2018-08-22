@@ -11,6 +11,7 @@
 #include <geometry_msgs/QuaternionStamped.h>
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <queue>
 #include "rm_cv/ArmorRecord.h"
 
 using namespace std;
@@ -44,7 +45,12 @@ double chi_square = 0;
 double outlier_l2_norm_ratio = 1.5;
 double yaw_delay = 0.0;
 double pitch_delay = 0.0;
-Vector3d OUTPUT_BOUND = MatrixXd::Zero(3, 1);;
+Vector3d OUTPUT_BOUND = MatrixXd::Zero(3, 1);
+
+// synchronization
+queue<geometry_msgs::QuaternionStamped::ConstPtr> imu_queue;
+const int MAX_IMU_QUEUE_SIZE = 1000;
+
 
 static void pub_result(const ros::Time &stamp, double delay_dt)
 {
@@ -70,12 +76,12 @@ static void pub_preprocessed(const std_msgs::Header &header,
 {
     geometry_msgs::TwistStamped debug;
     debug.header = header;
-    debug.twist.linear.x  = p[0] * 1000;
-    debug.twist.linear.y  = p[1] * 1000;
-    debug.twist.linear.z  = p[2] * 1000;
-    debug.twist.angular.x = v[0] * 1000;
-    debug.twist.angular.y = v[1] * 1000;
-    debug.twist.angular.z = v[2] * 1000;
+    debug.twist.linear.x  = p[0];
+    debug.twist.linear.y  = p[1];
+    debug.twist.linear.z  = p[2];
+    debug.twist.angular.x = v[0];
+    debug.twist.angular.y = v[1];
+    debug.twist.angular.z = v[2];
     publisher.publish(debug);
 }
 
@@ -112,6 +118,20 @@ static bool translation_is_outlier(const Vector3d &pos)
     return (chi_square > OUTLIER_THRESHOLD);
 }
 
+static double imu_to_yaw_angle(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
+{
+    // Quaterniond q = Quaterniond( imu->quaternion.w, imu->quaternion.x, imu->quaternion.y, imu->quaternion.z );
+    double qw = imu->quaternion.w;
+    double qx = imu->quaternion.x;
+    double qy = imu->quaternion.y;
+    double qz = imu->quaternion.z;
+
+    // convert to ZYX Euler angle yaw angle
+    // double euler_angle_0 = atan2(2.0 * (qw * qx + qy * qz), 1.0 - 2.0 * (qx * qx + qy * qy) );
+    // double euler_angle_1 = asin( 2.0 * (qw * qy - qz * qx) );
+    return atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz) );
+}
+
 static void preprocess_visual(const std_msgs::Header &header,
                               const geometry_msgs::Twist &twist,
                               Vector3d &pos, double dt_update)
@@ -123,7 +143,20 @@ static void preprocess_visual(const std_msgs::Header &header,
     camera_T_shield[2] = twist.linear.z;
     gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
-    init_T_shield = init_R_gimbal * gimbal_T_shield;
+
+    Matrix3d world_R_gimbal = MatrixXd::Identity(3, 3);
+//    while (!imu_queue.empty() &&
+//            imu_queue.front()->header.stamp < header.stamp) {
+//        imu_queue.pop();
+//    }
+    if (!imu_queue.empty()) {
+        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.front());
+        double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
+        world_R_gimbal = AngleAxisd(euler_angle_2, Vector3d::UnitZ()).toRotationMatrix();
+    }
+
+    init_T_shield = world_R_gimbal * gimbal_T_shield;
+    // init_T_shield = init_R_gimbal * gimbal_T_shield;
 
     // calculate and check the velocity
     init_vel_shield = (init_T_shield - init_T_shield_prev) / dt_update;
@@ -140,7 +173,7 @@ static void preprocess_visual(const std_msgs::Header &header,
     }
 
     // store the state
-    pub_preprocessed(header, camera_T_shield, camera_vel_shield, debug_pub);
+    pub_preprocessed(header, gimbal_T_shield, gimbal_vel_shield, debug_pub);
 
     pub_preprocessed(header, init_T_shield_prev, init_vel_shield, transform_pub);
 }
@@ -183,7 +216,18 @@ static void initialize_visual(const std_msgs::Header &header,
     camera_T_shield[2] = twist.linear.z;
     gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
-    init_T_shield = init_R_gimbal * gimbal_T_shield;
+
+    Matrix3d world_R_gimbal = MatrixXd::Identity(3, 3);
+//    while (!imu_queue.empty() &&
+//           imu_queue.front()->header.stamp < header.stamp) {
+//        imu_queue.pop();
+//    }
+    if (!imu_queue.empty()) {
+        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.front());
+        double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
+        world_R_gimbal = AngleAxisd(euler_angle_2, Vector3d::UnitZ()).toRotationMatrix();
+    }
+    init_T_shield = world_R_gimbal * gimbal_T_shield;
 
     x.segment<3>(0) = init_T_shield; // init velocity with zero
     x.segment<3>(3).setZero(); // init velocity with zero
@@ -195,12 +239,13 @@ static void initialize_visual(const std_msgs::Header &header,
     visual_initialized = true;
 }
 
+
+
 void attitude_cb(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
 {
-    // TODO: synchronize the timestamp
-    Quaterniond q_now = Quaterniond( imu->quaternion.w, imu->quaternion.x, imu->quaternion.y, imu->quaternion.z );
-    init_R_gimbal = q_now.toRotationMatrix();
-    cout << "init_R_gimbal: " << endl << init_R_gimbal << endl;
+    // synchronize the timestamp
+    imu_queue.push(imu);
+    if (imu_queue.size() > MAX_IMU_QUEUE_SIZE) imu_queue.pop();
 }
 
 /**
@@ -225,11 +270,10 @@ void real_visual_cb(const rm_cv::ArmorRecord::ConstPtr &armor)
 
             ros::Time t_update = armor->header.stamp;
             double dt_update = (t_update - t_prev).toSec();
-            dt_update = (dt_update < CV_UPDATE_TIME_MAX) ? dt_update : CV_UPDATE_TIME_MAX;
-            // cout << "dt_update: " << endl << dt_update << endl;
-
             Vector3d pos;
-            preprocess_visual(armor->header, armor->armorPose, pos, dt_update);
+
+            if (dt_update < CV_UPDATE_TIME_MAX)
+                preprocess_visual(armor->header, armor->armorPose, pos, dt_update);
 
             update(pos);
 

@@ -32,7 +32,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/transformed</topic>
@@ -83,7 +83,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/transformed</topic>
@@ -134,7 +134,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/transformed</topic>
@@ -185,7 +185,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/transformed</topic>
@@ -195,8 +195,8 @@
                                     <field>twist/angular/x</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>2000</absolute_maximum>
-                                        <absolute_minimum>-2000</absolute_minimum>
+                                        <absolute_maximum>1</absolute_maximum>
+                                        <absolute_minimum>-1</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>1</type>
@@ -236,7 +236,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/transformed</topic>
@@ -246,8 +246,8 @@
                                     <field>twist/angular/y</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>2000</absolute_maximum>
-                                        <absolute_minimum>-2000</absolute_minimum>
+                                        <absolute_maximum>1</absolute_maximum>
+                                        <absolute_minimum>-1</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>1</type>
@@ -287,7 +287,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/transformed</topic>
@@ -297,8 +297,8 @@
                                     <field>twist/angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>2000</absolute_maximum>
-                                        <absolute_minimum>-2000</absolute_minimum>
+                                        <absolute_maximum>1</absolute_maximum>
+                                        <absolute_minimum>-1</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>1</type>
@@ -329,12 +329,63 @@
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>vz</title>
                         </curve_5>
+                        <curve_6>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/can_receive_1/attitude</topic>
+                                    <type>geometry_msgs/QuaternionStamped</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>quaternion/w</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>0</type>
+                                    </scale>
+                                    <topic>/can_receive_1/attitude</topic>
+                                    <type>geometry_msgs/QuaternionStamped</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#000000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>1</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>0</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>Untitled Curve</title>
+                        </curve_6>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>100</plot_rate>
-                    <title>propagate acc and vel</title>
+                    <title>raw transformed result</title>
                 </column_0>
                 <column_1>
                     <axes>
@@ -590,7 +641,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
@@ -641,7 +692,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
@@ -692,7 +743,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
@@ -743,7 +794,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
@@ -794,7 +845,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
@@ -845,7 +896,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/prediction_kf/predict</topic>
@@ -919,7 +970,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/detected_armor</topic>
@@ -970,7 +1021,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/detected_armor</topic>
@@ -1021,7 +1072,7 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-7</relative_minimum>
+                                        <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
                                     <topic>/detected_armor</topic>
