@@ -70,12 +70,12 @@ static void pub_preprocessed(const std_msgs::Header &header,
 {
     geometry_msgs::TwistStamped debug;
     debug.header = header;
-    debug.twist.linear.x  = p[0];
-    debug.twist.linear.y  = p[1];
-    debug.twist.linear.z  = p[2];
-    debug.twist.angular.x = v[0];
-    debug.twist.angular.y = v[1];
-    debug.twist.angular.z = v[2];
+    debug.twist.linear.x  = p[0] * 1000;
+    debug.twist.linear.y  = p[1] * 1000;
+    debug.twist.linear.z  = p[2] * 1000;
+    debug.twist.angular.x = v[0] * 1000;
+    debug.twist.angular.y = v[1] * 1000;
+    debug.twist.angular.z = v[2] * 1000;
     publisher.publish(debug);
 }
 
@@ -89,7 +89,7 @@ static bool translation_is_outlier(const Vector3d &pos)
 
     double pos_norm   = z.segment<3>(0).norm();
     double state_norm = x.segment<3>(0).norm();
-    ROS_INFO("pos_norm %f, state_norm %f", pos_norm, state_norm);
+    // ROS_INFO("pos_norm %f, state_norm %f", pos_norm, state_norm);
     if (pos_norm > state_norm * outlier_l2_norm_ratio) {
         return true;
     } else if (pos_norm < state_norm / outlier_l2_norm_ratio) {
@@ -142,7 +142,7 @@ static void preprocess_visual(const std_msgs::Header &header,
     // store the state
     pub_preprocessed(header, camera_T_shield, camera_vel_shield, debug_pub);
 
-    pub_preprocessed(header, init_T_shield, init_vel_shield, transform_pub);
+    pub_preprocessed(header, init_T_shield_prev, init_vel_shield, transform_pub);
 }
 
 static void propagate(const double &dt) {
@@ -200,6 +200,7 @@ void attitude_cb(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
     // TODO: synchronize the timestamp
     Quaterniond q_now = Quaterniond( imu->quaternion.w, imu->quaternion.x, imu->quaternion.y, imu->quaternion.z );
     init_R_gimbal = q_now.toRotationMatrix();
+    cout << "init_R_gimbal: " << endl << init_R_gimbal << endl;
 }
 
 /**
@@ -225,6 +226,7 @@ void real_visual_cb(const rm_cv::ArmorRecord::ConstPtr &armor)
             ros::Time t_update = armor->header.stamp;
             double dt_update = (t_update - t_prev).toSec();
             dt_update = (dt_update < CV_UPDATE_TIME_MAX) ? dt_update : CV_UPDATE_TIME_MAX;
+            // cout << "dt_update: " << endl << dt_update << endl;
 
             Vector3d pos;
             preprocess_visual(armor->header, armor->armorPose, pos, dt_update);
@@ -247,9 +249,9 @@ int main(int argc, char **argv)
 
     n.param("attitude_topic", attitude_topic, string("/can_receive_node/attitude"));
     n.param("real_visual_topic", real_visual_topic, string("/detected_armor"));
-    n.param("publisher_topic", publisher_topic, string("/prediction_kf/predict"));
-    n.param("debug_topic", debug_topic, string("/prediction_kf/preprocessed"));
-    n.param("transform_topic", transform_topic, string("/prediction_kf/transformed"));
+    n.param("publisher_topic", publisher_topic, string("/prediction_kf_global/predict"));
+    n.param("debug_topic", debug_topic, string("/prediction_kf_global/preprocessed"));
+    n.param("transform_topic", transform_topic, string("/prediction_kf_global/transformed"));
     n.param("chi_square_threshold", OUTLIER_THRESHOLD, 10000.0);
     n.param("outlier_l2_norm_ratio", outlier_l2_norm_ratio, 1.5);
     n.param("R_pos", R_pos, 16.0);
@@ -265,7 +267,7 @@ int main(int argc, char **argv)
                      0,-1, 0;
     imu_T_camera <<  150, 0, -50; // in millimeter
 
-    OUTPUT_BOUND << 10000.0, 10000.0, 10000.0;
+    OUTPUT_BOUND << 10.0, 10.0, 20.0;
 
     x.setZero();
     R = R_pos * MatrixXd::Identity(3, 3);
