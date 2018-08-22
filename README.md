@@ -110,3 +110,7 @@ On both machines, add the ip address of the itself and the slave in the `/etc/ho
 
 
 Then launch roscore in the master machine, and all nodes don't need to launch roscore and can receive topics from each others.
+
+## For NVIDIA TX2
+1. flycapture has one extra step to configure, see https://www.ptgrey.com/tan/10699
+2. for rqt_multiplot, `sudo apt install libqwt-qt5-dev libqwt5-qt4 -y`, and in the running sequence, use `rosrun rqt_multiplot rqt_multiplot --force-discover`
