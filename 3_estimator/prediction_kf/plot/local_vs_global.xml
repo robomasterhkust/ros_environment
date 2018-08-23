@@ -338,8 +338,8 @@
                                         <absolute_maximum>1000</absolute_maximum>
                                         <absolute_minimum>0</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
+                                        <relative_minimum>-10</relative_minimum>
+                                        <type>2</type>
                                     </scale>
                                     <topic>/can_receive_1/attitude</topic>
                                     <type>geometry_msgs/QuaternionStamped</type>
@@ -378,7 +378,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>Untitled Curve</title>
+                            <title>imu w</title>
                         </curve_6>
                     </curves>
                     <legend>
@@ -612,7 +612,7 @@
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>cmd val</title>
+                    <title>imu</title>
                 </column_1>
             </row_0>
             <row_1>

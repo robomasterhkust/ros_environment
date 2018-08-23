@@ -52,6 +52,7 @@ Vector3d OUTPUT_BOUND = MatrixXd::Zero(3, 1);
 // synchronization
 queue<geometry_msgs::QuaternionStamped::ConstPtr> imu_queue;
 queue<Vector3d> visual_queue;
+int imu_back_time = 10;
 
 
 static void pub_result(const ros::Time &stamp, double delay_dt)
@@ -146,19 +147,20 @@ static void preprocess_visual(const std_msgs::Header &header,
     gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
 
-    Matrix3d world_R_gimbal = MatrixXd::Identity(3, 3);
-//    while (!imu_queue.empty() &&
+    Matrix3d world_R_gimbal;// = MatrixXd::Identity(3, 3);
+    world_R_gimbal << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+    while (!imu_queue.empty() &&
+            imu_queue.size() - (unsigned int)imu_back_time > 0) {
 //            imu_queue.front()->header.stamp < header.stamp) {
-//        imu_queue.pop();
-//    }
+        imu_queue.pop();
+    }
     if (!imu_queue.empty()) {
-        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.front());
-        double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
-        world_R_gimbal = AngleAxisd(euler_angle_2, Vector3d::UnitZ()).toRotationMatrix();
+        double yaw = imu_to_yaw_angle(imu_queue.front());
+        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
+        world_R_gimbal << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
     }
 
     init_T_shield = world_R_gimbal * gimbal_T_shield;
-    // init_T_shield = init_R_gimbal * gimbal_T_shield;
 
     // calculate and check the velocity
     init_vel_shield = (init_T_shield - init_T_shield_prev) / dt_update;
@@ -211,6 +213,7 @@ static void initialize_visual(const std_msgs::Header &header,
                               const geometry_msgs::Twist &twist)
 {
     ros::Time t_update = header.stamp;
+    ROS_INFO("visual init at %f", t_update.toSec());
 
     Vector3d camera_T_shield, gimbal_T_shield, init_T_shield;
     camera_T_shield[0] = twist.linear.x;
@@ -220,16 +223,25 @@ static void initialize_visual(const std_msgs::Header &header,
     gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
 
-    Matrix3d world_R_gimbal = MatrixXd::Identity(3, 3);
-//    while (!imu_queue.empty() &&
-//           imu_queue.front()->header.stamp < header.stamp) {
-//        imu_queue.pop();
-//    }
-    if (!imu_queue.empty()) {
-        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.front());
-        double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
-        world_R_gimbal = AngleAxisd(euler_angle_2, Vector3d::UnitZ()).toRotationMatrix();
+    Matrix3d world_R_gimbal;// = MatrixXd::Identity(3, 3);
+    world_R_gimbal << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+
+    while (!imu_queue.empty() &&
+            imu_queue.size() - (unsigned int)imu_back_time > 0) {
+           // imu_queue.front()->header.stamp < header.stamp) {
+        imu_queue.pop();
     }
+    cout << "final imu queue size " << imu_queue.size() << endl;
+    if (!imu_queue.empty()) {
+        double yaw = imu_to_yaw_angle(imu_queue.front());
+        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
+        world_R_gimbal << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
+        double DEBUG_imu_delay_time = header.stamp.toSec() - imu_queue.front()->header.stamp.toSec();
+        cout << "imu to visual time difference " << DEBUG_imu_delay_time << endl;
+    }
+
+    cout << "world_R_gimbal " << endl << world_R_gimbal << endl;
+
     init_T_shield = world_R_gimbal * gimbal_T_shield;
 
     // TODO: take multiple examples and give a best fit
@@ -246,10 +258,10 @@ static void initialize_visual(const std_msgs::Header &header,
         x.segment<3>(0) = T_sum / MAX_VISUAL_QUEUE_SIZE; // init velocity with zero
         x.segment<3>(3).setZero(); // init velocity with zero
 
+        P.setZero();
         P.topLeftCorner(3, 3)     = P_weight * MatrixXd::Identity(3, 3);
         P.bottomRightCorner(3, 3) = 2 * P_weight * MatrixXd::Identity(3, 3);
 
-        ROS_INFO("visual init at %f", t_update.toSec());
         cout << "DEBUG: x initialized with " << endl << x.transpose() << endl;
         cout << "P " << endl << P << endl;
 
@@ -331,6 +343,7 @@ int main(int argc, char **argv)
     n.param("transform_topic", transform_topic, string("/prediction_kf_global/transformed"));
     n.param("chi_square_threshold", OUTLIER_THRESHOLD, 10000.0);
     n.param("outlier_l2_norm_ratio", outlier_l2_norm_ratio, 1.5);
+    n.param("imu_back_time", imu_back_time, 10);
     n.param("R_pos", R_pos, 16.0);
     n.param("Q_pos", Q_pos, 0.2);
     n.param("Q_vel", Q_vel, 1.0);
