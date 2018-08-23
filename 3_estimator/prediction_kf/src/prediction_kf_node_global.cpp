@@ -33,9 +33,11 @@ bool visual_initialized = false, visual_valid = false;
 
 ros::Time t_prev;
 double R_pos, Q_pos, Q_vel, P_weight;
-const double CV_UPDATE_TIME_MAX = 0.1; // maxium allowed update time
+const double CV_UPDATE_TIME_MAX = 0.2; // maxium allowed update time
 const double DELAY_MAX = 0.05;
 const int ROS_FREQ = 100;
+const int MAX_VISUAL_QUEUE_SIZE = 5;
+const int MAX_IMU_QUEUE_SIZE = 1000;
 double OUTLIER_THRESHOLD = 10000.0;
 
 Vector3d init_T_shield_prev = MatrixXd::Zero(3, 1);
@@ -49,7 +51,7 @@ Vector3d OUTPUT_BOUND = MatrixXd::Zero(3, 1);
 
 // synchronization
 queue<geometry_msgs::QuaternionStamped::ConstPtr> imu_queue;
-const int MAX_IMU_QUEUE_SIZE = 1000;
+queue<Vector3d> visual_queue;
 
 
 static void pub_result(const ros::Time &stamp, double delay_dt)
@@ -85,6 +87,20 @@ static void pub_preprocessed(const std_msgs::Header &header,
     publisher.publish(debug);
 }
 
+static double imu_to_yaw_angle(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
+{
+    // Quaterniond q = Quaterniond( imu->quaternion.w, imu->quaternion.x, imu->quaternion.y, imu->quaternion.z );
+    double qw = imu->quaternion.w;
+    double qx = imu->quaternion.x;
+    double qy = imu->quaternion.y;
+    double qz = imu->quaternion.z;
+
+    // convert to ZYX Euler angle yaw angle
+    // double euler_angle_0 = atan2(2.0 * (qw * qx + qy * qz), 1.0 - 2.0 * (qx * qx + qy * qy) );
+    // double euler_angle_1 = asin( 2.0 * (qw * qy - qz * qx) );
+    return atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz) );
+}
+
 // Chi-square test for outlier rejection
 static bool translation_is_outlier(const Vector3d &pos)
 {
@@ -116,20 +132,6 @@ static bool translation_is_outlier(const Vector3d &pos)
     // cout << "chi_square " << endl << chi_square << endl;
 
     return (chi_square > OUTLIER_THRESHOLD);
-}
-
-static double imu_to_yaw_angle(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
-{
-    // Quaterniond q = Quaterniond( imu->quaternion.w, imu->quaternion.x, imu->quaternion.y, imu->quaternion.z );
-    double qw = imu->quaternion.w;
-    double qx = imu->quaternion.x;
-    double qy = imu->quaternion.y;
-    double qz = imu->quaternion.z;
-
-    // convert to ZYX Euler angle yaw angle
-    // double euler_angle_0 = atan2(2.0 * (qw * qx + qy * qz), 1.0 - 2.0 * (qx * qx + qy * qy) );
-    // double euler_angle_1 = asin( 2.0 * (qw * qy - qz * qx) );
-    return atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz) );
 }
 
 static void preprocess_visual(const std_msgs::Header &header,
@@ -166,6 +168,7 @@ static void preprocess_visual(const std_msgs::Header &header,
 
     if (pos_is_outlier) {
         pos = x.segment<3>(0);
+        x.segment<3>(3) *= 0.5;
         ROS_INFO("outlier rejected");
     }
     else {
@@ -178,12 +181,13 @@ static void preprocess_visual(const std_msgs::Header &header,
     pub_preprocessed(header, init_T_shield_prev, init_vel_shield, transform_pub);
 }
 
+/**
+ * Core Kalman Filter math, propagate and update
+ */
 static void propagate(const double &dt) {
     A.topRightCorner(3, 3) = dt * MatrixXd::Identity(3, 3);
-    // cout << "A " << endl << A << endl;
     x = A * x;
     P = A * P * A.transpose() + Q;
-    // cout << "P " << endl << P << endl;
 }
 
 static void update(const Vector3d &pos)
@@ -199,7 +203,6 @@ static void update(const Vector3d &pos)
     P = P - K * H * P;
 }
 
-
 /**
  * initialization of the state and convariance from visual
  * @param pnp
@@ -208,12 +211,12 @@ static void initialize_visual(const std_msgs::Header &header,
                               const geometry_msgs::Twist &twist)
 {
     ros::Time t_update = header.stamp;
-    ROS_INFO("visual init at %f", t_update.toSec());
 
     Vector3d camera_T_shield, gimbal_T_shield, init_T_shield;
     camera_T_shield[0] = twist.linear.x;
     camera_T_shield[1] = twist.linear.y;
     camera_T_shield[2] = twist.linear.z;
+
     gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
 
@@ -229,18 +232,40 @@ static void initialize_visual(const std_msgs::Header &header,
     }
     init_T_shield = world_R_gimbal * gimbal_T_shield;
 
-    x.segment<3>(0) = init_T_shield; // init velocity with zero
-    x.segment<3>(3).setZero(); // init velocity with zero
+    // TODO: take multiple examples and give a best fit
+    visual_queue.push(init_T_shield);
+    if (visual_queue.size() >= MAX_VISUAL_QUEUE_SIZE) {
+        Vector3d T_sum;
+        T_sum.setZero();
 
-    cout << "DEBUG: x initialized with " << endl << x.transpose() << endl;
+        for (int i = 0; i < MAX_VISUAL_QUEUE_SIZE; ++i) {
+            T_sum += visual_queue.front();
+            visual_queue.pop();
+        }
 
-    init_T_shield_prev = init_T_shield;
-    t_prev = t_update;
-    visual_initialized = true;
+        x.segment<3>(0) = T_sum / MAX_VISUAL_QUEUE_SIZE; // init velocity with zero
+        x.segment<3>(3).setZero(); // init velocity with zero
+
+        P.topLeftCorner(3, 3)     = P_weight * MatrixXd::Identity(3, 3);
+        P.bottomRightCorner(3, 3) = 2 * P_weight * MatrixXd::Identity(3, 3);
+
+        ROS_INFO("visual init at %f", t_update.toSec());
+        cout << "DEBUG: x initialized with " << endl << x.transpose() << endl;
+        cout << "P " << endl << P << endl;
+
+        init_T_shield_prev = init_T_shield;
+        visual_initialized = true;
+    }
+    else {
+        cout << "DEBUG: current x reading: " << init_T_shield.transpose() << endl;
+    }
 }
 
 
-
+/**
+ * handle and save attitude of the gimbal
+ * @param imu
+ */
 void attitude_cb(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
 {
     // synchronize the timestamp
@@ -259,29 +284,37 @@ void real_visual_cb(const rm_cv::ArmorRecord::ConstPtr &armor)
                      armor->armorPose.linear.z == 0 );
 
     if (visual_valid) {
+        ros::Time t_update = armor->header.stamp;
+        double dt_update = (t_update - t_prev).toSec();
+
         if (!visual_initialized) {
             initialize_visual(armor->header, armor->armorPose);
         }
         else {
+            if (dt_update < CV_UPDATE_TIME_MAX) {
+                Vector3d pos;
 
-            double running_time = ros::Time::now().toSec();
-            double delay_dt = running_time - armor->header.stamp.toSec();
-            delay_dt = (delay_dt < DELAY_MAX) ? delay_dt : DELAY_MAX;
-
-            ros::Time t_update = armor->header.stamp;
-            double dt_update = (t_update - t_prev).toSec();
-            Vector3d pos;
-
-            if (dt_update < CV_UPDATE_TIME_MAX)
                 preprocess_visual(armor->header, armor->armorPose, pos, dt_update);
 
-            update(pos);
+                update(pos);
 
-            propagate(dt_update);
+                propagate(dt_update);
 
-            pub_result(armor->header.stamp, delay_dt);
-            t_prev = t_update;
+                double running_time = ros::Time::now().toSec();
+                double delay_dt = running_time - armor->header.stamp.toSec();
+                delay_dt = (delay_dt < DELAY_MAX) ? delay_dt : DELAY_MAX;
+
+                pub_result(armor->header.stamp, delay_dt);
+            }
+            else {
+                visual_queue.push(x.segment<3>(0));
+
+                visual_initialized = false;
+
+                initialize_visual(armor->header, armor->armorPose);
+            }
         }
+        t_prev = t_update;
     }
 
 }
@@ -315,15 +348,10 @@ int main(int argc, char **argv)
 
     x.setZero();
     R = R_pos * MatrixXd::Identity(3, 3);
-
     Q.topLeftCorner(3, 3)     = Q_pos * MatrixXd::Identity(3, 3);
     Q.bottomRightCorner(3, 3) = Q_vel * MatrixXd::Identity(3, 3);
-    P.topLeftCorner(3, 3)     = P_weight * MatrixXd::Identity(3, 3);
-
-    P.bottomRightCorner(3, 3) = 2 * P_weight * MatrixXd::Identity(3, 3);
     cout << "R " << endl << R << endl;
     cout << "Q " << endl << Q << endl;
-    cout << "P " << endl << P << endl;
 
     ros::Subscriber s1 = n.subscribe(attitude_topic, 100, attitude_cb);
     ros::Subscriber s2 = n.subscribe(real_visual_topic, 40, real_visual_cb);
@@ -332,6 +360,13 @@ int main(int argc, char **argv)
     debug_pub  = n.advertise<geometry_msgs::TwistStamped>(debug_topic, 40);
     transform_pub = n.advertise<geometry_msgs::TwistStamped>(transform_topic, 40);
     ros::Rate r(ROS_FREQ);
-    ros::spin();
 
+    while (ros::ok()) {
+        if (visual_initialized) {
+
+        }
+
+        r.sleep();
+        ros::spinOnce();
+    }
 }
