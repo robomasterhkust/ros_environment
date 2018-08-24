@@ -93,7 +93,8 @@ class armor_frame_pid:
             shield_T_camera_rot = opencv_rotation.dot(shield_T_camera)
 
             camera_T_gimbal = np.array([150, 45, -30])
-            T = shield_T_camera_rot + camera_T_gimbal
+            # T = shield_T_camera_rot + camera_T_gimbal
+            T = shield_T_camera
             T_abs = np.linalg.norm(T)
 
             normalized_T = T / T_abs

@@ -10,8 +10,8 @@
         <param name="Q_pos" type="double" value="1.0"/>
         <param name="Q_vel" type="double" value="16.0"/>
         <param name="P_matrix_weight" type="double" value="65.0"/>
-        <param name="chi_square_threshold" type="double" value="10000.0"/>
-        <param name="outlier_l2_norm_ratio" type="double" value="1.3"/>
+        <param name="chi_square_threshold" type="double" value="100000.0"/>
+        <param name="outlier_l2_norm_ratio" type="double" value="1.5"/>
         <param name="pitch_delay" type="double" value="0"/>
         <param name="yaw_delay" type="double" value="0"/>
         <param name="repropagate_time" type="int" value="0"/>

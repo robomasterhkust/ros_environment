@@ -171,7 +171,7 @@ static void preprocess_visual(const std_msgs::Header &header,
     double yaw = 0;
     double imuz= 0;
 
-    int pop_time = 0;
+/*    int pop_time = 0;
     if (!imu_queue.empty()) {
         pop_time = imu_queue.size() - imu_back_time;
 
@@ -189,7 +189,7 @@ static void preprocess_visual(const std_msgs::Header &header,
                 ROS_INFO("angle_diff is, %f", angle_diff);
             }
         }
-    }
+    }*/
     init_T_shield = world_R_gimbal * gimbal_T_shield;
 
     // calculate and check the velocity
@@ -259,7 +259,7 @@ static void initialize_visual(const std_msgs::Header &header,
     world_R_gimbal << 1, 0, 0, 0, 1, 0, 0, 0, 1;
     double yaw = 0;
 
-    int pop_time = 0;
+/*    int pop_time = 0;
     if (!imu_queue.empty()) {
         pop_time = imu_queue.size() - imu_back_time;
 
@@ -274,7 +274,7 @@ static void initialize_visual(const std_msgs::Header &header,
             cout << "imu to visual time difference " << DEBUG_imu_delay_time << endl;
         }
         cout << "final poped times " << pop_time << endl;
-    }
+    }*/
 
     cout << "world_R_gimbal " << endl << world_R_gimbal << endl;
 
