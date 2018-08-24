@@ -18,10 +18,11 @@ using namespace std;
 using namespace Eigen;
 
 string attitude_topic, publisher_topic, debug_topic, real_visual_topic, transform_topic;
-ros::Publisher filter_pub, debug_pub, transform_pub;
-MatrixXd imu_R_camera = MatrixXd::Identity(3, 3); // rotation matrix from camera to imu
+string debug_angle_topic;
+ros::Publisher filter_pub, debug_pub, transform_pub, debug_angle_pub;
+MatrixXd gimbal_R_camera = MatrixXd::Identity(3, 3); // rotation matrix from camera to imu
 MatrixXd init_R_gimbal= MatrixXd::Identity(3, 3);
-Vector3d imu_T_camera = MatrixXd::Zero(3, 1);
+Vector3d gimbal_T_camera = MatrixXd::Zero(3, 1);
 
 VectorXd x(6);      // state
 MatrixXd P = MatrixXd::Identity(6, 6); // covariance
@@ -55,6 +56,9 @@ queue<Vector3d> visual_queue;
 int imu_back_time = 10;
 
 
+double angle_diff = 0;
+bool angle_diff_not_inited = true;
+
 static void pub_result(const ros::Time &stamp, double delay_dt)
 {
 //    geometry_msgs::TwistStamped odom;
@@ -86,6 +90,19 @@ static void pub_preprocessed(const std_msgs::Header &header,
     debug.twist.angular.y = v[1];
     debug.twist.angular.z = v[2];
     publisher.publish(debug);
+}
+
+static void pub_angle_debug(const std_msgs::Header &header,
+                            const double yaw,
+                            const Ref<const Vector3d> p,
+                            const double imuz)
+{
+    geometry_msgs::TwistStamped debug_angle;
+    debug_angle.header = header;
+    debug_angle.twist.angular.x = yaw;
+    debug_angle.twist.angular.y = -atan2(p[1], p[0]);
+    debug_angle.twist.angular.z = imuz;
+    debug_angle_pub.publish(debug_angle);
 }
 
 static double imu_to_yaw_angle(const geometry_msgs::QuaternionStamped::ConstPtr &imu)
@@ -135,6 +152,8 @@ static bool translation_is_outlier(const Vector3d &pos)
     return (chi_square > OUTLIER_THRESHOLD);
 }
 
+
+
 static void preprocess_visual(const std_msgs::Header &header,
                               const geometry_msgs::Twist &twist,
                               Vector3d &pos, double dt_update)
@@ -144,22 +163,33 @@ static void preprocess_visual(const std_msgs::Header &header,
     camera_T_shield[0] = twist.linear.x;
     camera_T_shield[1] = twist.linear.y;
     camera_T_shield[2] = twist.linear.z;
-    gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
+    gimbal_T_shield = gimbal_R_camera * camera_T_shield + gimbal_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
 
     Matrix3d world_R_gimbal;// = MatrixXd::Identity(3, 3);
     world_R_gimbal << 1, 0, 0, 0, 1, 0, 0, 0, 1;
-    while (!imu_queue.empty() &&
-            imu_queue.size() - (unsigned int)imu_back_time > 0) {
-//            imu_queue.front()->header.stamp < header.stamp) {
-        imu_queue.pop();
-    }
-    if (!imu_queue.empty()) {
-        double yaw = imu_to_yaw_angle(imu_queue.front());
-        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
-        world_R_gimbal << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
-    }
+    double yaw = 0;
+    double imuz= 0;
 
+    int pop_time = 0;
+    if (!imu_queue.empty()) {
+        pop_time = imu_queue.size() - imu_back_time;
+
+        if (pop_time > 0) {
+            for (int i = 0; i < pop_time; ++i) {
+                imu_queue.pop();
+            }
+            imuz = imu_queue.front()->quaternion.z;
+            yaw = imu_to_yaw_angle(imu_queue.front());
+            world_R_gimbal << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
+
+            if (angle_diff_not_inited) {
+                angle_diff =  yaw + atan2(gimbal_T_shield[1], gimbal_T_shield[0]);
+                angle_diff_not_inited = false;
+                ROS_INFO("angle_diff is, %f", angle_diff);
+            }
+        }
+    }
     init_T_shield = world_R_gimbal * gimbal_T_shield;
 
     // calculate and check the velocity
@@ -181,6 +211,8 @@ static void preprocess_visual(const std_msgs::Header &header,
     pub_preprocessed(header, gimbal_T_shield, gimbal_vel_shield, debug_pub);
 
     pub_preprocessed(header, init_T_shield_prev, init_vel_shield, transform_pub);
+
+    pub_angle_debug(header, yaw - angle_diff, gimbal_T_shield, imuz);
 }
 
 /**
@@ -220,31 +252,35 @@ static void initialize_visual(const std_msgs::Header &header,
     camera_T_shield[1] = twist.linear.y;
     camera_T_shield[2] = twist.linear.z;
 
-    gimbal_T_shield = imu_R_camera * camera_T_shield + imu_T_camera;
+    gimbal_T_shield = gimbal_R_camera * camera_T_shield + gimbal_T_camera;
     gimbal_T_shield *= 0.001; // Convert millimeter to meter
 
     Matrix3d world_R_gimbal;// = MatrixXd::Identity(3, 3);
     world_R_gimbal << 1, 0, 0, 0, 1, 0, 0, 0, 1;
+    double yaw = 0;
 
-    while (!imu_queue.empty() &&
-            imu_queue.size() - (unsigned int)imu_back_time > 0) {
-           // imu_queue.front()->header.stamp < header.stamp) {
-        imu_queue.pop();
-    }
-    cout << "final imu queue size " << imu_queue.size() << endl;
+    int pop_time = 0;
     if (!imu_queue.empty()) {
-        double yaw = imu_to_yaw_angle(imu_queue.front());
-        // double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
-        world_R_gimbal << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
-        double DEBUG_imu_delay_time = header.stamp.toSec() - imu_queue.front()->header.stamp.toSec();
-        cout << "imu to visual time difference " << DEBUG_imu_delay_time << endl;
+        pop_time = imu_queue.size() - imu_back_time;
+
+        if (pop_time > 0) {
+            for (int i = 0; i < pop_time; ++i) {
+                imu_queue.pop();
+            }
+            yaw = imu_to_yaw_angle(imu_queue.front());
+            // double euler_angle_2 = imu_to_yaw_angle(imu_queue.back());
+            world_R_gimbal << cos(yaw), -sin(yaw), 0, sin(yaw), cos(yaw), 0, 0, 0, 1;
+            double DEBUG_imu_delay_time = header.stamp.toSec() - imu_queue.front()->header.stamp.toSec();
+            cout << "imu to visual time difference " << DEBUG_imu_delay_time << endl;
+        }
+        cout << "final poped times " << pop_time << endl;
     }
 
     cout << "world_R_gimbal " << endl << world_R_gimbal << endl;
 
     init_T_shield = world_R_gimbal * gimbal_T_shield;
 
-    // TODO: take multiple examples and give a best fit
+    // TODO: using RANSAC instead of averaging filter
     visual_queue.push(init_T_shield);
     if (visual_queue.size() >= MAX_VISUAL_QUEUE_SIZE) {
         Vector3d T_sum;
@@ -341,6 +377,7 @@ int main(int argc, char **argv)
     n.param("publisher_topic", publisher_topic, string("/prediction_kf_global/predict"));
     n.param("debug_topic", debug_topic, string("/prediction_kf_global/preprocessed"));
     n.param("transform_topic", transform_topic, string("/prediction_kf_global/transformed"));
+    n.param("debug_angle_topic", debug_angle_topic, string("/prediction_kf/debug_angle"));
     n.param("chi_square_threshold", OUTLIER_THRESHOLD, 10000.0);
     n.param("outlier_l2_norm_ratio", outlier_l2_norm_ratio, 1.5);
     n.param("imu_back_time", imu_back_time, 10);
@@ -352,10 +389,10 @@ int main(int argc, char **argv)
     n.param("pitch_delay", pitch_delay, 0.0);
 
     // For chassis reading only
-    imu_R_camera <<  0, 0, 1,
+    gimbal_R_camera <<  0, 0, 1,
                     -1, 0, 0,
                      0,-1, 0;
-    imu_T_camera <<  150, 0, -50; // in millimeter
+    gimbal_T_camera <<  30, 0, -120; // in millimeter
 
     OUTPUT_BOUND << 10.0, 10.0, 20.0;
 
@@ -372,6 +409,7 @@ int main(int argc, char **argv)
     filter_pub = n.advertise<rm_cv::ArmorRecord>(publisher_topic, 40);
     debug_pub  = n.advertise<geometry_msgs::TwistStamped>(debug_topic, 40);
     transform_pub = n.advertise<geometry_msgs::TwistStamped>(transform_topic, 40);
+    debug_angle_pub = n.advertise<geometry_msgs::TwistStamped>(debug_angle_topic, 100);
     ros::Rate r(ROS_FREQ);
 
     while (ros::ok()) {
