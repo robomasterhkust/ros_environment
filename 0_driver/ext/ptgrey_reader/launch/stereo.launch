@@ -7,18 +7,17 @@
         <rosparam>
             # common setting and default individual settings
             cam_cnt: 2
-            frameRate:  15
+            frameRate:  10
             gain: 1.0
             is_auto_shutter: false
-            is_sync: true
+            is_sync: false
             shutter: 5.0
             brightness: 0.1
             exposure: 0.4
-            gain: 1.0
 
             # individual setting for camera 0
             camera0:
-                serialNum: 17221110
+                serialNum: 17302082
                 topic:     up/image_raw
                 topic_roi: up/image
                 is_roi:    false
@@ -28,9 +27,9 @@
                 center_y:  512
                 cropper_x: 600
                 cropper_y: 600
-                down_sample_scale: 0.75
+                down_sample_scale: 1.0
             camera1:
-                serialNum: 17221121
+                serialNum: 17533297
                 topic:     down/image_raw
                 topic_roi: down/image
                 is_roi:    false
@@ -40,7 +39,7 @@
                 center_y:  512
                 cropper_x: 600
                 cropper_y: 600
-                down_sample_scale: 0.75
+                down_sample_scale: 1.0
 
         </rosparam>
     </node>
