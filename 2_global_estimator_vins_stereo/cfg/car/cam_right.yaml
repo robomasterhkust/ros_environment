@@ -1,0 +1,35 @@
+%YAML:1.0
+
+#camera calibration 
+model_type: MEI
+camera_name: right
+image_width: 576
+image_height: 460
+mirror_parameters:
+   xi: 3.2915932567077220e+00
+distortion_parameters:
+   k1: -5.2047897394400322e-01
+   k2: 3.4811664647481768e+00
+   p1: 5.2567368405371474e-03
+   p2: -4.0043459050511246e-03
+projection_parameters:
+   gamma1: 3.2460422266237092e+03
+   gamma2: 3.2514441499249156e+03
+   u0: 6.4681595675182029e+02
+   v0: 5.1441455114721191e+02
+
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 0, 0, 1,
+          -1, 0, 0,
+           0,-1, 0]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [ 0.32, -0.13, 0.04 ]
+
+is_rectify: 0
+
