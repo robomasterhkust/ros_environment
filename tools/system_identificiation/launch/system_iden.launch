@@ -1,8 +1,9 @@
 <launch>
     <node pkg="system_identification" type="system_identification_node" name="system_iden_node" output="screen">
         <param name="cmd_topic" type="string" value="/cmd_vel"/>
-        <param name="gain" type="double" value="0.1"/>
-        <param name="Period" type="double" value="10"/>
+        <param name="gain" type="double" value="3"/>
+        <param name="Period" type="double" value="20"/>
+        <param name="YAW_or_PITCH" type="int" value="1"/>
     </node>
 
 	<!--<include file="$(find usb_can)/launch/usb_can.launch"/>-->

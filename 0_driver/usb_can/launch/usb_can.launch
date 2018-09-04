@@ -5,4 +5,7 @@
             force_ttyUSB_index:   -1
     </rosparam>
   </node>
+  <node name="can_receive_node" pkg="can_receive" type="can_receive_node" output="screen">
+    <param name="receiver_topic" type="string" value="/canRx"/>
+  </node>
 </launch>

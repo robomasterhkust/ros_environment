@@ -1,7 +1,4 @@
 # PointGrey Reader
-
-https://github.com/gaowenliang/ptgrey_reader
-
 ## Download code  
 
 Enter the catkin work space  
@@ -11,6 +8,16 @@ git clone https://github.com/gaowenliang/ptgrey_reader.git
 ```
 
 ## Install dependency for ptgrey
+
+For TX2 the you can direct use our install script
+
+```
+cd YOUR_ROS_WORKSPACE/src/ptgrey_reader/
+sh autoinstall_tx2.sh
+```
+
+and jump to run step
+
 
 ### Install libusb-1.0.21  
 ```
@@ -39,13 +46,18 @@ cd flycapture2-2.11.3.121-amd64/
 cd YOUR_ROS_WORKSPACE/src/ptgrey_reader/install/arm64/
 tar zxvf flycapture.2.11.3.121_arm64.tar.gz
 cd flycapture.2.11.3.121_arm64/
+cd include/
+sudo mkdir /usr/include/flycapture
+sudo cp *.h /usr/include/flycapture
+cd ../lib/
+sudo cp lib* /usr/lib
 ```
 
 Follow the README file. Install requirements:  
 ```
 sudo apt-get install libraw1394-11 libgtkmm-2.4-dev libglademm-2.4-dev libgtkglextmm-x11-1.2-dev libusb-1.0-0 -y
 ```  
-Install Flycapture2 driver library:
+Install Flycapture2 driver library (only Intel CPU need this step. No need for TX2)
 ```
 sudo sh install_flycapture.sh
 ```
@@ -56,7 +68,7 @@ catkin_make
 ```
 Before using that you may need to give them enough authority  
 ```
-sudo gedit cd /etc/udev/rules.d/40-flir.rules
+sudo gedit /etc/udev/rules.d/40-flir.rules
 ```  
 Change all the 0613 or 0664 to 777 in the "40-flir.rules" and save.
 Then restart the system.
@@ -103,12 +115,12 @@ Parameter | Detail | Default
 `is_grey`  | (for Color Sensor) Output Grey Scale image or not | `false`
 `is_roi`   | Use ROI and down sample not |  `false` 
 `is_auto_shutter` | Auto shutter time or not  |  `false` 
-`shutter`    | Shutter time |  `0.0001` to `100.0` 
+`shutter`    | Shutter time |  `0.0001` to `49.9313` 
 `brightness` | Brightness |  `5.0` 
 `exposure`   | Exposure |  `0.8` 
 `WB_red`     | Write Balance red |  `550` 
 `WB_Blue`    | Write Balance blue |  `810` 
-`gain`       | Gain |  `0.0` 
+`gain`       | Gain |  `0.0 to 18.0` 
 
 If `is_grey` is `true`, there will be a extra ROS tpoic named `/pg_YOU_SERIAL_NUM/image_grey`.
 
@@ -116,23 +128,42 @@ If `is_roi` is `true`, there will be a extra ROS tpoic named `/pg_YOU_SERIAL_NUM
 The ROI and down sample with such two step rule:
 * step1: crop ROI image
 
-<img src="docs/crp.png">
+<img src="docs/crp.jpg">
 
 * step2: down sample, with `down_sample_scale` <= 1.0
 
-<img src="docs/ds.png">
+<img src="docs/ds.jpg">
 
 ## Hardware Trigger
 The Hardware trigger is to capture an image while the camera received a trigger signal. An extra trigger cable is required.
 <img src="docs/line1.png">
 Buy the elements of the trigger cable in [JST NSHR-09V-S](https://www.digikey.hk/product-detail/zh/jst-sales-america-inc/NSHR-09V-S/455-2785-ND/3313624) and [JST ASSHLSSHL28W51](https://www.digikey.hk/product-detail/zh/jst-sales-america-inc/ASSHLSSHL28W51/455-3194-ND/6194849).
-<img src="docs/line2.png">
+<img src="docs/line2.jpg">
 Set `is_sync` as true in the launch file. And make sure the `rate` is larger than the trigger signal frequency.
+
+The Trigger signal is a high level signal.
 
 ## Issue  
 ### USB buffer issue:
-If progrem cannot run successfully, especially for muti-camera system and high FPS system, change the USB buffer before roslaunch the progrem: 
+If progrem cannot run successfully, especially for muti-camera system and high FPS system, change the USB buffer before roslaunch the progrem:
+* To temporarily set the maximum usbfs memory limit, run this command:
 ```
 sudo -S sh -c 'echo 2048 > /sys/module/usbcore/parameters/usbfs_memory_mb'
 ```
+* To permanently set the maximum usbfs memory limit:
+Open the /etc/default/grub file in any text editor.
+```
+sudo gedit /etc/default/grub
+```
+Find and replace:
+`GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"`
+with this:
+`GRUB_CMDLINE_LINUX_DEFAULT="quiet splash usbcore.usbfs_memory_mb=2048"`
+Update grub with these settings:
+```
+sudo update-grub
+```
+Reboot and test a USB 3.1 camera.
+
 Ps: 2048Mb is not required. Any buffer size is OK.
+

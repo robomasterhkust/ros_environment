@@ -8,6 +8,28 @@
 #include <ros/ros.h>
 #include <sstream>
 
+void
+colorToGrey( cv::Mat& image_in, cv::Mat& image_out )
+{
+    uchar* p_out;
+    cv::Vec3b* p_in;
+    for ( int idx_row = 0; idx_row < image_in.rows; ++idx_row )
+    {
+        p_out = image_out.ptr< uchar >( idx_row );
+        p_in  = image_in.ptr< cv::Vec3b >( idx_row );
+
+        for ( int idx_col = 0; idx_col < image_in.cols; ++idx_col )
+        {
+            // Red * 0.299 + Green * 0.587 + Blue * 0.114
+            int dst = p_in[idx_col][0]   //
+                      + p_in[idx_col][1] //
+                      + p_in[idx_col][2];
+
+            p_out[idx_col] = dst > 255 ? 255 : dst;
+        }
+    }
+}
+
 int
 main( int argc, char** argv )
 {
@@ -17,6 +39,7 @@ main( int argc, char** argv )
     bool is_pub              = true;
     bool is_show             = false;
     bool is_print            = true;
+    bool is_first            = true;
     bool is_grey             = false;
     int serialNum            = 17221121;
     bool is_auto_shutter     = false;
@@ -29,10 +52,15 @@ main( int argc, char** argv )
     double shutter           = 5.0;
     int WB_red               = 500;
     int WB_Blue              = 800;
+    double saturation        = 100;
+    double hue               = 0;
+    double sharpness         = 0;
     double down_sample_scale = 0.75;
     int size_x = 0, size_y = 0;
     int center_x = 0, center_y = 0;
     int cropper_x = 0, cropper_y = 0;
+    int src_rows, src_cols;
+    cv::Mat image_grey;
 
     nh.getParam( "is_grey", is_grey );
     nh.getParam( "is_pub", is_pub );
@@ -49,6 +77,10 @@ main( int argc, char** argv )
     nh.getParam( "shutter", shutter );
     nh.getParam( "WB_red", WB_red );
     nh.getParam( "WB_Blue", WB_Blue );
+    nh.getParam( "saturation", saturation );
+    nh.getParam( "hue", hue );
+    nh.getParam( "sharpness", sharpness );
+
     nh.getParam( "down_sample_scale", down_sample_scale );
     nh.getParam( "size_x", size_x );
     nh.getParam( "size_y", size_y );
@@ -88,11 +120,15 @@ main( int argc, char** argv )
                                                    shutter,
                                                    WB_red,
                                                    WB_Blue,
+                                                   saturation,
+                                                   hue,
+                                                   sharpness,
                                                    is_print,
                                                    is_sync );
 
     if ( is_roi )
-        imageROIPublisher = nh.advertise< sensor_msgs::Image >( "/pg_" + os.str( ) + "/image", 3 );
+        imageROIPublisher
+        = nh.advertise< sensor_msgs::Image >( "/pg_" + os.str( ) + "/image", 3 );
     if ( is_grey && camReader.Camera( ).isColorCamera( ) )
     {
         imageGreyPublisher
@@ -146,6 +182,14 @@ main( int argc, char** argv )
                 if ( camReader.Camera( ).isColorCamera( ) )
                 {
                     outImg.encoding = sensor_msgs::image_encodings::BGR8;
+                    if ( is_first )
+                    {
+                        src_rows = cv_image.image.rows;
+                        src_cols = cv_image.image.cols;
+                        cv::Mat img_tmp( src_rows, src_cols, CV_8UC1 );
+                        img_tmp.copyTo( image_grey );
+                        is_first = false;
+                    }
                 }
                 else
                     outImg.encoding = sensor_msgs::image_encodings::MONO8;
@@ -163,7 +207,9 @@ main( int argc, char** argv )
                 {
                     outImg.encoding = sensor_msgs::image_encodings::MONO8;
 
-                    cv::cvtColor( cv_image.image, outImg.image, CV_BGR2GRAY );
+                    // cv::cvtColor( cv_image.image, outImg.image, CV_BGR2GRAY );
+                    colorToGrey( cv_image.image, image_grey );
+                    outImg.image = image_grey;
                     imageGreyPublisher.publish( outImg );
 
                     if ( is_roi )

@@ -9,6 +9,7 @@
 #include <can_receive_msg/power_shooter_rfid_bufferinfo.h>
 #include <can_receive_msg/power_vol_cur.h>
 #include <can_receive_msg/projectile_hlth.h>
+#include "geometry_msgs/QuaternionStamped.h"
 
 #include <std_msgs/Header.h>
 
@@ -32,6 +33,8 @@
 #define CAN_CHASSIS_DEBUG_BL 0x213
 #define CAN_CHASSIS_DEBUG_BR 0x214
 
+std::string receiver_topic;
+
 ros::Publisher dbus_publisher;
 ros::Publisher gameinfo_publisher;
 ros::Publisher projectile_hlth_publisher;
@@ -40,7 +43,7 @@ ros::Publisher power_vol_cur_publisher;
 ros::Publisher power_shooter_rfid_bufferinfo_publisher;
 ros::Publisher location_xy_publisher;
 ros::Publisher location_zyaw_publisher;
-ros::Publisher imu_16470_publisher;
+ros::Publisher attitude_publisher;
 ros::Publisher motor_debug_publisher;
 
 int16_t temp0_speed;
@@ -166,18 +169,18 @@ void msgCallback(const can_msgs::Frame &f) {
   }
 
   case CAN_GIMBAL_SEND_16470_ID: {
-    can_receive_msg::imu_16470 imu_16470_msg;
+    geometry_msgs::QuaternionStamped imu_16470_msg;
     imu_16470_msg.header = f.header;
     int16_t a = (int16_t)((uint16_t)f.data[1] << 8 | (uint16_t)f.data[0]);
     int16_t b = (int16_t)((uint16_t)f.data[3] << 8 | (uint16_t)f.data[2]);
     int16_t c = (int16_t)((uint16_t)f.data[5] << 8 | (uint16_t)f.data[4]);
     int16_t d = (int16_t)((uint16_t)f.data[7] << 8 | (uint16_t)f.data[6]);
-    imu_16470_msg.quaternion[0] = a * 0.001;
-    imu_16470_msg.quaternion[1] = b * 0.001;
-    imu_16470_msg.quaternion[2] = c * 0.001;
-    imu_16470_msg.quaternion[3] = d * 0.001;
+    imu_16470_msg.quaternion.w = a * 0.001;
+    imu_16470_msg.quaternion.x = b * 0.001;
+    imu_16470_msg.quaternion.y = c * 0.001;
+    imu_16470_msg.quaternion.z = d * 0.001;
 
-    imu_16470_publisher.publish(imu_16470_msg);
+    attitude_publisher.publish(imu_16470_msg);
 
     break;
   }
@@ -224,6 +227,8 @@ int main(int argc, char *argv[]) {
   ros::init(argc, argv, "can_receive_node");
   ros::NodeHandle nh("~"), nh_param("~");
 
+  nh.param("receiver_topic", receiver_topic, std::string("/canRx"));
+
   dbus_publisher = nh.advertise<can_receive_msg::dbus>("dbus", 100);
   gameinfo_publisher = nh.advertise<can_receive_msg::gameinfo>("gameinfo", 100);
   projectile_hlth_publisher =
@@ -239,13 +244,13 @@ int main(int argc, char *argv[]) {
       nh.advertise<can_receive_msg::power_vol_cur>("power_vol_cur", 100);
   power_buffer_publisher =
       nh.advertise<can_receive_msg::power_buffer>("power_buffer", 100);
-  imu_16470_publisher =
-      nh.advertise<can_receive_msg::imu_16470>("imu_16470", 100);
+  attitude_publisher =
+      nh.advertise<geometry_msgs::QuaternionStamped>("attitude", 100);
   motor_debug_publisher =
       nh.advertise<can_receive_msg::motor_debug>("motor_debug", 100);
 
   ros::Subscriber can_subscriber =
-      nh.subscribe("/canusb/canRx", 100, msgCallback);
+      nh.subscribe(receiver_topic, 100, msgCallback);
 
   ros::spin();
 
