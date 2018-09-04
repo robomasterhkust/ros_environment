@@ -92,7 +92,6 @@ public:
                         cv::OutputArray rvec, cv::OutputArray tvec,
                         bool useExtrinsicGuess = false, int flags = cv::SOLVEPNP_ITERATIVE) const;
 
-protected:
   bool loadAllConfig();
   bool storeAllConfig();
   bool loadBaseParameters(const FileStorage &fs);
@@ -135,6 +134,7 @@ protected:
 
   virtual void info() = 0; //print information about the cam
 
+protected:
   Camera(const string &config_filename)
       : config_filename(config_filename),
         outQ(4)
@@ -164,7 +164,19 @@ protected:
   Vec3d rotationVec;
   Vec3d translationVec;
 
-private:
   mutex lockcam;
+
   int failCount = 0;
 };
+
+namespace fsHelper
+{
+template <class T>
+void readOrDefault(const FileNode &node, T &x, const T &default_value = T())
+{
+  if (node.empty())
+    x = default_value;
+  else
+    node >> x;
+};
+}; // namespace fsHelper

@@ -30,20 +30,33 @@ FIND_LIBRARY(FLYCAP_LIBRARY NAMES libflycapture.so
    /usr/lib
 )
 
-message(STATUS "Flycapture library: ${POINTGREY_INCLUDE_DIR}")
+message(STATUS "Flycapture library: ${FLYCAP_LIBRARY}")
+
+
+catkin_package(
+  INCLUDE_DIRS include
+  LIBRARIES
+  CATKIN_DEPENDS roscpp std_msgs
+  DEPENDS
+)
 
 include_directories(
-    include
+    src
     ${catkin_INCLUDE_DIRS}
 )
 
 set(${PROJECT_NAME}_DETECTION_SOURCES
     src/main.cpp
+    src/CamBase.cpp
+    src/FlirCam.cpp
 )
 
 
-add_executable(flir_reader ${${PROJECT_NAME}_DETECTION_SOURCES})
+add_executable(flir_reader_node ${${PROJECT_NAME}_DETECTION_SOURCES})
 
-target_link_libraries(flir_reader
-  ${FLYCAP_LIBRARY}
+target_link_libraries(flir_reader_node
+    ${catkin_LIBRARIES}
+    ${Boost_SYSTEM_LIBRARY}
+    ${OpenCV_LIBS}
+    ${FLYCAP_LIBRARY}
 )

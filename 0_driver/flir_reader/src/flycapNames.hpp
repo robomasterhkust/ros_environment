@@ -1,0 +1,55 @@
+#include <string.h>
+
+const std::string flycapInterfaceTypeStr[] =
+    {
+        "INTERFACE_IEEE1394",
+        "INTERFACE_USB2",
+        "INTERFACE_USB3",
+        "INTERFACE_GIGE",
+        "INTERFACE_UNKNOWN"};
+
+const std::string flycapPropertyTypeNames[] = {
+    "BRIGHTNESS",
+    "AUTO_EXPOSURE",
+    "SHARPNESS",
+    "WHITE_BALANCE",
+    "HUE",
+    "SATURATION",
+    "GAMMA",
+    "IRIS",
+    "FOCUS",
+    "ZOOM",
+    "PAN",
+    "TILT",
+    "SHUTTER",
+    "GAIN",
+    "TRIGGER_MODE",
+    "TRIGGER_DELAY",
+    "FRAME_RATE",
+    "TEMPERATURE",
+    "UNSPECIFIED_PROPERTY_TYPE",
+    "PROPERTY_TYPE_FORCE_32BITS"};
+
+const std::string flycapPixelFormatNames[] = {
+    "PIXEL_FORMAT_MONO8",
+    "PIXEL_FORMAT_411YUV8",
+    "PIXEL_FORMAT_422YUV8",
+    "PIXEL_FORMAT_444YUV8",
+    "PIXEL_FORMAT_RGB8",
+    "PIXEL_FORMAT_MONO16",
+    "PIXEL_FORMAT_RGB16",
+    "PIXEL_FORMAT_S_MONO16",
+    "PIXEL_FORMAT_S_RGB16",
+    "PIXEL_FORMAT_RAW8",
+    "PIXEL_FORMAT_RAW16",
+    "PIXEL_FORMAT_MONO12",
+    "PIXEL_FORMAT_RAW12",
+    "PIXEL_FORMAT_BGR",
+    "PIXEL_FORMAT_BGRU",
+    "PIXEL_FORMAT_RGB",
+    "PIXEL_FORMAT_RGBU",
+    "PIXEL_FORMAT_BGR16",
+    "PIXEL_FORMAT_BGRU16",
+    "PIXEL_FORMAT_422YUV8_JPEG",
+    "NUM_PIXEL_FORMATS",
+    "UNSPECIFIED_PIXEL_FORMAT"};
