@@ -1,5 +1,8 @@
 #include "FlirCam.hpp"
 #include "flycapNames.hpp"
+#include <ros/ros.h>
+#include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
 
 PointGreyCamera::PointGreyCamera(const string &config_path)
     : Camera(config_path)
@@ -157,7 +160,7 @@ FrameInfo *PointGreyCamera::getFrame()
     FlyCapture2::Image convertedImage;
 
     // Convert the raw image
-    error = rawImage.Convert(FlyCapture2::PIXEL_FORMAT_BGR, &convertedImage);
+    error = rawImage.Convert(format7ImageSettings.pixelFormat, &convertedImage);
 
     if (error != FlyCapture2::PGRERROR_OK)
     {
@@ -179,13 +182,67 @@ FrameInfo *PointGreyCamera::getFrame()
     }
     else
     {
-        tempimg.copyTo(tempOut->img);
+        tempOut->img = tempimg;
     }
 
     tempOut->rosheader.stamp.nsec = ts.microSeconds * 1000;
     tempOut->rosheader.stamp.sec = ts.seconds;
 
     return tempOut;
+};
+
+cv_bridge::CvImage *PointGreyCamera::getFrameROS()
+{
+    cv_bridge::CvImage *rxImg;
+    FlyCapture2::Image rawImage;
+
+    // Retrieve an image
+    FlyCapture2::Error error = pCamera->RetrieveBuffer(&rawImage);
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        error.PrintErrorTrace();
+        ROS_INFO("Error in RetrieveBuffer, captureOneImage");
+        return NULL;
+    }
+
+    FlyCapture2::TimeStamp ts = rawImage.GetTimeStamp();
+    //    std::cout << "time " << time.seconds << " " << time.microSeconds << std::endl;
+
+    // Create a converted image
+    FlyCapture2::Image convertedImage;
+
+    // Convert the raw image
+    error = rawImage.Convert(FlyCapture2::PIXEL_FORMAT_BGR, &convertedImage);
+
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        ROS_INFO("Error in Convert");
+        error.PrintErrorTrace();
+        return NULL;
+    }
+
+    // Change to opencv image Mat
+    unsigned char *pdata = convertedImage.GetData();
+
+    std_msgs::Header header;
+    rxImg = new cv_bridge::CvImage(header, "");
+    header.stamp.nsec = ts.microSeconds * 1000;
+    header.stamp.sec = ts.seconds;
+    rxImg->encoding = sensor_msgs::image_encodings::BGR8;
+    Mat tempimg = cv::Mat(rawImage.GetRows(), rawImage.GetCols(), CV_8UC3, pdata);
+    if (tempimg.empty())
+        return NULL;
+
+    if (resizeHalf)
+    {
+        cv::resize(tempimg, rxImg->image, cv::Size(tempimg.cols / 2, tempimg.rows / 2), 0, 0);
+    }
+    else
+    {
+        tempimg.copyTo(rxImg->image);
+    }
+
+    return rxImg;
 };
 
 bool PointGreyCamera::loadDriverParameters(const FileStorage &fs)
@@ -207,6 +264,13 @@ bool PointGreyCamera::loadDriverParameters(const FileStorage &fs)
         node[flycapPropertyTypeNames[i] + "_valueA"] >> (int &)properties[i].valueA;
         node[flycapPropertyTypeNames[i] + "_valueB"] >> (int &)properties[i].valueB;
     };
+
+    node["format7ImageSettings_mode"] >> (int &)format7ImageSettings.mode;
+    node["format7ImageSettings_width"] >> (int &)format7ImageSettings.width;
+    node["format7ImageSettings_offsetX"] >> (int &)format7ImageSettings.offsetX;
+    node["format7ImageSettings_height"] >> (int &)format7ImageSettings.height;
+    node["format7ImageSettings_offsetY"] >> (int &)format7ImageSettings.offsetY;
+    node["packagesizepercent"] >> packagesizepercent;
 
     return true;
 };
@@ -231,6 +295,15 @@ bool PointGreyCamera::storeDriverParameters(FileStorage &fs)
            << flycapPropertyTypeNames[i] + "_valueB" << (int)properties[i].valueB;
     };
 
+    fs << "format7ImageSettings_mode" << (int)format7ImageSettings.mode
+       << "format7ImageSettings_width" << (int)format7ImageSettings.width
+       << "format7ImageSettings_offsetX" << (int)format7ImageSettings.offsetX
+       << "format7ImageSettings_height" << (int)format7ImageSettings.height
+       << "format7ImageSettings_offsetY" << (int)format7ImageSettings.offsetY
+       << "format7ImageSettings_pixelFormat" << (int)format7ImageSettings.pixelFormat
+       << "packagesize" << (int)packagesize
+       << "packagesizepercent" << packagesizepercent;
+
     fs << "}";
 };
 
@@ -241,7 +314,7 @@ bool PointGreyCamera::setCamConfig()
     for (int i = 0; i < FlyCapture2::TEMPERATURE; i++)
     {
         properties[i].type = (FlyCapture2::PropertyType)i;
-        FlyCapture2::Error error = pCamera->SetProperty(&properties[i]);
+        error = pCamera->SetProperty(&properties[i]);
         if (error.GetType() == FlyCapture2::PGRERROR_PROPERTY_NOT_PRESENT)
         {
             continue;
@@ -261,6 +334,14 @@ bool PointGreyCamera::setCamConfig()
                    flycapPropertyTypeNames[i].c_str());
         }
     };
+
+    error = pCamera->SetFormat7Configuration(&format7ImageSettings, packagesizepercent);
+    if (error.GetType() != FlyCapture2::PGRERROR_OK)
+    {
+        ROS_WARN("Error setting FLIR Camera format7 configuration : %s",
+                 error.GetDescription());
+        success = false;
+    }
     return success;
 };
 
@@ -272,6 +353,16 @@ bool PointGreyCamera::getCamConfig()
     {
         success &= getCamProperty((FlyCapture2::PropertyType)i, &properties[i]);
     };
+
+    pCamera->GetFormat7Configuration(&format7ImageSettings, &packagesize, &packagesizepercent);
+    printf("Current Format7 settings:\nmode: %d\noffsetX: %d\noffsetY: %d\nheight: %d\nwidth: %d\npixelFormat: %#x\n",
+           (int)format7ImageSettings.mode,
+           format7ImageSettings.offsetX,
+           format7ImageSettings.offsetY,
+           format7ImageSettings.height,
+           format7ImageSettings.width,
+           format7ImageSettings.pixelFormat);
+
     return success;
 };
 
@@ -319,6 +410,44 @@ void PointGreyCamera::info()
             printf("\n");
         }
     };
+
+    FlyCapture2::Format7Info f7info;
+    bool f7supported;
+    for (int i = 0; i < FlyCapture2::NUM_MODES; i++)
+    {
+        f7info.mode = (FlyCapture2::Mode)i;
+        pCamera->GetFormat7Info(&f7info, &f7supported);
+        if (f7supported)
+        {
+            printf(
+                "Format7 mode: %d\n"
+                "imageHStepSize: %d\n"
+                "imageVStepSize: %d\n"
+                "maxHeight: %d\n"
+                "maxWidth: %d\n"
+                "minPacketSize: %d\n"
+                "packetSize: %d\n"
+                "maxPacketSize: %d\n"
+                "offsetHStepSize: %d\n"
+                "offsetVStepSize: %d\n"
+                "percentage: %f\n"
+                "pixelFormatBitField: %#x\n"
+                "vendorPixelFormatBitField: %#x\n\n",
+                f7info.mode,
+                f7info.imageHStepSize,
+                f7info.imageVStepSize,
+                f7info.maxHeight,
+                f7info.maxWidth,
+                f7info.minPacketSize,
+                f7info.packetSize,
+                f7info.maxPacketSize,
+                f7info.offsetHStepSize,
+                f7info.offsetVStepSize,
+                f7info.percentage,
+                f7info.pixelFormatBitField,
+                f7info.vendorPixelFormatBitField);
+        }
+    }
 };
 
 bool PointGreyCamera::getCamProperty(

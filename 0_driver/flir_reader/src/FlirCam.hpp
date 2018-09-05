@@ -2,7 +2,8 @@
 #include <flycapture/FlyCapture2.h>
 #include <opencv2/opencv.hpp>
 #include "CamBase.hpp"
-#include "ros/ros.h"
+#include <ros/ros.h>
+#include <cv_bridge/cv_bridge.h>
 
 class PointGreyCamera : public Camera
 {
@@ -22,6 +23,8 @@ class PointGreyCamera : public Camera
    * @return FrameInfo* 
    */
     FrameInfo *getFrame();
+
+    cv_bridge::CvImage *getFrameROS();
 
     bool loadDriverParameters(const FileStorage &fs);
     bool storeDriverParameters(FileStorage &fs);
@@ -56,28 +59,29 @@ class PointGreyCamera : public Camera
                   bool useExtrinsicGuess, int flags) const override;
 
   private:
-    FlyCapture2::CameraInfo camInfo;
-    FlyCapture2::Camera *pCamera; // point to the Camera
+    //driver objects
     FlyCapture2::BusManager busMgr;
+    FlyCapture2::Camera *pCamera; // pointer to the Camera
+
+    //opencv preprocess
+    bool resizeHalf;
+
+    //main camera info
+    FlyCapture2::CameraInfo camInfo;
     FlyCapture2::PGRGuid guid; // A GUID to the camera, uniquely identify a camera.
 
     FlyCapture2::FC2Config cameraConfig;
     FlyCapture2::CameraInfo cameraInfo;
 
-    unsigned int serialNumber = 0; // serial Number of each camera
+    unsigned int serialNumber = 0; // serial Number unique for each camera
 
-    FlyCapture2::Format7Info format7Info;
+    //format7 related
     FlyCapture2::Format7PacketInfo format7PacketInfo;
     FlyCapture2::Format7ImageSettings format7ImageSettings;
-    FlyCapture2::PixelFormat format7PixelFormat;
-
-    FlyCapture2::Property properties[17];
-
-    bool resizeHalf;
-    bool useTrigger;
-
     unsigned int packagesize;
     float packagesizepercent;
+
+    FlyCapture2::Property properties[17];
 
     bool brightness_use_abs;
     bool brightness_use_auto;
