@@ -61,7 +61,7 @@ bool PointGreyCamera::initialize()
         }
         else
         {
-            ROS_INFO("FLIR camera connected");
+            ROS_INFO("FLIR camera of serialNumber found");
         }
     }
 
@@ -70,15 +70,14 @@ bool PointGreyCamera::initialize()
 
     if (error != FlyCapture2::PGRERROR_OK)
     {
-        std::cout << "[#INFO] Error in Connect." << std::endl;
-        error.PrintErrorTrace();
+        ROS_WARN("FLIR camera Connect failed : %s", error.GetDescription());
         return false;
     }
     else
     {
         if (pCamera->IsConnected())
         {
-            std::cout << "[#INFO] Camera Connected." << std::endl;
+            ROS_INFO("FLIR camera Connected");
         }
     }
     error = pCamera->GetCameraInfo(&camInfo);
