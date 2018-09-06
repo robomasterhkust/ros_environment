@@ -254,14 +254,26 @@ bool PointGreyCamera::loadDriverParameters(const FileStorage &fs)
 
     fsHelper::readOrDefault(node["format7_mode"], (int &)format7ImageSettings.mode, (int)FlyCapture2::MODE_0);
 
+    int temp;
+
     for (int i = 0; i < FlyCapture2::TEMPERATURE; i++)
     {
-        node[flycapPropertyTypeNames[i] + "_absControl"] >> (int &)properties[i].absControl;
+        node[flycapPropertyTypeNames[i] + "_absControl"] >> temp;
+        properties[i].absControl = (temp > 0);
         node[flycapPropertyTypeNames[i] + "_absValue"] >> properties[i].absValue;
-        node[flycapPropertyTypeNames[i] + "_autoManualMode"] >> (int &)properties[i].autoManualMode;
-        node[flycapPropertyTypeNames[i] + "_onOff"] >> (int &)properties[i].onOff;
+        node[flycapPropertyTypeNames[i] + "_autoManualMode"] >> temp;
+        properties[i].autoManualMode = (temp > 0);
+        node[flycapPropertyTypeNames[i] + "_onOff"] >> temp;
+        properties[i].onOff = (temp > 0);
         node[flycapPropertyTypeNames[i] + "_valueA"] >> (int &)properties[i].valueA;
         node[flycapPropertyTypeNames[i] + "_valueB"] >> (int &)properties[i].valueB;
+        printf("Read %s from config file:\n", flycapPropertyTypeNames[i].c_str());
+        printf("_absControl %s\n", properties[i].absControl ? "Yes" : "No");
+        printf("_absValue %f\n", properties[i].absValue);
+        printf("_autoManualMode %s\n", properties[i].autoManualMode ? "Yes" : "No");
+        printf("_onOff %s\n", properties[i].onOff ? "Yes" : "No");
+        printf("_absControl %d\n", properties[i].valueA);
+        printf("_absControl %d\n", properties[i].valueB);
     };
 
     node["format7ImageSettings_mode"] >> (int &)format7ImageSettings.mode;
@@ -269,6 +281,16 @@ bool PointGreyCamera::loadDriverParameters(const FileStorage &fs)
     node["format7ImageSettings_offsetX"] >> (int &)format7ImageSettings.offsetX;
     node["format7ImageSettings_height"] >> (int &)format7ImageSettings.height;
     node["format7ImageSettings_offsetY"] >> (int &)format7ImageSettings.offsetY;
+    string tempstr;
+    node["format7ImageSettings_pixelFormat"] >> tempstr;
+    for (int i = 0; i < FlyCapture2::NUM_PIXEL_FORMATS; i++)
+    {
+        if (tempstr == flycapPixelFormatNames[i])
+        {
+            format7ImageSettings.pixelFormat = (FlyCapture2::PixelFormat)flycapPixelFormatBitFields[i];
+            break;
+        }
+    }
     node["packagesizepercent"] >> packagesizepercent;
 
     return true;
@@ -298,12 +320,22 @@ bool PointGreyCamera::storeDriverParameters(FileStorage &fs)
        << "format7ImageSettings_width" << (int)format7ImageSettings.width
        << "format7ImageSettings_offsetX" << (int)format7ImageSettings.offsetX
        << "format7ImageSettings_height" << (int)format7ImageSettings.height
-       << "format7ImageSettings_offsetY" << (int)format7ImageSettings.offsetY
-       << "format7ImageSettings_pixelFormat" << (int)format7ImageSettings.pixelFormat
-       << "packagesize" << (int)packagesize
-       << "packagesizepercent" << packagesizepercent;
+       << "format7ImageSettings_offsetY" << (int)format7ImageSettings.offsetY;
 
-    fs << "}";
+    for (int i = 0; i < FlyCapture2::NUM_PIXEL_FORMATS; i++)
+    {
+        if (format7ImageSettings.pixelFormat == flycapPixelFormatBitFields[i])
+        {
+            fs << "format7ImageSettings_pixelFormat" << flycapPixelFormatNames[i];
+            break;
+        }
+    }
+
+    fs << "packagesize" << (int)packagesize
+       << "packagesizepercent" << packagesizepercent
+       << "}";
+
+    return true;
 };
 
 bool PointGreyCamera::setCamConfig()
@@ -341,6 +373,11 @@ bool PointGreyCamera::setCamConfig()
                  error.GetDescription());
         success = false;
     }
+    else
+    {
+        printf("Set flir camera %d format7 configuration success\n",
+               camInfo.serialNumber);
+    }
     return success;
 };
 
@@ -354,21 +391,36 @@ bool PointGreyCamera::getCamConfig()
     };
 
     pCamera->GetFormat7Configuration(&format7ImageSettings, &packagesize, &packagesizepercent);
-    printf("Current Format7 settings:\nmode: %d\noffsetX: %d\noffsetY: %d\nheight: %d\nwidth: %d\npixelFormat: %#x\n",
+    printf("Current Format7 settings:\nmode: %d\noffsetX: %d\noffsetY: %d\nheight: %d\nwidth: %d\n",
            (int)format7ImageSettings.mode,
            format7ImageSettings.offsetX,
            format7ImageSettings.offsetY,
            format7ImageSettings.height,
-           format7ImageSettings.width,
-           format7ImageSettings.pixelFormat);
+           format7ImageSettings.width);
+
+    printf("pixelFormat:\n");
+    for (int i = 0; i < FlyCapture2::NUM_PIXEL_FORMATS; i++)
+    {
+        if (format7ImageSettings.pixelFormat & flycapPixelFormatBitFields[i])
+        {
+            printf("%s\n", flycapPixelFormatNames[i].c_str());
+            break;
+        }
+    }
 
     return success;
 };
 
 bool PointGreyCamera::startStream()
 {
+    printf("startStream:\n");
     FlyCapture2::Error error;
     error = pCamera->StartCapture();
+    printf("Started Capture:\n");
+    if (error != FlyCapture2::PGRERROR_OK)
+    {
+        printf("start stream failed: %s\n", error.GetDescription());
+    }
     return (error == FlyCapture2::PGRERROR_OK);
 };
 
@@ -445,6 +497,15 @@ void PointGreyCamera::info()
                 f7info.percentage,
                 f7info.pixelFormatBitField,
                 f7info.vendorPixelFormatBitField);
+
+            printf("Supported formats:\n");
+            for (int i = 0; i < FlyCapture2::NUM_PIXEL_FORMATS; i++)
+            {
+                if (f7info.pixelFormatBitField & flycapPixelFormatBitFields[i])
+                {
+                    printf("%s\n", flycapPixelFormatNames[i].c_str());
+                }
+            }
         }
     }
 };

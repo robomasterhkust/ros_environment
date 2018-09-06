@@ -39,7 +39,9 @@ int main(int argc, char **argv)
                 image_publishers.back().second->initialize();
                 image_publishers.back().second->info();
                 image_publishers.back().second->applySetting();
+                printf("apply setting\n");
                 image_publishers.back().second->startStream();
+                printf("startStream\n");
             }
             else
             {
