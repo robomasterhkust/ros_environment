@@ -28,8 +28,11 @@
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
   <build_depend>message_generation</build_depend>
+  <build_depend>can_msgs</build_depend>
   <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
+  <build_export_depend>can_msgs</build_export_depend>
+  <exec_depend>can_msgs</exec_depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>roscpp</depend>
