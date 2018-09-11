@@ -1,8 +1,9 @@
 <launch>
     <node name="flir_reader" pkg="flir_reader" type="flir_reader_node" cwd="ROS_HOME" launch-prefix="sudo -E bash -c" output="screen">
         <rosparam>
-            num_cams:   1
-            cam0: test.xml
+            num_cams:   2
+            cam0: 15508324.xml
+            cam1: 17533277.xml
         </rosparam>
     </node>
 </launch>

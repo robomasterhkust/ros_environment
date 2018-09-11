@@ -43,7 +43,7 @@ generate_messages(
 
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS
   LIBRARIES
   CATKIN_DEPENDS roscpp sensor_msgs std_msgs message_runtime
   DEPENDS

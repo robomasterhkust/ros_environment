@@ -57,20 +57,26 @@ int main(int argc, char **argv)
     }
 
     //TODO: multithread
+
+    cv_bridge::CvImage *f[image_publishers.size()];
     while (1)
     {
-        for (auto p : image_publishers)
+        for (int i = 0; i < image_publishers.size(); i++)
         {
-            cv_bridge::CvImage *f = p.second->getFrameROS();
-            cv::imshow("img", f->image);
+            f[i] = image_publishers[i].second->getFrameROS();
+            cv::imshow(to_string(image_publishers[i].second->getSN()), f[i]->image);
             sensor_msgs::Image imgMsg;
-            f->toImageMsg(imgMsg);
-            p.first->publish(imgMsg);
-            delete f;
+            f[i]->toImageMsg(imgMsg);
+            image_publishers[i].first->publish(imgMsg);
         };
 
         if (cv::waitKey(1) == 27)
             break;
+
+        for (int i = 0; i < image_publishers.size(); i++)
+        {
+            delete f[i];
+        }
     }
 
     for (auto p : image_publishers)
