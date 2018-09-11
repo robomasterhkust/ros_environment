@@ -48,14 +48,6 @@ private:
 
   const int fd;
   termios tty;
-  //queue related
-  unsigned char buf[BUFFER_SIZE];
-  unsigned int startPos = 0;
-  unsigned int endPos = 0;
-
-  bool foundAT = false;
-  unsigned int ATseekPos = 0;
-  unsigned int EOLseekPos = 0;
 
   std::thread *readThd;
 
