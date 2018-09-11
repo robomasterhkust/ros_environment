@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<driverType>3</driverType>
+<CameraBase>
+  <cameraMatrix type_id="opencv-matrix">
+    <rows>3</rows>
+    <cols>3</cols>
+    <dt>d</dt>
+    <data>
+      1.1773132521471161e+03 0. 6.0247908791292161e+02 0.
+      1.1773132521471161e+03 5.0527254733207218e+02 0. 0. 1.</data></cameraMatrix>
+  <distCoeffs type_id="opencv-matrix">
+    <rows>5</rows>
+    <cols>1</cols>
+    <dt>d</dt>
+    <data>
+      -3.1494236477146542e-01 -7.1856132972817777e-01
+      1.0591155043751033e-03 8.8731514409656521e-03
+      3.8301748981182766e+00</data></distCoeffs>
+  <rotationVec>
+    0. 0. 0.</rotationVec>
+  <translationVec>
+    0. 0. 0.</translationVec>
+  <minReadDelay_ms>0</minReadDelay_ms>
+  <maxReadDelay_ms>1000000</maxReadDelay_ms></CameraBase>
+<pgCam>
+  <serialNumber>0</serialNumber>
+  <resizeHalf>1</resizeHalf>
+  <format7_mode>0</format7_mode>
+  <BRIGHTNESS_absControl>1</BRIGHTNESS_absControl>
+  <BRIGHTNESS_absValue>7.4218750000000000e+00</BRIGHTNESS_absValue>
+  <BRIGHTNESS_autoManualMode>0</BRIGHTNESS_autoManualMode>
+  <BRIGHTNESS_onOff>1</BRIGHTNESS_onOff>
+  <BRIGHTNESS_valueA>31</BRIGHTNESS_valueA>
+  <BRIGHTNESS_valueB>0</BRIGHTNESS_valueB>
+  <AUTO_EXPOSURE_absControl>1</AUTO_EXPOSURE_absControl>
+  <AUTO_EXPOSURE_absValue>1.0588989257812500e+00</AUTO_EXPOSURE_absValue>
+  <AUTO_EXPOSURE_autoManualMode>1</AUTO_EXPOSURE_autoManualMode>
+  <AUTO_EXPOSURE_onOff>1</AUTO_EXPOSURE_onOff>
+  <AUTO_EXPOSURE_valueA>400</AUTO_EXPOSURE_valueA>
+  <AUTO_EXPOSURE_valueB>0</AUTO_EXPOSURE_valueB>
+  <SHARPNESS_absControl>0</SHARPNESS_absControl>
+  <SHARPNESS_absValue>0.</SHARPNESS_absValue>
+  <SHARPNESS_autoManualMode>0</SHARPNESS_autoManualMode>
+  <SHARPNESS_onOff>0</SHARPNESS_onOff>
+  <SHARPNESS_valueA>1024</SHARPNESS_valueA>
+  <SHARPNESS_valueB>0</SHARPNESS_valueB>
+  <WHITE_BALANCE_absControl>0</WHITE_BALANCE_absControl>
+  <WHITE_BALANCE_absValue>0.</WHITE_BALANCE_absValue>
+  <WHITE_BALANCE_autoManualMode>0</WHITE_BALANCE_autoManualMode>
+  <WHITE_BALANCE_onOff>0</WHITE_BALANCE_onOff>
+  <WHITE_BALANCE_valueA>550</WHITE_BALANCE_valueA>
+  <WHITE_BALANCE_valueB>810</WHITE_BALANCE_valueB>
+  <HUE_absControl>1</HUE_absControl>
+  <HUE_absValue>0.</HUE_absValue>
+  <HUE_autoManualMode>0</HUE_autoManualMode>
+  <HUE_onOff>0</HUE_onOff>
+  <HUE_valueA>2048</HUE_valueA>
+  <HUE_valueB>0</HUE_valueB>
+  <SATURATION_absControl>1</SATURATION_absControl>
+  <SATURATION_absValue>100.</SATURATION_absValue>
+  <SATURATION_autoManualMode>0</SATURATION_autoManualMode>
+  <SATURATION_onOff>0</SATURATION_onOff>
+  <SATURATION_valueA>1024</SATURATION_valueA>
+  <SATURATION_valueB>0</SATURATION_valueB>
+  <GAMMA_absControl>1</GAMMA_absControl>
+  <GAMMA_absValue>1.</GAMMA_absValue>
+  <GAMMA_autoManualMode>0</GAMMA_autoManualMode>
+  <GAMMA_onOff>0</GAMMA_onOff>
+  <GAMMA_valueA>1024</GAMMA_valueA>
+  <GAMMA_valueB>0</GAMMA_valueB>
+  <IRIS_absControl>0</IRIS_absControl>
+  <IRIS_absValue>0.</IRIS_absValue>
+  <IRIS_autoManualMode>0</IRIS_autoManualMode>
+  <IRIS_onOff>0</IRIS_onOff>
+  <IRIS_valueA>0</IRIS_valueA>
+  <IRIS_valueB>0</IRIS_valueB>
+  <FOCUS_absControl>0</FOCUS_absControl>
+  <FOCUS_absValue>0.</FOCUS_absValue>
+  <FOCUS_autoManualMode>0</FOCUS_autoManualMode>
+  <FOCUS_onOff>0</FOCUS_onOff>
+  <FOCUS_valueA>0</FOCUS_valueA>
+  <FOCUS_valueB>0</FOCUS_valueB>
+  <ZOOM_absControl>0</ZOOM_absControl>
+  <ZOOM_absValue>0.</ZOOM_absValue>
+  <ZOOM_autoManualMode>0</ZOOM_autoManualMode>
+  <ZOOM_onOff>0</ZOOM_onOff>
+  <ZOOM_valueA>0</ZOOM_valueA>
+  <ZOOM_valueB>0</ZOOM_valueB>
+  <PAN_absControl>0</PAN_absControl>
+  <PAN_absValue>0.</PAN_absValue>
+  <PAN_autoManualMode>0</PAN_autoManualMode>
+  <PAN_onOff>0</PAN_onOff>
+  <PAN_valueA>0</PAN_valueA>
+  <PAN_valueB>0</PAN_valueB>
+  <TILT_absControl>0</TILT_absControl>
+  <TILT_absValue>0.</TILT_absValue>
+  <TILT_autoManualMode>0</TILT_autoManualMode>
+  <TILT_onOff>0</TILT_onOff>
+  <TILT_valueA>0</TILT_valueA>
+  <TILT_valueB>0</TILT_valueB>
+  <SHUTTER_absControl>0</SHUTTER_absControl>
+  <SHUTTER_absValue>7.6275108337402344e+01</SHUTTER_absValue>
+  <SHUTTER_autoManualMode>1</SHUTTER_autoManualMode>
+  <SHUTTER_onOff>1</SHUTTER_onOff>
+  <SHUTTER_valueA>2149</SHUTTER_valueA>
+  <SHUTTER_valueB>0</SHUTTER_valueB>
+  <GAIN_absControl>0</GAIN_absControl>
+  <GAIN_absValue>0.</GAIN_absValue>
+  <GAIN_autoManualMode>1</GAIN_autoManualMode>
+  <GAIN_onOff>1</GAIN_onOff>
+  <GAIN_valueA>256</GAIN_valueA>
+  <GAIN_valueB>0</GAIN_valueB>
+  <TRIGGER_MODE_absControl>0</TRIGGER_MODE_absControl>
+  <TRIGGER_MODE_absValue>0.</TRIGGER_MODE_absValue>
+  <TRIGGER_MODE_autoManualMode>0</TRIGGER_MODE_autoManualMode>
+  <TRIGGER_MODE_onOff>0</TRIGGER_MODE_onOff>
+  <TRIGGER_MODE_valueA>0</TRIGGER_MODE_valueA>
+  <TRIGGER_MODE_valueB>0</TRIGGER_MODE_valueB>
+  <TRIGGER_DELAY_absControl>0</TRIGGER_DELAY_absControl>
+  <TRIGGER_DELAY_absValue>0.</TRIGGER_DELAY_absValue>
+  <TRIGGER_DELAY_autoManualMode>0</TRIGGER_DELAY_autoManualMode>
+  <TRIGGER_DELAY_onOff>0</TRIGGER_DELAY_onOff>
+  <TRIGGER_DELAY_valueA>0</TRIGGER_DELAY_valueA>
+  <TRIGGER_DELAY_valueB>0</TRIGGER_DELAY_valueB>
+  <FRAME_RATE_absControl>1</FRAME_RATE_absControl>
+  <FRAME_RATE_absValue>50.</FRAME_RATE_absValue>
+  <FRAME_RATE_autoManualMode>0</FRAME_RATE_autoManualMode>
+  <FRAME_RATE_onOff>0</FRAME_RATE_onOff>
+  <FRAME_RATE_valueA>0</FRAME_RATE_valueA>
+  <FRAME_RATE_valueB>0</FRAME_RATE_valueB>
+  <format7ImageSettings_mode>0</format7ImageSettings_mode>
+  <format7ImageSettings_width>644</format7ImageSettings_width>
+  <format7ImageSettings_offsetX>0</format7ImageSettings_offsetX>
+  <format7ImageSettings_height>482</format7ImageSettings_height>
+  <format7ImageSettings_offsetY>0</format7ImageSettings_offsetY>
+  <format7ImageSettings_pixelFormat>RAW8</format7ImageSettings_pixelFormat>
+  <packagesize>2000</packagesize>
+  <packagesizepercent>100.</packagesizepercent></pgCam>
+</opencv_storage>
