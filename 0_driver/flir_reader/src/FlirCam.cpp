@@ -413,7 +413,7 @@ bool PointGreyCamera::getCamConfig()
 
 bool PointGreyCamera::startStream()
 {
-    printf("startStream:\n");
+    printf("startStream %d %d:\n",serialNumber,pCamera);
     FlyCapture2::Error error;
     error = pCamera->StartCapture();
     printf("Started Capture:\n");
