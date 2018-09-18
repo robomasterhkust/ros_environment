@@ -41,8 +41,11 @@
 #include "EndpointTargetDetection.h"
 #include "EndpointCalibration.h"
 #include "ros/ros.h"
+#include "sensor_msgs/PointCloud.h"
 #include <thread>
 #include <chrono>
+
+ros::Publisher pointCloudPub;
 
 // called every time ep_targetdetect_get_targets method is called to return measured time domain signals
 void received_target_info(void *context,
@@ -50,20 +53,27 @@ void received_target_info(void *context,
                           uint8_t endpoint,
                           const Target_Info_t *targets, uint8_t num_targets)
 {
+    sensor_msgs::PointCloud ptCloud;
+    ptCloud.channels.push_back(sensor_msgs::ChannelFloat32());
+    ptCloud.channels[0].name = "Radial speed";
     uint32_t j;
-    for (j = 0; j < num_targets; j++)
+    for (j = 0; j < num_targets; j++, targets++)
     {
+        geometry_msgs::Point32 point;
+        point.y = point.z = 0;
         printf("*********************Received targets*********************\n");
         printf("Received target: target_id %d\n", targets->target_id);
-        printf("Received target: Distance %f [cm]\n", targets->radius);
+        printf("Received target: Distance %f [cm]\n", point.x = targets->radius);
         printf("Received target: Radial speed %f\n", targets->radial_speed);
         printf("Received target: Azimuth %f\n", targets->azimuth);
         printf("Received target: Azimuth speed %f\n", targets->azimuth_speed);
         printf("Received target: Elevation %f \n", targets->elevation);
         printf("Received target: Elevation speed %f \n", targets->elevation_speed);
-        targets++;
         printf("\n");
+        ptCloud.points.push_back(point);
+        ptCloud.channels[0].values.push_back(targets->radial_speed);
     }
+    pointCloudPub.publish(ptCloud);
 }
 
 // called every time ep_radar_base_get_frame_data method is called to return measured time domain signals
@@ -130,6 +140,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "inf24g");
     ros::NodeHandle nh = ros::NodeHandle("~");
+    pointCloudPub = nh.advertise<sensor_msgs::PointCloud>("inf24radar", 3);
 
     int res = -1;
     int protocolHandle = 0;
@@ -158,31 +169,34 @@ int main(int argc, char **argv)
             }
         }
     }
+    printf("protocolHandle: %d\n", protocolHandle);
+    printf("endpointRadarBase: %d, endpointTargetDetection: %d\n", endpointRadarBase, endpointTargetDetection);
 
-    if (endpointRadarBase >= 0 && endpointTargetDetection >= 0)
+    if (endpointRadarBase > 0 || endpointTargetDetection > 0)
     {
         // register call back functions for target data
         ep_targetdetect_set_callback_target_processing(received_target_info, NULL);
         // ep_radar_base_set_callback_data_frame(received_frame_data, NULL);
         ep_calibration_get_calibration_data(protocolHandle, endpointRadarBase);
         ep_calibration_set_calibration_data(protocolHandle, endpointRadarBase);
-        
+
         res = ep_radar_base_set_automatic_frame_trigger(protocolHandle,
                                                         endpointRadarBase,
                                                         0);
-
         while (ros::ok())
         {
             // get target data
             ep_targetdetect_get_targets(protocolHandle, endpointTargetDetection);
             // get raw data
-            res = ep_radar_base_get_frame_data(protocolHandle,
-                                               endpointRadarBase,
-                                               1);
+            // res = ep_radar_base_get_frame_data(protocolHandle, endpointRadarBase, 1);
 
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
-
+    else
+    {
+        printf("no device found\n");
+        return 0;
+    }
     return res;
 }
