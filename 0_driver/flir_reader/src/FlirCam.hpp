@@ -58,6 +58,11 @@ class PointGreyCamera : public Camera
                   cv::OutputArray rvec, cv::OutputArray tvec,
                   bool useExtrinsicGuess, int flags) const override;
 
+    int getSN()
+    {
+        return serialNumber;
+    }
+
   private:
     //driver objects
     FlyCapture2::BusManager busMgr;

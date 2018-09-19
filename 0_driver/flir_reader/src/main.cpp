@@ -70,15 +70,18 @@ int main(int argc, char **argv)
             f[i]->toImageMsg(imgMsg);
             image_publishers[i].first->publish(imgMsg);
             printf("%dcaptured latency: %f\n",i,(ros::Time::now()-imgMsg.header.stamp).toSec());
+
         };
 
         if (cv::waitKey(1) == 27)
             break;
 
-        for (int i =0;i<image_publishers.size();i++)
+
+        for (int i = 0; i < image_publishers.size(); i++)
         {
             delete f[i];
-	}
+        }
+
     }
 
     for (auto p : image_publishers)
