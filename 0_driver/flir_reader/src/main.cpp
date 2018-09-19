@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < num_cams; i++)
     {
+	printf("reading cam %s", to_string(i).c_str());
         string fn = nh.param<string>("cam" + to_string(i), "");
         if (fn != "")
         {
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
                 image_publishers.back().second->applySetting();
                 printf("apply setting\n");
                 image_publishers.back().second->startStream();
-                printf("startStream\n");
+                printf("startStream\n\n\n");
             }
             else
             {
@@ -53,30 +54,34 @@ int main(int argc, char **argv)
     };
     if (image_publishers.size() == 0)
     {
+                printf("image_publishers.size() == 0\n");
         return 0;
     }
 
     //TODO: multithread
-
-    cv_bridge::CvImage *f[image_publishers.size()];
+	cv_bridge::CvImage *f[image_publishers.size()];
     while (1)
     {
-        for (int i = 0; i < image_publishers.size(); i++)
+        for (int i =0;i<image_publishers.size();i++)
         {
             f[i] = image_publishers[i].second->getFrameROS();
-            cv::imshow(to_string(image_publishers[i].second->getSN()), f[i]->image);
+            cv::imshow(image_publishers[i].second->getName(), f[i]->image);
             sensor_msgs::Image imgMsg;
             f[i]->toImageMsg(imgMsg);
             image_publishers[i].first->publish(imgMsg);
+            printf("%dcaptured latency: %f\n",i,(ros::Time::now()-imgMsg.header.stamp).toSec());
+
         };
 
         if (cv::waitKey(1) == 27)
             break;
 
+
         for (int i = 0; i < image_publishers.size(); i++)
         {
             delete f[i];
         }
+
     }
 
     for (auto p : image_publishers)

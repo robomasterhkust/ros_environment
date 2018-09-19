@@ -1,0 +1,38 @@
+%YAML:1.0
+
+#camera calibration with smaller resolution
+model_type: MEI
+camera_name: left_small
+image_width: 576
+image_height: 460
+mirror_parameters:
+   xi: 1.9011872077780336e+00
+distortion_parameters:
+   k1: -7.6685406838891756e-01
+   k2: 6.4694778041471002e-01
+   p1: -1.2428682173063236e-03
+   p2: -7.4702045617074098e-04
+projection_parameters:
+   gamma1: 1.0057978509017140e+03
+   gamma2: 1.0041712086530503e+03
+   u0: 2.8805759963560456e+02
+   v0: 2.4147498194276235e+02
+
+
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ 0, 0, 1,
+          -1, 0, 0,
+           0,-1, 0]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [ 0.32, 0.13, 0.04 ]
+
+
+is_rectify: 0
+
+
