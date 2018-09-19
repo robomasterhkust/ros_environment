@@ -55,7 +55,9 @@ void received_target_info(void *context,
 {
     sensor_msgs::PointCloud ptCloud;
     ptCloud.channels.push_back(sensor_msgs::ChannelFloat32());
-    ptCloud.channels[0].name = "Radial speed";
+    ptCloud.channels.push_back(sensor_msgs::ChannelFloat32());
+    ptCloud.channels[0].name = "ID";
+    ptCloud.channels[1].name = "Radial speed";
     uint32_t j;
     for (j = 0; j < num_targets; j++, targets++)
     {
@@ -71,7 +73,8 @@ void received_target_info(void *context,
         printf("Received target: Elevation speed %f \n", targets->elevation_speed);
         printf("\n");
         ptCloud.points.push_back(point);
-        ptCloud.channels[0].values.push_back(targets->radial_speed);
+        ptCloud.channels[0].values.push_back(targets->target_id);
+        ptCloud.channels[1].values.push_back(targets->radial_speed);
     }
     pointCloudPub.publish(ptCloud);
 }
@@ -188,9 +191,9 @@ int main(int argc, char **argv)
             // get target data
             ep_targetdetect_get_targets(protocolHandle, endpointTargetDetection);
             // get raw data
-            // res = ep_radar_base_get_frame_data(protocolHandle, endpointRadarBase, 1);
+            res = ep_radar_base_get_frame_data(protocolHandle, endpointRadarBase, 1);
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
         }
     }
     else
