@@ -1,0 +1,4 @@
+<launch>
+  <node name="inf24radar" pkg="inf24radar" type="inf24radar_node" respawn="false" output="screen" cwd="ROS_HOME" launch-prefix="sudo -E bash -c">
+  </node>
+</launch>
