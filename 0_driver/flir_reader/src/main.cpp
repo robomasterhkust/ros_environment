@@ -69,7 +69,7 @@ int main(int argc, char **argv)
             sensor_msgs::Image imgMsg;
             f[i]->toImageMsg(imgMsg);
             image_publishers[i].first->publish(imgMsg);
-            printf("%dcaptured\n",i);
+            printf("%dcaptured latency: %f\n",i,(ros::Time::now()-imgMsg.header.stamp).toSec());
         };
 
         if (cv::waitKey(1) == 27)
