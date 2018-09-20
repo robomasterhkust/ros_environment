@@ -2,7 +2,7 @@
 
     <arg name="device" default = "17302082"/>
     <arg name="device2" default = "17533297"/>
-    <arg name="rate" default="10"/>
+    <arg name="rate" default="20"/>
 
       <node name="single_reader" pkg="ptgrey_reader" type="single_reader"
          ns="pg_$(arg device)" output="screen">

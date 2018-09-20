@@ -64,17 +64,19 @@ void received_target_info(void *context,
         geometry_msgs::Point32 point;
         point.y = point.z = 0;
         printf("*********************Received targets*********************\n");
-        printf("Received target: target_id %d\n", targets->target_id);
-        printf("Received target: Distance %f [cm]\n", point.x = targets->radius);
-        printf("Received target: Radial speed %f\n", targets->radial_speed);
-        printf("Received target: Azimuth %f\n", targets->azimuth);
-        printf("Received target: Azimuth speed %f\n", targets->azimuth_speed);
-        printf("Received target: Elevation %f \n", targets->elevation);
+        printf("Received target: target_id %d\n", 	targets->target_id);
+        printf("Received target: Distance %f [m]\n", 	point.x = targets->radius / 100.0);
+        printf("Received target: Radial speed %f\n", 	targets->radial_speed);
+        printf("Received target: Azimuth %f\n", 	targets->azimuth);
+        printf("Received target: Azimuth speed %f\n", 	targets->azimuth_speed);
+        printf("Received target: Elevation %f \n", 	targets->elevation);
         printf("Received target: Elevation speed %f \n", targets->elevation_speed);
         printf("\n");
+	ptCloud.header.stamp = ros::Time::now();
+	ptCloud.header.frame_id = "world";
         ptCloud.points.push_back(point);
         ptCloud.channels[0].values.push_back(targets->target_id);
-        ptCloud.channels[1].values.push_back(targets->radial_speed);
+        ptCloud.channels[1].values.push_back(targets->radial_speed / 100.0);
     }
     pointCloudPub.publish(ptCloud);
 }
