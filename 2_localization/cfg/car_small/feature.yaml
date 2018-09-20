@@ -1,20 +1,13 @@
 %YAML:1.0
 
 #feature traker paprameters
-<<<<<<< HEAD
+
 max_cnt: 150            # max feature number in feature tracking
-=======
-max_cnt: 120            # max feature number in feature tracking
->>>>>>> master
 min_dist: 25            # min distance between two features 
 freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
 
 F_threshold: 1.0        # ransac threshold (pixel)
-<<<<<<< HEAD
 show_track: 1           # publish tracking image as topic
-=======
-show_track: 0           # publish tracking image as topic
->>>>>>> master
 equalize: 1             # if image is too dark or light, trun on equalize to find enough features
 
 is_mask: 0
