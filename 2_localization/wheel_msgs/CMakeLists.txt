@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
     message_runtime
     )
 ## Generate messages in the 'msg' folder
- add_message_files(
+add_message_files(DIRECTORY msg
    FILES
    steeringAngle.msg
    wheelSpeeds.msg
