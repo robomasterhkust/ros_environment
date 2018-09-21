@@ -1,3 +1,6 @@
 [submodule "1_perception_cv/RMComputerVision"]
 	path = 1_perception_cv/RMComputerVision
 	url = git@github.com:robomasterhkust/RMComputerVision.git
+[submodule "2_localization/vins_so"]
+	path = 2_localization/vins_so
+	url = git@github.com:gaowenliang/vins_so.git

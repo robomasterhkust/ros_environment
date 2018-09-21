@@ -55,23 +55,28 @@ void received_target_info(void *context,
 {
     sensor_msgs::PointCloud ptCloud;
     ptCloud.channels.push_back(sensor_msgs::ChannelFloat32());
-    ptCloud.channels[0].name = "Radial speed";
+    ptCloud.channels.push_back(sensor_msgs::ChannelFloat32());
+    ptCloud.channels[0].name = "ID";
+    ptCloud.channels[1].name = "Radial speed";
     uint32_t j;
     for (j = 0; j < num_targets; j++, targets++)
     {
         geometry_msgs::Point32 point;
         point.y = point.z = 0;
         printf("*********************Received targets*********************\n");
-        printf("Received target: target_id %d\n", targets->target_id);
-        printf("Received target: Distance %f [cm]\n", point.x = targets->radius);
-        printf("Received target: Radial speed %f\n", targets->radial_speed);
-        printf("Received target: Azimuth %f\n", targets->azimuth);
-        printf("Received target: Azimuth speed %f\n", targets->azimuth_speed);
-        printf("Received target: Elevation %f \n", targets->elevation);
+        printf("Received target: target_id %d\n", 	targets->target_id);
+        printf("Received target: Distance %f [m]\n", 	point.x = targets->radius / 100.0);
+        printf("Received target: Radial speed %f\n", 	targets->radial_speed);
+        printf("Received target: Azimuth %f\n", 	targets->azimuth);
+        printf("Received target: Azimuth speed %f\n", 	targets->azimuth_speed);
+        printf("Received target: Elevation %f \n", 	targets->elevation);
         printf("Received target: Elevation speed %f \n", targets->elevation_speed);
         printf("\n");
+	ptCloud.header.stamp = ros::Time::now();
+	ptCloud.header.frame_id = "world";
         ptCloud.points.push_back(point);
-        ptCloud.channels[0].values.push_back(targets->radial_speed);
+        ptCloud.channels[0].values.push_back(targets->target_id);
+        ptCloud.channels[1].values.push_back(targets->radial_speed / 100.0);
     }
     pointCloudPub.publish(ptCloud);
 }
@@ -188,9 +193,9 @@ int main(int argc, char **argv)
             // get target data
             ep_targetdetect_get_targets(protocolHandle, endpointTargetDetection);
             // get raw data
-            // res = ep_radar_base_get_frame_data(protocolHandle, endpointRadarBase, 1);
+            res = ep_radar_base_get_frame_data(protocolHandle, endpointRadarBase, 1);
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
         }
     }
     else

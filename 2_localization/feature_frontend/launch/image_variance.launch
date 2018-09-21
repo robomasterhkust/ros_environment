@@ -1,0 +1,13 @@
+<launch>
+    <arg name="cam"     default = "/home/nvidia/ws/src/2_global_estimator_vins_stereo/cfg/car_small/cam_right.yaml" />
+    <arg name="image"   default = "/home/nvidia/ws/src/2_global_estimator_vins_stereo/cfg/car_small/cam_mask.bmp" />
+
+    <node pkg="feature_frontend" type="image_variance" name="fisheye" output="screen">
+        <param name="data_save_path" type="string" value= "$(find feature_frontend)/data/"/>
+        <rosparam subst_value="True">
+            camera_model: $(arg cam)
+            mask: $(arg image)
+        </rosparam>
+    </node>
+
+</launch>

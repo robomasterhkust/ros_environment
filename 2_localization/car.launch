@@ -1,0 +1,34 @@
+<launch>
+
+<node pkg="feature_frontend" type="stereocam_node" name="feature" output="screen">
+    <param name="camera_num_stereo" type="int" value="1"/>
+    <rosparam subst_value="True">
+        camera0:
+            image_topic_left:       /pg_17302082/image_roi
+            image_topic_right:      /pg_17533297/image_roi
+            cam_config_file_left:   /home/nvidia/ws/src/2_localization/cfg/car_small/cam_left.yaml
+            cam_config_file_right:  /home/nvidia/ws/src/2_localization/cfg/car_small/cam_right.yaml
+            error_config_left:      /home/nvidia/ws/src/2_localization/cfg/car_small/left_err
+            error_config_right:     /home/nvidia/ws/src/2_localization/cfg/car_small/right_err
+            feature_config_file:    /home/nvidia/ws/src/2_localization/cfg/car_small/feature.yaml
+     </rosparam>
+</node>
+
+<node ns = "vins" name="vins" pkg="vins_so" type="vins_so" output="screen">
+    <param name="vins_folder" type="string" value="/home/nvidia/ws/src/2_localization/cfg" />
+    <param name="num_of_cam" type="int" value="2" />
+    <param name="camera_num_stereo" type="int" value="1"/>
+    <rosparam subst_value="True">
+        vins_config_file:           /home/nvidia/ws/src/2_localization/cfg/car_small/vins.yaml
+        # individual setting for camera 0
+        camera0:
+            cam_config_file:        /home/nvidia/ws/src/2_localization/cfg/car_small/cam_left.yaml
+        camera1:
+            cam_config_file:        /home/nvidia/ws/src/2_localization/cfg/car_small/cam_right.yaml
+    </rosparam>
+</node>
+
+
+
+
+</launch>
