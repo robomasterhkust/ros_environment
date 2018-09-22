@@ -5,6 +5,3 @@
 	path = 2_localization/vins_so
 	url = git@github.com:gaowenliang/vins_so.git
 	branch = devel_new
-[submodule "tools/plan_utils"]
-	path = tools/plan_utils
-	url = git@github.com:HKUST-Aerial-Robotics/plan_utils.git
