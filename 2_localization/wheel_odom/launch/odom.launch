@@ -3,6 +3,12 @@
     <arg name="is_newestPtCloud" value="false"/>
     <arg name="odom_topic" value="/wheel_odom"/>
 
+<node pkg="wheel_preprocess"
+      name="wheel_preprocess_node"
+      type="wheel_preprocess_node"
+      output="screen">
+</node>
+
 <node pkg="wheel_odom"
       name="wheel_odom"
       type="wheel_odom"

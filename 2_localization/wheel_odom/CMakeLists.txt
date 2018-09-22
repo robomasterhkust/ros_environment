@@ -33,16 +33,14 @@ generate_messages(
 )
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/../devel/include/wheel_msgs
+  INCLUDE_DIRS include
 #  LIBRARIES wheel_odom
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
-
 include_directories(
     ${catkin_INCLUDE_DIRS}
-	${CMAKE_SOURCE_DIR}/../devel/include/wheel_msgs
-)
+    "include")
 
 ###########
 ## Build ##
@@ -50,6 +48,10 @@ include_directories(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+include_directories(
+# include
+# ${catkin_INCLUDE_DIRS}
+)
 
 set(WheelOdom_LIB_SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/WheelOdom/WheelOdom.cpp
@@ -71,9 +73,9 @@ add_executable(wheel_odom
     ${WheelOdom_LIB_SOURCE_FILES}
     ${WheelOdom_ROS_LIB_SOURCE_FILES}
     src/wheelOdomNode.cpp )
-target_link_libraries(wheel_odom    dw     ${catkin_LIBRARIES} ${CMAKE_SOURCE_DIR}/../devel/include/wheel_msgs)
+target_link_libraries(wheel_odom    dw     ${catkin_LIBRARIES}  )
 
 add_executable(wheel_pub    src/wheel_pub.cpp )
-target_link_libraries(wheel_pub    dw     ${catkin_LIBRARIES} ${CMAKE_SOURCE_DIR}/../devel/include/wheel_msgs)
+target_link_libraries(wheel_pub    dw     ${catkin_LIBRARIES}  )
 
 

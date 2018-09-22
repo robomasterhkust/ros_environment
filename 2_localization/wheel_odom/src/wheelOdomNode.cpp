@@ -7,7 +7,7 @@ main( int argc, char** argv )
     ros::init( argc, argv, "WheelOdometry" );
     ros::NodeHandle n;
 
-    wheel_odom::WheelOdometryROS odom( n, 3.0, 2.0 );
+    wheel_odom::WheelOdometryROS odom( n, 0.307, 0.419 );
 
     ros::spin( );
 

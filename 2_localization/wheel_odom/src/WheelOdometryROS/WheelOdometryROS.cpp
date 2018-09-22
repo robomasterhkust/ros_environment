@@ -3,7 +3,7 @@
 wheel_odom::WheelOdometryROS::WheelOdometryROS( ros::NodeHandle nh, double length, double width )
 : is_first_run( true )
 {
-    model_type = OMNI_WHEEL;
+    model_type = MECANUM_WHEEL;
     odom = wheel_odom::WheelOdomFactory::newWheelOdom( )->init( model_type, length, width );
 
     steering_sub
@@ -72,7 +72,8 @@ wheel_odom::WheelOdometryROS::speedCallback( const wheel_odom::wheelSpeedsConstP
             break;
     }
 
-    odom->setDt( m_dt );
+    // odom->setDt( m_dt );
+    odom->setDt(0.02);
 
     odom->calcOdom( );
 
@@ -83,7 +84,8 @@ wheel_odom::WheelOdometryROS::speedCallback( const wheel_odom::wheelSpeedsConstP
         double yaw = odom2d.yaw;
 
         nav_msgs::OdometryPtr odom_msg( new nav_msgs::Odometry );
-        odom_msg->header.stamp    = speed->header.stamp;
+        // odom_msg->header.stamp    = speed->header.stamp;
+        odom_msg->header.stamp = ros::Time::now();
         odom_msg->header.frame_id = "world";
         odom_msg->child_frame_id  = "base_link";
 
@@ -97,7 +99,7 @@ wheel_odom::WheelOdometryROS::speedCallback( const wheel_odom::wheelSpeedsConstP
         odom_msg->pose.pose.orientation.z = sin( yaw / 2 );
 
         odom_msg->twist.twist.linear.x = vel2d.x;
-        odom_msg->twist.twist.linear.y = 0; // vel2d.y; // assume velocity y is 0
+        odom_msg->twist.twist.linear.y = vel2d.y; // assume velocity y is 0
         odom_msg->twist.twist.linear.z = 0;
 
         odom_msg->twist.twist.angular.x = 0;

@@ -17,13 +17,13 @@ ros::Publisher imu_pub, visual_pub, debug_pub;
 const int update_freq = 400; // 1 / dt
 const double dt = 0.0025;
 
-void pub_imu(const Vector3d& acc){
+void pub_imu(const Vector3d& acc, const Quaterniond& orientation){
     sensor_msgs::Imu imu;
     imu.header.stamp = ros::Time::now();
-    imu.orientation.w = 1;
-    imu.orientation.x = 0;
-    imu.orientation.y = 0;
-    imu.orientation.z = 0;
+    imu.orientation.w = orientation.w();
+    imu.orientation.x = orientation.x();
+    imu.orientation.y = orientation.y();
+    imu.orientation.z = orientation.z();
     imu.linear_acceleration.x = acc[0];
     imu.linear_acceleration.y = acc[1];
     imu.linear_acceleration.z = acc[2] + 9.8;
@@ -140,21 +140,28 @@ int main(int argc, char **argv) {
     Path.block<1, 3>(1, 0) = Vector3d(0.8, 0.2, 0.1);
     Path.block<1, 3>(2, 0) = Vector3d(1, 0, 0);
 
-    Vector3d Vel_constraint(0, 0, 0);
-    Vector3d Acc_constraint(0, 0, 0);
+    Vector3d Vel_init(0, 0, 0);
+    Vector3d Acc_init(0, 0, 0);
     VectorXd time_period = MatrixXd::Zero(2, 1);
     time_period << 5.0, 5.0;
     VectorXd time_int = time_period;
 
-
+    // generate a smooth curve
     TrajectoryGenerator generator;
     MatrixXd coeff = generator.PolyQPGeneration(
-            Path, Vel_constraint, Acc_constraint, time_period, 1);
+            Path, Vel_init, Acc_init, time_period, 1);
     cout << "polynomial " << endl << coeff << endl;
 
     auto t_start = ros::Time::now().toSec();
     int iterator = 0;
     auto time_period_size = (int)time_period.size();
+
+    // provide the orientation, rotate in Z axis first
+    Vector3d axis_z = Vector3d::UnitZ();
+    VectorXd theta = MatrixXd::Zero(3, 1);
+    theta[0] = 0.0;
+    theta[1] = 0.1 * M_PI;
+    theta[2] = 0.25 * M_PI;
 
     while (ros::ok()) {
 
@@ -174,10 +181,20 @@ int main(int argc, char **argv) {
             getPositionFromCoeff(pos, coeff, iterator, dt);
             getVelocityFromCoeff(vel, coeff, iterator, dt);
             getAccelerationFromCoeff(acc, coeff, iterator, dt);
-            
-            pub_imu(acc);
-            pub_visual(pos);
-            pub_debug(pos, vel, acc);
+
+            double omg = (theta[iterator+1] - theta[iterator]) / time_period[iterator];
+            double angle = omg * dt + theta[iterator];
+            AngleAxisd orientation(angle, axis_z);
+            Quaterniond q(orientation);
+
+            Vector3d acc_imu = q.conjugate() * acc;
+            pub_imu(acc_imu, q);
+
+            Vector3d pos_imu = q.conjugate() * pos;
+            pub_visual(pos_imu);
+
+            Vector3d vel_imu = q.conjugate() * vel;
+            pub_debug(pos_imu, vel_imu, acc_imu);
         }
 
         r.sleep();
