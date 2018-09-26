@@ -10,9 +10,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  roscpp
-  std_msgs
+    geometry_msgs
+    roscpp
+    std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -30,7 +30,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gimbal_controller
-        CATKIN_DEPENDS geometry_msgs roscpp std_msgs
+#  CATKIN_DEPENDS geometry_msgs roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -41,8 +41,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-        ${catkin_INCLUDE_DIRS}
-        ${EIGEN3_INCLUDE_DIR}
+    include
+    ${catkin_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a C++ library
@@ -54,11 +55,17 @@ include_directories(
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+set(visual_servo_LIB_SOURCE_FILES
+    ${PROJECT_SOURCE_DIR}/src/VisualServoController.cpp
+)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/gimbal_controller_node.cpp)
+add_executable(visual_servo_controller
+    src/visual_servo_controller.cpp
+    ${visual_servo_LIB_SOURCE_FILES}
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -71,6 +78,6 @@ add_executable(${PROJECT_NAME}_node src/gimbal_controller_node.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
-   ${catkin_LIBRARIES}
+target_link_libraries(visual_servo_controller
+    ${catkin_LIBRARIES}
 )
