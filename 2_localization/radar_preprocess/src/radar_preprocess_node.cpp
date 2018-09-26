@@ -15,7 +15,7 @@ ros::Publisher filtered_cloud_pub;
 
 bool filter_initialized = false;
 
-KalmanFilter kf_one;
+KalmanFilter kf;
 
 void
 initialize_radar_filter(double distance)
@@ -37,18 +37,18 @@ initialize_radar_filter(double distance)
     H << 1, 0;
     Q << 1, 0,
          0, 1;
-    R << 1;
+    R << 0.01;
     P << 1, 0,
          0, 1;
 
     // initialize the filter
-    KalmanFilter kf(dt, A, H, Q, R, P);
+    KalmanFilter kf_init(dt, A, H, Q, R, P);
     Eigen::VectorXd x0(n);
     x0 << distance, 0;
 
     // create a prediction with Kalman filter
-    kf.init(ros::Time::now().toSec(), x0);
-    kf_one = kf;
+    kf_init.init(ros::Time::now().toSec(), x0);
+    kf = kf_init;
 	filter_initialized = true;
 	ROS_INFO("initialized the radar kalman filter at %f", distance);
 }
@@ -71,45 +71,57 @@ radar_callback(const sensor_msgs::PointCloud::ConstPtr pc_ptr)
     int i;
     geometry_msgs::Point32 point;
 
-    if (!filter_initialized) {
-        double distance = 9.0;
+    if (s > 0) {
+        if (!filter_initialized) {
+            double distance = 9.0;
 
-        for ( i = 0; i < s; ++i) {
-            double x_ = pc_ptr->points[i].x;
-            if (x_ > 9 && x_ < 10)
-                distance = x_;
+            for ( i = 0; i < s; ++i) {
+                double x_ = pc_ptr->points[i].x;
+                if (x_ > 9 && x_ < 10)
+                    distance = x_;
+            }
+            initialize_radar_filter(distance);
         }
-        initialize_radar_filter(distance);
-    }
-    else
-    {
-        double minChiSquare = std::numeric_limits<double>::max();
-        int final_index = s;
-		
-        // compare the chi-square to select into one
-        for ( i = 0; i < s; ++i) {
-            Eigen::VectorXd z(m);
-            z << pc_ptr->points[i].x;
+        else
+        {
+            double minChiSquare = std::numeric_limits<double>::max();
+            int chi_index = s;
+            bool found_nearest_point = false;
 
-            double chiSquare = kf_one.chiSquare(z);
-            if (chiSquare < minChiSquare) {
-                minChiSquare = chiSquare;
-                final_index = i;
+            // compare the chi-square to select into one
+            for ( i = 0; i < s; ++i) {
+                Eigen::VectorXd z(m);
+                z << pc_ptr->points[i].x;
+
+                double chiSquare = kf.chiSquare(z);
+                if (chiSquare < minChiSquare) {
+                    minChiSquare = chiSquare;
+                    chi_index = i;
+                }
+            }
+            double residual = pc_ptr->points[chi_index].x - kf.state()[0];
+            if (residual < 1 && residual > -1)
+                found_nearest_point = true;
+
+            if (found_nearest_point) {
+                ROS_INFO("found the number at %d with X2 %f", chi_index, minChiSquare);
+
+                Eigen::VectorXd z_sel(m);
+                z_sel << pc_ptr->points[chi_index].x;
+                kf.propagate();
+                kf.update(z_sel);
+
+                point.x = kf.state()[0]; // estimated state
+                point.y = kf.state()[1]; // estimated velocity
+                point.z = pc_ptr->channels[0].values[chi_index]; // point cloud ID
+
+                publish_message(point, pc_ptr->header);
             }
         }
-		ROS_INFO("found the number at %d with X2 %f", final_index, minChiSquare);
-
-        Eigen::VectorXd z_sel(m);
-        z_sel << pc_ptr->points[final_index].x;
-        kf_one.propagate();
-        kf_one.update(z_sel);
-
-	    point.x = kf_one.state()[0]; // estimated state
-		point.y = kf_one.state()[1]; // estimated velocity
-		point.z = pc_ptr->channels[0].values[final_index]; // point cloud ID
-
-		publish_message(point, pc_ptr->header);
     }
+	else {
+		ROS_INFO("no point available");
+	}
 }
 
 int main(int argc, char **argv)
