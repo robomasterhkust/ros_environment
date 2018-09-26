@@ -53,9 +53,16 @@ initialize_radar_filter(double distance)
 	ROS_INFO("initialized the radar kalman filter at %f", distance);
 }
 
+// change the ID to the sorted order
 void
-publish_message(const geometry_msgs::Point32& point, const std_msgs::Header& header)
+publish_message(const int id, const std_msgs::Header& header)
 {
+    geometry_msgs::Point32 point;
+
+	point.x = kf.state()[0]; // estimated state
+	point.y = kf.state()[1]; // estimated velocity
+	point.z = id; 
+
 	sensor_msgs::PointCloud ptCloud;
 	ptCloud.header = header;
 	ptCloud.points.push_back(point);
@@ -69,7 +76,6 @@ radar_callback(const sensor_msgs::PointCloud::ConstPtr pc_ptr)
     int m = 1;
     int s = pc_ptr->points.size();
     int i;
-    geometry_msgs::Point32 point;
 
     if (s > 0) {
         if (!filter_initialized) {
@@ -87,6 +93,7 @@ radar_callback(const sensor_msgs::PointCloud::ConstPtr pc_ptr)
             double minChiSquare = std::numeric_limits<double>::max();
             int chi_index = s;
             bool found_nearest_point = false;
+			int id = 0;
 
             // compare the chi-square to select into one
             for ( i = 0; i < s; ++i) {
@@ -106,17 +113,20 @@ radar_callback(const sensor_msgs::PointCloud::ConstPtr pc_ptr)
             if (found_nearest_point) {
                 ROS_INFO("found the number at %d with X2 %f", chi_index, minChiSquare);
 
+                kf.propagate();
+
                 Eigen::VectorXd z_sel(m);
                 z_sel << pc_ptr->points[chi_index].x;
-                kf.propagate();
                 kf.update(z_sel);
 
-                point.x = kf.state()[0]; // estimated state
-                point.y = kf.state()[1]; // estimated velocity
-                point.z = pc_ptr->channels[0].values[chi_index]; // point cloud ID
+                publish_message(id, pc_ptr->header);
+            } 
+			else {
+				ROS_INFO("radar does not track the obstacle");
+				// kf.propagate();
 
-                publish_message(point, pc_ptr->header);
-            }
+                publish_message(id, pc_ptr->header);
+			}
         }
     }
 	else {
