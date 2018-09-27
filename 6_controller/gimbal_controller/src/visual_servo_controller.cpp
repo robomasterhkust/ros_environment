@@ -56,14 +56,13 @@ int main(int argc, char **argv) {
             -0.5, 0.2,
             -0.5, -0.2;
     input_image_frame <<
-            0.5, 0.3,
-            0.5, -0.3,
-            -0.5, 0.3,
-            -0.5, -0.3;
-    // std::cout << "target_image_frame " << target_image_frame << std::endl;
+            0.8, 0.3,
+            0.8, -0.3,
+            -0.2, 0.3,
+            -0.2, -0.3;
 
     VisualServoController ctl(1, target_image_frame);
-    ctl.control(input_image_frame);
+    Eigen::VectorXd ctl_val = ctl.control(input_image_frame);
 
     ros::spin();
 }
