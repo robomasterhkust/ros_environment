@@ -22,8 +22,26 @@ VisualServoController::VisualServoController()
     ss = 3;
 }
 
+void
+VisualServoController::setKp(
+		const double Kp)
+		
+{
+    this->Kp = Kp;
+} 
+
+void
+VisualServoController::setTarget( 
+		const Eigen::MatrixXd& target_points_in_image_frame )
+{
+    this->n = target_points_in_image_frame.rows();
+    this->m = target_points_in_image_frame.cols();
+    this->target_points = target_points_in_image_frame;
+}
+
 /**
  * Core controller, (wz) = - Kp * 0.5 * (Le + Le*)^-1 e
+ * 		for pinhole camera only
  * @param input_points
  * @return controller output
  */
@@ -36,7 +54,9 @@ VisualServoController::control(const Eigen::MatrixXd &input_points)
     int i;
     /**
      * Form the feature Jacobian Le =
-     * Le_i = [y, -x]'
+     * Le_i = 
+     * [xy,  -(1 + x^2),   y]
+     * [1 + y^2,    -xy,  -x]
      * Le   = [Le1, Le2, Le3, Le4]'
      *
      */

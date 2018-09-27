@@ -28,6 +28,10 @@ public:
      */
     VisualServoController();
 
+	void setKp( const double Kp);
+	
+	void setTarget( const Eigen::MatrixXd& target_points_in_image_frame );
+
     /**
      * return the control value
      */

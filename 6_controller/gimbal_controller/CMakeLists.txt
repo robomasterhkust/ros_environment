@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     roscpp
     std_msgs
+    rm_cv
+    camera_model
 )
 
 ## System dependencies are found with CMake's conventions
@@ -30,8 +32,8 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gimbal_controller
-#  CATKIN_DEPENDS geometry_msgs roscpp std_msgs
-#  DEPENDS system_lib
+   CATKIN_DEPENDS geometry_msgs roscpp std_msgs rm_cv
+#  DEPENDS system_lib vertice
 )
 
 ###########
@@ -80,4 +82,13 @@ add_executable(visual_servo_controller
 ## Specify libraries to link a library or executable target against
 target_link_libraries(visual_servo_controller
     ${catkin_LIBRARIES}
+)
+
+
+add_executable(controller_tester
+        src/controller_tester.cpp
+)
+
+target_link_libraries(controller_tester
+        ${catkin_LIBRARIES}
 )
