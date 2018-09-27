@@ -35,8 +35,8 @@ class armor_frame_pid:
     def __init__(self):
         # "/detected_armor"
         self.armor_subscriber = rospy.Subscriber(
-            "/prediction_kf/predict", ArmorRecord, self.cv_callback, queue_size=1)
-        self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+            "/detected_armor", ArmorRecord, self.cv_callback, queue_size=1)
+        self.cmd_pub = rospy.Publisher('/cmd_vel_origin', Twist, queue_size=1)
         self.debug_pub = rospy.Publisher('/debug', Pid, queue_size=1)
 
         self.y_err = 0
@@ -92,7 +92,7 @@ class armor_frame_pid:
 
             shield_T_camera_rot = opencv_rotation.dot(shield_T_camera)
 
-            camera_T_gimbal = np.array([150, 45, -30])
+            camera_T_gimbal = np.array([130, 0, -40])
             # T = shield_T_camera_rot + camera_T_gimbal
             T = shield_T_camera
             T_abs = np.linalg.norm(T)

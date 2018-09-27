@@ -19,7 +19,7 @@ ros::Publisher cmd_pub, debug_pub;
 string cv_topic, publisher_topic;
 
 // Camera
-std::string cfg_file_name = "/home/ros/ws/src/6_controller/gimbal_controller/cfg/cam_tracking.yaml";
+std::string cfg_file_name = "/home/nvidia/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml";
 camera_model::CameraPtr m_camera;
 
 // Controller
@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "four_point_visual_servo");
     ros::NodeHandle nh("~");
 
+    nh.param("Kp", Kp, 1.0);
     nh.param("cv_topic", cv_topic, string("/detected_vertice"));
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
 
@@ -83,7 +84,10 @@ int main(int argc, char **argv) {
 	// setup the target coordinate
 	MatrixXd target_pixel(n, m);
 	MatrixXd target_image_frame(n, m);
-	target_pixel << 288, 230, 200, 200, 0, 0, 576,480;
+	target_pixel << 595, 496,
+                    595, 528,
+                    685, 496,
+                    685, 528; // 1650 mm
 	
 	Vector3d target_pixel_output[n];
 	
