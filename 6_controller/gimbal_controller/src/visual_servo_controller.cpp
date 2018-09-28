@@ -15,8 +15,8 @@
 using namespace std;
 using namespace Eigen;
 
-ros::Publisher cmd_pub, debug_pub;
-string cv_topic, publisher_topic;
+ros::Publisher cmd_pub, debug_pub_typeI, debug_pub_typeII;
+string cv_topic, publisher_topic, debug_typeI_topic, debug_typeII_topic;
 
 // Camera
 std::string cfg_file_name = "/home/nvidia/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml";
@@ -31,19 +31,18 @@ MatrixXd target_image_frame(n, m);
 VisualServoController ctl;
 
 void
-publish_message(const double wz)
+publish_message(const double wz, const ros::Publisher& pub)
 {
     geometry_msgs::Twist vel_msg;
     vel_msg.angular.z = wz;
-    cmd_pub.publish(vel_msg);
+    pub.publish(vel_msg);
 }
 
+
+// No need to reject noise
 void
 visual_servo_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 {
-    // TODO: check outlier
-
-	
     // convert the pixel value to image coordinate value
     MatrixXd input_pixel(n, m);
     Vector3d input_pixel_output[n];
@@ -62,7 +61,15 @@ visual_servo_cb(const rm_cv::vertice::ConstPtr cv_ptr)
     VectorXd ctl_val = ctl.control(input_image_frame);
 
     // publish the message in camera y axis
-    publish_message(ctl_val(1));
+    publish_message(ctl_val(1), cmd_pub);
+    
+    /*
+    // For comparision only
+    VectorXd ctl_val_typeI = ctl.control_type_current(input_image_frame);
+    VectorXd ctl_val_typeII = ctl.control_type_target(input_image_frame);
+    publish_message(ctl_val_typeI(1), debug_pub_typeI);
+    publish_message(ctl_val_typeII(1), debug_pub_typeII);
+    */
 }
 
 
@@ -74,9 +81,13 @@ int main(int argc, char **argv) {
     nh.param("Kp", Kp, 1.0);
     nh.param("cv_topic", cv_topic, string("/detected_vertice"));
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
+    nh.param("debug_typeI_topic", debug_typeI_topic, string("/cmd_vel_type_current"));
+    nh.param("debug_typeII_topic", debug_typeII_topic, string("/cmd_vel_type_target"));
 
     ros::Subscriber sub = nh.subscribe(cv_topic, 10, visual_servo_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
+	debug_pub_typeI = nh.advertise<geometry_msgs::Twist>(debug_typeI_topic, 10);
+	debug_pub_typeII = nh.advertise<geometry_msgs::Twist>(debug_typeII_topic, 10);
 
     // create a camera model
     m_camera = camera_model::CameraFactory::instance()->generateCameraFromYamlFile(cfg_file_name);

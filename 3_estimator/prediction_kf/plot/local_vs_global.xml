@@ -415,11 +415,11 @@
                                         <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
+                                    <topic>/rosout</topic>
+                                    <type>rosgraph_msgs/Log</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>quaternion/w</field>
+                                    <field>angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -428,8 +428,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
+                                    <topic>/cmd_vel</topic>
+                                    <type>geometry_msgs/Twist</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -444,7 +444,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
+                                <pen_width>3</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -452,7 +452,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>w</title>
+                            <title>servo</title>
                         </curve_0>
                         <curve_1>
                             <axes>
@@ -466,11 +466,11 @@
                                         <relative_minimum>-10</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
+                                    <topic>/rosout</topic>
+                                    <type>rosgraph_msgs/Log</type>
                                 </x_axis>
                                 <y_axis>
-                                    <field>quaternion/x</field>
+                                    <field>angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
                                         <absolute_maximum>1000</absolute_maximum>
@@ -479,8 +479,8 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>0</type>
                                     </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
+                                    <topic>/cmd_vel_origin</topic>
+                                    <type>geometry_msgs/Twist</type>
                                 </y_axis>
                             </axes>
                             <color>
@@ -495,7 +495,7 @@
                             <style>
                                 <lines_interpolate>false</lines_interpolate>
                                 <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
+                                <pen_width>3</pen_width>
                                 <render_antialias>false</render_antialias>
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
@@ -503,116 +503,14 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>x</title>
+                            <title>origin</title>
                         </curve_1>
-                        <curve_2>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-10</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>quaternion/y</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>y</title>
-                        </curve_2>
-                        <curve_3>
-                            <axes>
-                                <x_axis>
-                                    <field>header/stamp</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-10</relative_minimum>
-                                        <type>2</type>
-                                    </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
-                                </x_axis>
-                                <y_axis>
-                                    <field>quaternion/z</field>
-                                    <field_type>0</field_type>
-                                    <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
-                                        <relative_maximum>0</relative_maximum>
-                                        <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
-                                    </scale>
-                                    <topic>/can_receive_1/attitude</topic>
-                                    <type>geometry_msgs/QuaternionStamped</type>
-                                </y_axis>
-                            </axes>
-                            <color>
-                                <custom_color>#000000</custom_color>
-                                <type>0</type>
-                            </color>
-                            <data>
-                                <circular_buffer_capacity>1000</circular_buffer_capacity>
-                                <time_frame_length>10</time_frame_length>
-                                <type>0</type>
-                            </data>
-                            <style>
-                                <lines_interpolate>false</lines_interpolate>
-                                <pen_style>1</pen_style>
-                                <pen_width>1</pen_width>
-                                <render_antialias>false</render_antialias>
-                                <steps_invert>false</steps_invert>
-                                <sticks_baseline>0</sticks_baseline>
-                                <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
-                            </style>
-                            <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>z</title>
-                        </curve_3>
                     </curves>
                     <legend>
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>imu</title>
+                    <title>cmd_vel</title>
                 </column_1>
             </row_0>
             <row_1>

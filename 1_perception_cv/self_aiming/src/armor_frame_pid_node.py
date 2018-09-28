@@ -37,10 +37,10 @@ class armor_frame_pid:
     def __init__(self):
         # "/detected_armor"
         self.armor_subscriber = rospy.Subscriber(
-            "/prediction_kf/predict", ArmorRecord, self.cv_callback, queue_size=1)
+            "/detected_armor", ArmorRecord, self.cv_callback, queue_size=1)
         # self.imu_16470_subscriber = rospy.Subscriber(
         #     "/can_receive_node/imu_16470", imu_16470, self.imu_callback, queue_size=1)
-        self.cmd_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
+        self.cmd_pub = rospy.Publisher('/cmd_vel_ref', Twist, queue_size=1)
         self.debug_pub = rospy.Publisher('/debug', Pid, queue_size=1)
 
         self.y_err = 0
@@ -142,7 +142,7 @@ class armor_frame_pid:
             # for soldier 1
             # camera_T_gimbal = np.array([185, 0, 0])
 
-            camera_T_gimbal = np.array([150, 45, -30])
+            camera_T_gimbal = np.array([150, 0, -30])
             T = shield_T_camera_rot + camera_T_gimbal
             # print "before: %s %s %s" % (T[0], T[1], T[2])
             # T = diff_rotation_matrix.dot(T)
