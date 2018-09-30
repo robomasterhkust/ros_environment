@@ -1,35 +1,17 @@
 %YAML:1.0
 
-#camera calibration with smaller resolution
-model_type: MEI
-camera_name: right_small
-image_width: 576
-image_height: 460
-mirror_parameters:
-   xi: 1.8816611208699410e+00
+#camera calibration
+model_type: PINHOLE
+camera_name: tracking
+image_width: 1280
+image_height: 1024
 distortion_parameters:
-   k1: -7.8791957593425632e-01
-   k2: 8.0635555731450825e-01
-   p1: -8.5372422172610941e-04
-   p2: -7.2372752161102376e-04
+   k1: -3.1494236477146542e-01
+   k2: -7.1856132972817777e-01
+   p1: 1.0591155043751033e-03
+   p2: 8.8731514409656521e-03
 projection_parameters:
-   gamma1: 9.9559433616435354e+02
-   gamma2: 9.9412681283576285e+02
-   u0: 2.8964131418605444e+02
-   v0: 2.3205932432248187e+02
-
-extrinsicRotation: !!opencv-matrix
-   rows: 3
-   cols: 3
-   dt: d
-   data: [ 0, 0, 1,
-          -1, 0, 0,
-           0,-1, 0]
-extrinsicTranslation: !!opencv-matrix
-   rows: 3
-   cols: 1
-   dt: d
-   data: [ 0.32, -0.13, 0.04 ]
-
-is_rectify: 0
-
+   fx: 1.1773132521471161e+03
+   fy: 1.1773132521471161e+03
+   cx: 6.0247908791292161e+02
+   cy: 5.0527254733207218e+02

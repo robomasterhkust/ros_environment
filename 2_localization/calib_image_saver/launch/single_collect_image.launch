@@ -1,11 +1,11 @@
 <launch>
     <node pkg="calib_image_saver" type="singleImageSaver" name="saver" output="screen">
-        <remap from="/image_input" to="/pg_17533297/image_roi"/>
-        <param name="image_path" type="string" value="/home/nvidia/ws/devel/lib/camera_model/right_small"/>
+        <remap from="/image_input" to="/pg_17533277/image_raw"/>
+        <param name="image_path" type="string" value="/home/nvidia/ws/src/camera_model/camera_tracking"/>
         <param name="image_name" type="string" value="IMG_"/>
-        <param name="rate" type="int" value="9"/>
-        <param name="board_width" type="int" value="8"/>
-        <param name="board_height" type="int" value="9"/>
+        <param name="rate" type="int" value="10"/>
+        <param name="board_width" type="int" value="7"/>
+        <param name="board_height" type="int" value="5"/>
         <param name="is_use_OpenCV" type="bool" value="true"/>
         <param name="is_show" type="bool" value="true"/>
     </node>

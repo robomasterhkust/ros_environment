@@ -33,9 +33,19 @@ public:
 	void setTarget( const Eigen::MatrixXd& target_points_in_image_frame );
 
     /**
-     * return the control value
+     * return the control value, type III, half of both pseudo inverse
      */
     Eigen::VectorXd control(const Eigen::MatrixXd& input_points);
+
+	/**
+	 * return the type I, current Le pseudo inverse
+	 */
+	Eigen::VectorXd control_type_current(const Eigen::MatrixXd& input_points);
+	
+	/**
+	 * return the type II, target Le pseudo inverse
+	 */
+	Eigen::VectorXd control_type_target(const Eigen::MatrixXd& input_points);
 
 private:
     double Kp;
