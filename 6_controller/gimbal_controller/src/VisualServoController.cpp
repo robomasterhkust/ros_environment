@@ -40,7 +40,7 @@ VisualServoController::setTarget(
 }
 
 /**
- * Core controller, (wz) = - Kp * 0.5 * (Le + Le*)^-1 e
+ * Core controller, (wz) = - Kp * (0.5 * (Le + Le*))^-1 e
  * 		for pinhole camera only
  * @param input_points
  * @return controller output
@@ -83,7 +83,7 @@ VisualServoController::control(const Eigen::MatrixXd &input_points)
         Le_star(m * i + 1, 1) = -x * y;
         Le_star(m * i + 1, 2) = -x;
     }
-    Eigen::MatrixXd Le_sum = Le + Le_star;
+    Eigen::MatrixXd Le_sum = 0.5 * (Le + Le_star);
 
     /**
      * Calculate the gain
@@ -104,7 +104,7 @@ VisualServoController::control(const Eigen::MatrixXd &input_points)
             singularValueInv(i) = 0;
     }
 
-    Eigen::MatrixXd K = -Kp * 0.5 * Le_svd.matrixV() * singularValueInv.asDiagonal() * Le_svd.matrixU().transpose();
+    Eigen::MatrixXd K = -Kp * Le_svd.matrixV() * singularValueInv.asDiagonal() * Le_svd.matrixU().transpose();
 
     /**
      * Calculate the error

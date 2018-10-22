@@ -1,5 +1,5 @@
 /**
- * Beck Pang, 20180926, trying to use the four points directly to build a robuster controller
+ * Beck Pang, 20180926, use the four features to build a basic perspective controller, works.
  * Reference: Chaumette, François, and Seth Hutchinson. "Visual servo control. I. Basic approaches."
  */
 
@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
 	std::cout << "target in image frame " << std::endl << target_image_frame << std::endl;
 	
 	ctl.setTarget(target_image_frame);
+
 
 
     ros::spin();
