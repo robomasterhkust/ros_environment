@@ -92,3 +92,17 @@ add_executable(controller_tester
 target_link_libraries(controller_tester
         ${catkin_LIBRARIES}
 )
+
+## 20181022 new controller with feedforward
+set(VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES
+        ${PROJECT_SOURCE_DIR}/src/VisualServoControllerWithFeedForward.cpp
+)
+
+add_executable(visual_servo_controller_with_feedforward
+        src/visual_servo_controller_with_feedforward.cpp
+        ${VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES}
+)
+
+target_link_libraries(visual_servo_controller_with_feedforward
+        ${catkin_LIBRARIES}
+)
