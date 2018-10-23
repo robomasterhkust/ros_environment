@@ -52,7 +52,7 @@ public:
     /**
      * @return the estimated target movement considering the body movement
      */
-    Eigen::MatrixXd estimatePartialError();
+    Eigen::VectorXd estimatePartialError();
 
     /**
      * @return the control value, type III, half of both pseudo inverse
@@ -95,6 +95,9 @@ private:
 
     // body angular velocity
     Eigen::MatrixXd angular_velocity;
+
+    // the feedforward angular velocity
+    Eigen::VectorXd estimated_angular_velocity_ff;
 
     // received one visual feature
     bool error_initialized;

@@ -10,6 +10,7 @@
 #include <cmath>
 #include <Eigen/Dense>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/TwistStamped.h>
 #include "rm_cv/vertice.h"
 #include "VisualServoControllerWithFeedForward.h"
 #include "camera_model/camera_models/CameraFactory.h"
@@ -18,7 +19,9 @@ using namespace std;
 using namespace Eigen;
 
 ros::Publisher cmd_pub, debug_pub_typeI, debug_pub_typeII;
-string cv_topic, publisher_topic, debug_typeI_topic, debug_typeII_topic;
+ros::Publisher omega_hat_pub;
+string cv_topic, omega_topic;
+string publisher_topic, debug_typeI_topic, debug_typeII_topic;
 
 // Camera
 std::string cfg_file_name = "/home/nvidia/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml";
@@ -33,17 +36,26 @@ MatrixXd target_image_frame(n, m);
 VisualServoControllerWithFeedForward ctl;
 
 void
-publish_message(const double wz, const ros::Publisher& pub)
+publish_cmd(const double wz, const ros::Publisher& pub)
 {
     geometry_msgs::Twist vel_msg;
     vel_msg.angular.z = wz;
     pub.publish(vel_msg);
 }
 
-
-// No need to reject noise
 void
-visual_servo_cb(const rm_cv::vertice::ConstPtr cv_ptr)
+publish_estimated_velocity(const Eigen::VectorXd &estimated_omega)
+{
+    geometry_msgs::TwistStamped omega_msg;
+    omega_msg.header.stamp = ros::Time::now();
+    omega_msg.twist.angular.x = estimated_omega[0];
+    omega_msg.twist.angular.y = estimated_omega[1];
+    omega_msg.twist.angular.z = estimated_omega[2];
+    omega_hat_pub.publish(omega_msg);
+}
+
+void
+visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 {
     // convert the pixel value to image coordinate value
     MatrixXd input_pixel(n, m);
@@ -60,24 +72,29 @@ visual_servo_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 
     // use the image frame coordinate value to control
     ctl.updateFeatures(input_image_frame);
-    ctl.setKp(Kp);
-    VectorXd ctl_val = ctl.control();
-
-    // publish the message in camera y axis
-    publish_message(ctl_val(1), cmd_pub);
 }
 
+void
+omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
+    MatrixXd input_omega(3, 1);
+    input_omega(0, 0) = omega_ptr->twist.angular.x;
+    input_omega(1, 0) = omega_ptr->twist.angular.y;
+    input_omega(2, 0) = omega_ptr->twist.angular.z;
+    ctl.updateOmega(input_omega);
+}
 
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "four_point_visual_servo");
     ros::NodeHandle nh("~");
 
-    nh.param("Kp", Kp, 1.0);
+    nh.param("Kp", Kp, -1.0);
     nh.param("cv_topic", cv_topic, string("/detected_vertice"));
+    nh.param("omega_topic", omega_topic, string("/can_transimit/omega_cam"));
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
 
-    ros::Subscriber sub = nh.subscribe(cv_topic, 10, visual_servo_cb);
+    ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
+    ros::Subscriber sub2 = nh.subscribe(omega_topic, 10, omega_cam_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
 
     // create a camera model
@@ -101,5 +118,19 @@ int main(int argc, char **argv) {
 	
 	ctl.setTarget(target_image_frame);
 
-    ros::spin();
+    ros::Rate rate(30);
+
+    while (ros::ok()) {
+        // publish the command in camera y axis
+        ctl.setKp(Kp);
+        VectorXd ctl_val = ctl.control();
+        publish_cmd(ctl_val(1), cmd_pub);
+
+        // publish the estimated velocity
+        VectorXd estimated_vel = ctl.estimatePartialError();
+        publish_estimated_velocity(estimated_vel);
+
+        rate.sleep();
+        ros::spinOnce();
+    }
 }

@@ -166,16 +166,22 @@ VisualServoControllerWithFeedForward::updateOmega(const Eigen::MatrixXd &omega)
 }
 
 
-Eigen::MatrixXd
+/**
+ *
+ * @return the estimated target angular velocity \in R^3
+ */
+Eigen::VectorXd
 VisualServoControllerWithFeedForward::estimatePartialError()
 {
     if (error_initialized && omega_initialized) {
         estimated_error_partial = dot_error - Le_hat * angular_velocity;
+        estimated_angular_velocity_ff = Le_hat_inverse * estimated_error_partial;
     }
     else {
-        estimated_error_partial = Eigen::MatrixXd::Zero(n * m, 1);
+        estimated_angular_velocity_ff = Eigen::MatrixXd::Zero(ss, 1);
     }
-    return estimated_error_partial;
+
+    return estimated_angular_velocity_ff;
 }
 
 /**
@@ -187,11 +193,14 @@ VisualServoControllerWithFeedForward::control()
 {
     Eigen::VectorXd control_val(ss);
 
-    if (!error_initialized || !omega_initialized) {
+    if (!error_initialized && !omega_initialized) {
+        control_val << Eigen::MatrixXd::Zero(ss, 1);
+    }
+    else if (!error_initialized || !omega_initialized) {
         control_val << -Kp * Le_hat_inverse * error;
     }
     else {
-        control_val << -Kp * Le_hat_inverse * error - Le_hat_inverse * estimatePartialError();
+        control_val << -Kp * Le_hat_inverse * error - estimatePartialError();
     }
 
     std::cout << "control_val is " << std::endl << control_val << std::endl;
