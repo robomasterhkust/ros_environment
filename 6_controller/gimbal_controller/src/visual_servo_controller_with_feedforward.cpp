@@ -75,7 +75,7 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
         m_camera->liftSphere(input_pixel.row(i), input_pixel_output[i] );
         input_image_frame.row(i) << input_pixel_output[i](0), input_pixel_output[i](1);
     }
-    std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
+    // std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
 
     // use the image frame coordinate value to control
     ctl.updateFeatures(input_image_frame);
@@ -89,7 +89,7 @@ omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
     input_omega(1, 0) = omega_ptr->twist.angular.y;
     input_omega(2, 0) = omega_ptr->twist.angular.z;
 
-    std::cout << "input in omega" << std::endl << input_omega << std::endl;
+    // std::cout << "input in omega" << std::endl << input_omega << std::endl;
 
     ctl.updateOmega(input_omega);
     gyro_updated = true;
@@ -122,21 +122,23 @@ int main(int argc, char **argv) {
 	MatrixXd target_pixel(n, m);
 	MatrixXd target_image_frame(n, m);
 	target_pixel << 595, 496,
-                    595, 528,
-                    685, 496,
-                    685, 528; // 1650 mm
-	
+		    595, 528,
+		    685, 496,
+		    685, 528; // 1650 mm
+
 	Vector3d target_pixel_output[n];
 
 	for	(int i=0; i < n; ++i) {
 	    m_camera->liftSphere(target_pixel.row(i), target_pixel_output[i] );
-        target_image_frame.row(i) << target_pixel_output[i](0), target_pixel_output[i](1);
+	target_image_frame.row(i) << target_pixel_output[i](0), target_pixel_output[i](1);
 	}
 	std::cout << "target in image frame " << std::endl << target_image_frame << std::endl;
-	
+
 	ctl.setTarget(target_image_frame);
 
     ros::Rate rate(30);
+
+    ctl.setControlFrequency(30);
 
     while (ros::ok()) {
         // publish the command in camera y axis

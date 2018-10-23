@@ -200,10 +200,10 @@ VisualServoControllerWithFeedForward::control()
         control_val << -Kp * Le_hat_inverse * error;
     }
     else {
-        control_val << -Kp * Le_hat_inverse * error - estimatePartialError();
+        control_val << -Kp * Le_hat_inverse * error - Kd * estimatePartialError();
     }
 
-    std::cout << "control_val is " << std::endl << control_val << std::endl;
+    // std::cout << "control_val is " << std::endl << control_val << std::endl;
 
     return control_val;
 }
