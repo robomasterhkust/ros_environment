@@ -64,6 +64,12 @@ VisualServoControllerWithFeedForward::setTarget(
     this->target_points = target_points_in_image_frame;
 }
 
+Eigen::VectorXd
+VisualServoControllerWithFeedForward::getRawVisualOmega()
+{
+    return raw_visual_omega;
+}
+
 /**
  * Update the interaction matrix, its inverse, and error
  * @param input_points \in R^8
@@ -147,13 +153,11 @@ VisualServoControllerWithFeedForward::updateFeatures(const Eigen::MatrixXd &inpu
         dot_error = (error - error_prev) * ctrl_freq;
         error_prev = error;
     }
-
-
 }
 
 /**
- * Update the body frame angular velocity
- * @param omega angular velocity \in R^3
+ * Update the body frame angular velocity w in camera frame
+ * @param omega angular velocity in camera frame \in R^3
  */
 void
 VisualServoControllerWithFeedForward::updateOmega(const Eigen::MatrixXd &omega)
@@ -178,6 +182,7 @@ VisualServoControllerWithFeedForward::estimatePartialError()
     if (error_initialized && omega_initialized) {
         estimated_error_partial = dot_error - Le_hat * angular_velocity;
         estimated_angular_velocity_ff = Le_hat_inverse * estimated_error_partial;
+        raw_visual_omega = Le_hat_inverse * dot_error;
 
         /**
          * print the debugging message
@@ -186,11 +191,12 @@ VisualServoControllerWithFeedForward::estimatePartialError()
         std::cout << "e(t - dt) is " << std::endl << error_prev.transpose()  << std::endl;
         std::cout << "e.^ is " << std::endl << dot_error.transpose() << std::endl;
         std::cout << "^de/dt is " << std::endl << estimated_error_partial.transpose() << std::endl;
-        std::cout << "hat_Le is " << std::endl << Le_hat << std::endl;
-        std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
+        // std::cout << "hat_Le is " << std::endl << Le_hat << std::endl;
+        // std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
     }
     else {
         estimated_angular_velocity_ff = Eigen::MatrixXd::Zero(ss, 1);
+        raw_visual_omega = Eigen::MatrixXd::Zero(ss, 1);
     }
 
     return estimated_angular_velocity_ff;
@@ -198,7 +204,7 @@ VisualServoControllerWithFeedForward::estimatePartialError()
 
 /**
  * Core controller
- * @return controller output
+ * @return controller w_target in camera frame
  */
 Eigen::VectorXd
 VisualServoControllerWithFeedForward::control()
@@ -215,7 +221,9 @@ VisualServoControllerWithFeedForward::control()
         control_val << -Kp * Le_hat_inverse * error - Kd * estimatePartialError();
     }
 
-    // std::cout << "control_val is " << std::endl << control_val << std::endl;
+    // std::cout << "error_initialized is " << std::endl << error_initialized << std::endl;
+    // std::cout << "omega_initialized is " << std::endl << omega_initialized << std::endl;
+    std::cout << "control_val is " << std::endl << control_val << std::endl;
 
     return control_val;
 }

@@ -30,7 +30,7 @@ public:
      */
     VisualServoControllerWithFeedForward();
 
-	void setKp( const double Kp);
+    void setKp( const double Kp);
 
     /**
      * Enable the velocity feedforward
@@ -39,7 +39,7 @@ public:
 
     void setControlFrequency( const double control_frequency);
 	
-	void setTarget( const Eigen::MatrixXd& target_points_in_image_frame );
+    void setTarget( const Eigen::MatrixXd& target_points_in_image_frame );
 
     /**
      * Taking the features input
@@ -53,6 +53,8 @@ public:
      * @return the estimated target movement considering the body movement
      */
     Eigen::VectorXd estimatePartialError();
+
+    Eigen::VectorXd getRawVisualOmega();
 
     /**
      * @return the control value, type III, half of both pseudo inverse
@@ -96,8 +98,11 @@ private:
     // body angular velocity
     Eigen::MatrixXd angular_velocity;
 
-    // the feedforward angular velocity
+    // the estimated feedforward angular velocity, visual - gimbal
     Eigen::VectorXd estimated_angular_velocity_ff;
+
+    // the raw visual angular velocity
+    Eigen::VectorXd raw_visual_omega;
 
     // received one visual feature
     bool error_initialized;

@@ -20,10 +20,14 @@ using namespace Eigen;
 
 ros::Publisher cmd_pub;
 ros::Publisher omega_pub;
+ros::Publisher omega_raw_pub;
+ros::Publisher omega_visual_pub;
 string cv_topic;
-string omega_topic;
-string publisher_topic;
+string omega_input_topic;
 string omega_pub_topic;
+string omega_raw_topic;
+string omega_visual_topic;
+string publisher_topic;
 
 // Camera
 std::string cfg_file_name;
@@ -51,14 +55,14 @@ publish_cmd(const double wz, const ros::Publisher& pub)
 }
 
 void
-publish_estimated_velocity(const Eigen::VectorXd &estimated_omega)
+publish_angular_velocity(const Eigen::VectorXd &estimated_omega, const ros::Publisher& pub)
 {
     geometry_msgs::TwistStamped omega_msg;
     omega_msg.header.stamp = ros::Time::now();
     omega_msg.twist.angular.x = estimated_omega[0];
     omega_msg.twist.angular.y = estimated_omega[1];
     omega_msg.twist.angular.z = estimated_omega[2];
-    omega_pub.publish(omega_msg);
+    pub.publish(omega_msg);
 }
 
 void
@@ -75,7 +79,7 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
         m_camera->liftSphere(input_pixel.row(i), input_pixel_output[i] );
         input_image_frame.row(i) << input_pixel_output[i](0), input_pixel_output[i](1);
     }
-    // std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
+    std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
 
     // use the image frame coordinate value to control
     ctl.updateFeatures(input_image_frame);
@@ -89,9 +93,18 @@ omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
     input_omega(1, 0) = omega_ptr->twist.angular.y;
     input_omega(2, 0) = omega_ptr->twist.angular.z;
 
-    // std::cout << "input in omega" << std::endl << input_omega << std::endl;
+    Eigen::MatrixXd end_R_cam(3, 3);
 
-    ctl.updateOmega(input_omega);
+    end_R_cam << 
+        0, -1, 0,
+        0, 0, -1,
+        1, 0, 0;
+
+    VectorXd input_omega_cam = end_R_cam * input_omega;
+    // std::cout << "input in omega" << std::endl << input_omega << std::endl;
+    publish_angular_velocity(input_omega_cam, omega_raw_pub);
+
+    ctl.updateOmega(input_omega_cam);
     gyro_updated = true;
 }
 
@@ -103,17 +116,23 @@ int main(int argc, char **argv) {
     nh.param("Kp", Kp, -1.0);
     nh.param("Kd", Kd, 0.0);
     nh.param("cv_topic", cv_topic, string("/detected_vertice"));
-    nh.param("omega_topic", omega_topic, string("/can_transimit/omega_cam"));
+    nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
+    
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
-    nh.param("omega_pub_topic", omega_pub_topic, string("/visual_estimate"));
+    nh.param("omega_pub_topic", omega_pub_topic, string("/visual_servo/visual_estimate"));
+    nh.param("omega_raw_topic", omega_raw_topic, string("/visual_servo/raw_omega_cam"));
+    nh.param("omega_visual_topic", omega_visual_topic, string("/visual_servo/omega_visual"));
+
     nh.param("cfg_file_name", cfg_file_name, string("/home/ros/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml"));
 
 
 
     ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
-    ros::Subscriber sub2 = nh.subscribe(omega_topic, 10, omega_cam_cb);
+    ros::Subscriber sub2 = nh.subscribe(omega_input_topic, 10, omega_cam_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
     omega_pub = nh.advertise<geometry_msgs::TwistStamped>(omega_pub_topic, 10);
+    omega_raw_pub = nh.advertise<geometry_msgs::TwistStamped>(omega_raw_topic, 10);
+    omega_visual_pub = nh.advertise<geometry_msgs::TwistStamped>(omega_visual_topic, 10);
 
     // create a camera model
     m_camera = camera_model::CameraFactory::instance()->generateCameraFromYamlFile(cfg_file_name);
@@ -148,6 +167,7 @@ int main(int argc, char **argv) {
         if (visual_updated) {
             VectorXd ctl_val = ctl.control();
             publish_cmd(ctl_val(1), cmd_pub);
+            visual_updated = false;
         }
         else {
             publish_cmd(0, cmd_pub);
@@ -156,7 +176,11 @@ int main(int argc, char **argv) {
         // publish the estimated velocity
         if (gyro_updated) {
             VectorXd estimated_vel = ctl.estimatePartialError();
-            publish_estimated_velocity(estimated_vel);
+            VectorXd raw_visual_w  = ctl.getRawVisualOmega();
+            publish_angular_velocity(estimated_vel, omega_pub);
+            publish_angular_velocity(raw_visual_w, omega_visual_pub);
+
+            gyro_updated = false;
         }
 
         rate.sleep();
