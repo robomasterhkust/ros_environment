@@ -35,6 +35,9 @@ int n = 4;
 int m = 2;
 double Kp = 1.0;
 double Kd = 0.0;
+
+bool visual_updated = false;
+bool gyro_updated = false;
 MatrixXd target_image_frame(n, m);
 
 VisualServoControllerWithFeedForward ctl;
@@ -76,6 +79,7 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 
     // use the image frame coordinate value to control
     ctl.updateFeatures(input_image_frame);
+    visual_updated = true;
 }
 
 void
@@ -88,6 +92,7 @@ omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
     std::cout << "input in omega" << std::endl << input_omega << std::endl;
 
     ctl.updateOmega(input_omega);
+    gyro_updated = true;
 }
 
 
@@ -138,12 +143,19 @@ int main(int argc, char **argv) {
 
         ctl.setKp(Kp);
         ctl.setKd(Kd);
-        VectorXd ctl_val = ctl.control();
-        publish_cmd(ctl_val(1), cmd_pub);
+        if (visual_updated) {
+            VectorXd ctl_val = ctl.control();
+            publish_cmd(ctl_val(1), cmd_pub);
+        }
+        else {
+            publish_cmd(0, cmd_pub);
+        }
 
         // publish the estimated velocity
-        VectorXd estimated_vel = ctl.estimatePartialError();
-        publish_estimated_velocity(estimated_vel);
+        if (gyro_updated) {
+            VectorXd estimated_vel = ctl.estimatePartialError();
+            publish_estimated_velocity(estimated_vel);
+        }
 
         rate.sleep();
         ros::spinOnce();
