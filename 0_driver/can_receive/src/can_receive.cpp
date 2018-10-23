@@ -230,13 +230,14 @@ void msgCallback(const can_msgs::Frame &f)
         case CAN_GIMBAL_END_EFFECTOR_ANGULAR_VEL: {
             geometry_msgs::TwistStamped omega_msg;
             omega_msg.header.stamp = ros::Time::now();
-            int16_t x = (int16_t)((uint16_t) f.data[1] << 8 | (uint16_t) f.data[0]);
-            int16_t y = (int16_t)((uint16_t) f.data[3] << 8 | (uint16_t) f.data[2]);
-            int16_t z = (int16_t)((uint16_t) f.data[5] << 8 | (uint16_t) f.data[4]);
+            // premultipled by 64
+            int16_t x = (int16_t)((uint16_t) f.data[0] << 8 | (uint16_t) f.data[1]);
+            int16_t y = (int16_t)((uint16_t) f.data[2] << 8 | (uint16_t) f.data[3]);
+            int16_t z = (int16_t)((uint16_t) f.data[4] << 8 | (uint16_t) f.data[5]);
             // int16_t d = (int16_t)((uint16_t) f.data[7] << 8 | (uint16_t) f.data[6]);
-            omega_msg.twist.angular.x = x * 0.001;
-            omega_msg.twist.angular.y = y * 0.001;
-            omega_msg.twist.angular.z = z * 0.001;
+            omega_msg.twist.angular.x = (float)(x * 0.015625);
+            omega_msg.twist.angular.y = (float)(y * 0.015625);
+            omega_msg.twist.angular.z = (float)(z * 0.015625);
             end_eff_omega_publisher.publish(omega_msg);
         }
     }
