@@ -147,6 +147,8 @@ VisualServoControllerWithFeedForward::updateFeatures(const Eigen::MatrixXd &inpu
         dot_error = (error - error_prev) * ctrl_freq;
         error_prev = error;
     }
+
+
 }
 
 /**
@@ -176,6 +178,16 @@ VisualServoControllerWithFeedForward::estimatePartialError()
     if (error_initialized && omega_initialized) {
         estimated_error_partial = dot_error - Le_hat * angular_velocity;
         estimated_angular_velocity_ff = Le_hat_inverse * estimated_error_partial;
+
+        /**
+         * print the debugging message
+         */
+        std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
+        std::cout << "e(t - dt) is " << std::endl << error_prev.transpose()  << std::endl;
+        std::cout << "e.^ is " << std::endl << dot_error.transpose() << std::endl;
+        std::cout << "^de/dt is " << std::endl << estimated_error_partial.transpose() << std::endl;
+        std::cout << "hat_Le is " << std::endl << Le_hat << std::endl;
+        std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
     }
     else {
         estimated_angular_velocity_ff = Eigen::MatrixXd::Zero(ss, 1);
