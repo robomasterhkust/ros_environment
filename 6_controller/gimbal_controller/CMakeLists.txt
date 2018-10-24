@@ -44,6 +44,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
     include
+    include/kalman
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
 )
@@ -86,23 +87,29 @@ target_link_libraries(visual_servo_controller
 
 
 add_executable(controller_tester
-        src/controller_tester.cpp
+    src/controller_tester.cpp
 )
 
 target_link_libraries(controller_tester
-        ${catkin_LIBRARIES}
+    ${catkin_LIBRARIES}
 )
 
 ## 20181022 new controller with feedforward
+set(Kalman_filter_LIB_SOURCE_FILES
+        ${PROJECT_SOURCE_DIR}/src/kalman/kalman.cpp
+        )
+
 set(VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES
-        ${PROJECT_SOURCE_DIR}/src/VisualServoControllerWithFeedForward.cpp
+    ${Kalman_filter_LIB_SOURCE_FILES}
+    ${PROJECT_SOURCE_DIR}/src/VisualServoControllerWithFeedForward.cpp
 )
 
+
 add_executable(visual_servo_controller_with_feedforward
-        src/visual_servo_controller_with_feedforward.cpp
-        ${VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES}
+    src/visual_servo_controller_with_feedforward.cpp
+    ${VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES}
 )
 
 target_link_libraries(visual_servo_controller_with_feedforward
-        ${catkin_LIBRARIES}
+    ${catkin_LIBRARIES}
 )

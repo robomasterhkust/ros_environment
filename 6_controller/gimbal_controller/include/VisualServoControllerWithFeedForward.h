@@ -7,6 +7,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
+#include "kalman.h"
 
 #pragma once
 
@@ -50,11 +51,22 @@ public:
     void updateOmega(const Eigen::MatrixXd &omega);
 
     /**
+     * Public function to initialize the Kalman filter for visual velocity
+     * @param kf_r0
+     * @param kf_dt
+     */
+    void initKalmanFilter(double kf_r0, double kf_dt);
+
+    void setKalmanR(double kf_r0);
+
+    /**
      * @return the estimated target movement considering the body movement
      */
-    Eigen::VectorXd estimatePartialError();
+    void estimatePartialError();
 
-    Eigen::VectorXd getRawVisualOmega();
+    Eigen::VectorXd getRawVisualOmega(){ return raw_visual_omega; }
+
+    Eigen::VectorXd getEstimatedVisualOmega(){ return estimated_visual_omega; }
 
     /**
      * @return the control value, type III, half of both pseudo inverse
@@ -101,13 +113,20 @@ private:
     // the estimated feedforward angular velocity, visual - gimbal
     Eigen::VectorXd estimated_angular_velocity_ff;
 
-    // the raw visual angular velocity
+    // the raw visual angular velocity \in R^3
     Eigen::VectorXd raw_visual_omega;
+
+    // the estimated visual angular velocity
+    Eigen::VectorXd estimated_visual_omega;
 
     // received one visual feature
     bool error_initialized;
 
     bool omega_initialized;
 
+    // the optimal filter for the estimated angular_velocity feedforward
+    KalmanFilter kf;
+
+    bool kalman_initialized;
 };
 #endif //ROS_ENVIRONMENT_VISUALSERVOCONTROLLER_WITH_FEEDFORWARD_H

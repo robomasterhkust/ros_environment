@@ -39,6 +39,8 @@ int n = 4;
 int m = 2;
 double Kp = 1.0;
 double Kd = 0.0;
+double Kf_r0 = 0.01;
+double ctrl_freq = 30;
 
 bool visual_updated = false;
 bool gyro_updated = false;
@@ -79,7 +81,7 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
         m_camera->liftSphere(input_pixel.row(i), input_pixel_output[i] );
         input_image_frame.row(i) << input_pixel_output[i](0), input_pixel_output[i](1);
     }
-    std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
+    // std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
 
     // use the image frame coordinate value to control
     ctl.updateFeatures(input_image_frame);
@@ -115,6 +117,7 @@ int main(int argc, char **argv) {
 
     nh.param("Kp", Kp, -1.0);
     nh.param("Kd", Kd, 0.0);
+    nh.param("Kf_r0", Kf_r0, 0.01);
     nh.param("cv_topic", cv_topic, string("/detected_vertice"));
     nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
     
@@ -149,19 +152,20 @@ int main(int argc, char **argv) {
 
 	for	(int i=0; i < n; ++i) {
 	    m_camera->liftSphere(target_pixel.row(i), target_pixel_output[i] );
-	target_image_frame.row(i) << target_pixel_output[i](0), target_pixel_output[i](1);
+	    target_image_frame.row(i) << target_pixel_output[i](0), target_pixel_output[i](1);
 	}
 	std::cout << "target in image frame " << std::endl << target_image_frame << std::endl;
 
 	ctl.setTarget(target_image_frame);
 
-    ros::Rate rate(30);
+    ctl.setControlFrequency(ctrl_freq);
 
-    ctl.setControlFrequency(30);
+    ctl.initKalmanFilter(Kf_r0, 1 / ctrl_freq);
+
+    ros::Rate rate(ctrl_freq);
 
     while (ros::ok()) {
         // publish the command in camera y axis
-
         ctl.setKp(Kp);
         ctl.setKd(Kd);
         if (visual_updated) {
@@ -175,7 +179,7 @@ int main(int argc, char **argv) {
 
         // publish the estimated velocity
         if (gyro_updated) {
-            VectorXd estimated_vel = ctl.estimatePartialError();
+            VectorXd estimated_vel = ctl.getEstimatedVisualOmega();
             VectorXd raw_visual_w  = ctl.getRawVisualOmega();
             publish_angular_velocity(estimated_vel, omega_pub);
             publish_angular_velocity(raw_visual_w, omega_visual_pub);

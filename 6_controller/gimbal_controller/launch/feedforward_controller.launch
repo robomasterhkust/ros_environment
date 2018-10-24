@@ -6,6 +6,7 @@
     <node name="feedforward_ctl" pkg="gimbal_controller" type="visual_servo_controller_with_feedforward" output="screen">
         <param name="Kp" type="double" value="-1.0"/>
         <param name="Kd" type="double" value="0.0"/>
+        <param name="Kf_r0" type="double" value="0.01"/>
         <param name="publisher_topic" type="string" value="/cmd_vel"/>
         <param name="omega_pub_topic" type="string" value="/visual_servo/visual_estimate"/>
         <param name="omega_raw_topic" type="string" value="/visual_servo/raw_omega_cam"/>
