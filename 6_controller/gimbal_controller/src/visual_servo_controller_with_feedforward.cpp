@@ -19,12 +19,14 @@ using namespace std;
 using namespace Eigen;
 
 ros::Publisher cmd_pub;
-ros::Publisher omega_pub;
+ros::Publisher kalman_output_pub;
 ros::Publisher omega_raw_pub;
 ros::Publisher omega_visual_pub;
+ros::Publisher kalman_input_pub;
 string cv_topic;
 string omega_input_topic;
-string omega_pub_topic;
+string kalman_input_topic;
+string kalman_output_topic;
 string omega_raw_topic;
 string omega_visual_topic;
 string publisher_topic;
@@ -40,7 +42,12 @@ int m = 2;
 double Kp = 1.0;
 double Kd = 0.0;
 double Kf_r0 = 0.01;
+double Kf_q0 = 1.0;
 double ctrl_freq = 30;
+
+// Handle acyronized observer and control
+double prev_ctl_val = 0;
+int cv_state_machine = 0;
 
 bool visual_updated = false;
 bool gyro_updated = false;
@@ -118,11 +125,13 @@ int main(int argc, char **argv) {
     nh.param("Kp", Kp, -1.0);
     nh.param("Kd", Kd, 0.0);
     nh.param("Kf_r0", Kf_r0, 0.01);
+    nh.param("Kf_r0", Kf_r0, 1.0);
     nh.param("cv_topic", cv_topic, string("/detected_vertice"));
     nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
     
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
-    nh.param("omega_pub_topic", omega_pub_topic, string("/visual_servo/visual_estimate"));
+    nh.param("kalman_input_topic",  kalman_input_topic,  string("/visual_servo/kalman_input"));
+    nh.param("kalman_output_topic", kalman_output_topic, string("/visual_servo/kalman_output"));
     nh.param("omega_raw_topic", omega_raw_topic, string("/visual_servo/raw_omega_cam"));
     nh.param("omega_visual_topic", omega_visual_topic, string("/visual_servo/omega_visual"));
 
@@ -133,9 +142,10 @@ int main(int argc, char **argv) {
     ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
     ros::Subscriber sub2 = nh.subscribe(omega_input_topic, 10, omega_cam_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
-    omega_pub = nh.advertise<geometry_msgs::TwistStamped>(omega_pub_topic, 10);
-    omega_raw_pub = nh.advertise<geometry_msgs::TwistStamped>(omega_raw_topic, 10);
-    omega_visual_pub = nh.advertise<geometry_msgs::TwistStamped>(omega_visual_topic, 10);
+    omega_raw_pub     = nh.advertise<geometry_msgs::TwistStamped>(omega_raw_topic, 10);
+    omega_visual_pub  = nh.advertise<geometry_msgs::TwistStamped>(omega_visual_topic, 10);
+    kalman_input_pub  = nh.advertise<geometry_msgs::TwistStamped>(kalman_input_topic, 10);
+    kalman_output_pub = nh.advertise<geometry_msgs::TwistStamped>(kalman_output_topic, 10);
 
     // create a camera model
     m_camera = camera_model::CameraFactory::instance()->generateCameraFromYamlFile(cfg_file_name);
@@ -162,31 +172,49 @@ int main(int argc, char **argv) {
 
     ctl.initKalmanFilter(Kf_r0, 1 / ctrl_freq);
 
+   
     ros::Rate rate(ctrl_freq);
 
     while (ros::ok()) {
         // publish the command in camera y axis
         ctl.setKp(Kp);
         ctl.setKd(Kd);
+        ctl.setKalmanR(Kf_r0);
+        ctl.setKalmanQ(Kf_q0);
+        
+        
         if (visual_updated) {
             VectorXd ctl_val = ctl.control();
             publish_cmd(ctl_val(1), cmd_pub);
             visual_updated = false;
+            prev_ctl_val = ctl_val(1);
+            cv_state_machine = 1;
+
+			// publish the estimated velocity
+			if (gyro_updated) {
+		        VectorXd kalman_output = ctl.getKalmanOutput();
+		        VectorXd kalman_input  = ctl.getKalmanInput();
+		        VectorXd raw_visual_w  = ctl.getRawVisualOmega();
+		        publish_angular_velocity(kalman_output, kalman_output_pub);
+		        publish_angular_velocity(kalman_input, kalman_input_pub);
+		        publish_angular_velocity(raw_visual_w, omega_visual_pub);
+
+		        gyro_updated = false;
+		    }
+
+        }
+        else if (cv_state_machine != 0){
+            publish_cmd(prev_ctl_val, cmd_pub);
+			prev_ctl_val = 0.0;
+			cv_state_machine = 0;
         }
         else {
-            publish_cmd(0, cmd_pub);
+            publish_cmd(0.0, cmd_pub);
+            ctl.resetFlag();
         }
 
-        // publish the estimated velocity
-        if (gyro_updated) {
-            VectorXd estimated_vel = ctl.getEstimatedVisualOmega();
-            VectorXd raw_visual_w  = ctl.getRawVisualOmega();
-            publish_angular_velocity(estimated_vel, omega_pub);
-            publish_angular_velocity(raw_visual_w, omega_visual_pub);
-
-            gyro_updated = false;
-        }
-
+       
+        
         rate.sleep();
         ros::spinOnce();
     }

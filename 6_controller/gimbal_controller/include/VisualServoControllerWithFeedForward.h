@@ -30,6 +30,8 @@ public:
      * Blank initializer
      */
     VisualServoControllerWithFeedForward();
+    
+    void resetFlag();
 
     void setKp( const double Kp);
 
@@ -59,6 +61,8 @@ public:
 
     void setKalmanR(double kf_r0);
 
+    void setKalmanQ(double kf_q0);
+
     /**
      * @return the estimated target movement considering the body movement
      */
@@ -66,7 +70,9 @@ public:
 
     Eigen::VectorXd getRawVisualOmega(){ return raw_visual_omega; }
 
-    Eigen::VectorXd getEstimatedVisualOmega(){ return estimated_visual_omega; }
+    Eigen::VectorXd getKalmanInput(){ return estimated_angular_velocity_ff; }
+
+    Eigen::VectorXd getKalmanOutput(){ return estimated_visual_omega; }
 
     /**
      * @return the control value, type III, half of both pseudo inverse
@@ -121,6 +127,8 @@ private:
 
     // received one visual feature
     bool error_initialized;
+
+    bool prev_error_initialized;
 
     bool omega_initialized;
 

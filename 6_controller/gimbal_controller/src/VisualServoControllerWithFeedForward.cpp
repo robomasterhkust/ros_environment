@@ -41,6 +41,15 @@ VisualServoControllerWithFeedForward::VisualServoControllerWithFeedForward()
 }
 
 void
+VisualServoControllerWithFeedForward::resetFlag()
+{
+    error_initialized = false;
+    omega_initialized = false;
+    // kalman_initialized= false;
+}
+
+
+void
 VisualServoControllerWithFeedForward::setKp(
 		const double Kp)
 {
@@ -84,9 +93,11 @@ VisualServoControllerWithFeedForward::getRawVisualOmega()
 void
 VisualServoControllerWithFeedForward::initKalmanFilter(double kf_r0, double kf_dt)
 {
-    const int nn = 2 * this->n;
+    const int nn = this->ss;
     Eigen::MatrixXd I = Eigen::MatrixXd::Identity(nn, nn);
     Eigen::MatrixXd O = Eigen::MatrixXd::Zero(nn, nn);
+
+    /*
     Eigen::MatrixXd A(2 * nn, 2 * nn);
     Eigen::MatrixXd H(1 * nn, 2 * nn);
     Eigen::MatrixXd Q(2 * nn, 2 * nn);
@@ -102,6 +113,8 @@ VisualServoControllerWithFeedForward::initKalmanFilter(double kf_r0, double kf_d
     P0<< I, O,
          O, I;
     kf.setMatrices(kf_dt, A, H, Q, R, P0);
+    */
+    kf.setMatrices(kf_dt, I, I, I, I * kf_r0, I);
     kf.init();
     kalman_initialized = true;
     std::cout << "Kalman filter initialized with A size " << 2 * nn << std::endl;
@@ -113,10 +126,22 @@ VisualServoControllerWithFeedForward::setKalmanR(double kf_r0)
     if (!kalman_initialized)
         throw std::runtime_error("Kalman filter not initialized.");
 
-    const int nn = 2 * this->n;
+    const int nn = this->ss;
     Eigen::MatrixXd I = Eigen::MatrixXd::Identity(nn, nn);
 
     kf.setR(I * kf_r0);
+}
+
+void
+VisualServoControllerWithFeedForward::setKalmanQ(double kf_q0)
+{
+    if (!kalman_initialized)
+        throw std::runtime_error("Kalman filter not initialized.");
+
+    const int nn = this->ss;
+    Eigen::MatrixXd I = Eigen::MatrixXd::Identity(nn, nn);
+
+    kf.setQ(I * kf_q0);
 }
 
 /**
@@ -193,10 +218,15 @@ VisualServoControllerWithFeedForward::updateFeatures(const Eigen::MatrixXd &inpu
         error(m * i + 1, 0) = input_points(i, 1) - target_points(i, 1);
     }
 
+    prev_error_initialized = error_initialized;
     if (!error_initialized) {
         error_prev = Eigen::MatrixXd::Zero(n * m, 1);
         dot_error = Eigen::MatrixXd::Zero(n * m, 1);
         error_initialized = true;
+    }
+    else if (prev_error_initialized != error_initialized){
+        dot_error = Eigen::MatrixXd::Zero(n * m, 1);
+        error_prev = error;
     }
     else {
         dot_error = (error - error_prev) * ctrl_freq;
@@ -228,16 +258,19 @@ void
 VisualServoControllerWithFeedForward::estimatePartialError()
 {
     if (error_initialized && omega_initialized) {
-        estimated_error_partial = dot_error - Le_hat * angular_velocity;
+        // estimated_error_partial = dot_error - Le_hat * angular_velocity;
+	    estimated_angular_velocity_ff = Le_hat_inverse * dot_error - angular_velocity;
 
-        std::cout << "enter kf update with visual" << std::endl << estimated_error_partial << std::endl;
-        kf.update(estimated_error_partial);
+        std::cout << "enter kf update with visual" << std::endl << estimated_angular_velocity_ff.transpose() << std::endl;
+        
+        kf.propagate();
+        kf.update(estimated_angular_velocity_ff);
         std::cout << "end kf update" << std::endl;
 
         raw_visual_omega = Le_hat_inverse * dot_error;
 
-        // estimated_angular_velocity_ff = Le_hat_inverse * estimated_error_partial;
-        estimated_visual_omega = Le_hat_inverse * kf.state().topRows(2 * n);
+        
+        estimated_visual_omega = kf.state().topRows(ss);
         /**
          * print the debugging message
          */
@@ -276,7 +309,7 @@ VisualServoControllerWithFeedForward::control()
     }
     else {
         estimatePartialError();
-        control_val << -Kp * Le_hat_inverse * error - Kd * getEstimatedVisualOmega();
+        control_val << -Kp * Le_hat_inverse * error - Kd * getKalmanOutput();
     }
 
 //    std::cout << "control_val is " << std::endl << control_val << std::endl;

@@ -53,6 +53,16 @@ KalmanFilter::setR(const Eigen::MatrixXd& R)
 }
 
 void
+KalmanFilter::setQ(const Eigen::MatrixXd& Q)
+{
+    if (Q.rows() != n || Q.cols() != n)
+        throw std::runtime_error("Q has different size");
+
+    this->Q = Q;
+}
+
+
+void
 KalmanFilter::init(double t0, const Eigen::VectorXd& x0)
 {
     x = x0;

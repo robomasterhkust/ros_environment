@@ -54,6 +54,8 @@ public:
      */
     void setR(const Eigen::MatrixXd& R);
 
+    void setQ(const Eigen::MatrixXd& Q);
+
     /**
      * Initialize the filter with initial states as zero and initial current time.
      */
