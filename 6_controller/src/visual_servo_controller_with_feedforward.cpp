@@ -15,6 +15,9 @@
 #include "VisualServoControllerWithFeedForward.h"
 #include "camera_model/camera_models/CameraFactory.h"
 
+#include <dynamic_reconfigure/server.h>
+#include <visual_servo_control/tuningConfig.h>
+
 using namespace std;
 using namespace Eigen;
 
@@ -124,6 +127,16 @@ omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
     ctl.updateOmega(input_omega_cam);
 }
 
+/**
+ * callback function for dynamic reconfigure
+ */
+void configCallback(visual_servo_control::tuningConfig &config, uint32_t level __attribute__((unused)))
+{
+    Kp = config.Kp;
+    Kd = config.Kd;
+    Kf_r0 = config.Kf_r0;
+    Kf_q0 = config.Kf_q0;
+}
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "four_point_visual_servo");
@@ -144,6 +157,11 @@ int main(int argc, char **argv) {
 
     nh.param("cfg_file_name", cfg_file_name, string("/home/ros/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml"));
 
+    // dynamic reconfigure server
+    dynamic_reconfigure::Server<visual_servo_control::tuningConfig> dr_server;
+    dynamic_reconfigure::Server<visual_servo_control::tuningConfig>::CallbackType dr_callback;
+    dr_callback = boost::bind(&configCallback, _1, _2);
+    dr_server.setCallback(dr_callback);
 
     ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
     ros::Subscriber sub2 = nh.subscribe(omega_input_topic, 10, omega_cam_cb);

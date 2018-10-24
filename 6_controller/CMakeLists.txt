@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(gimbal_controller)
+project(visual_servo_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 set(CMAKE_BUILD_TYPE "Release")
@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     rm_cv
     camera_model
+    dynamic_reconfigure
 )
 
 ## System dependencies are found with CMake's conventions
@@ -29,12 +30,17 @@ find_package(Eigen3 REQUIRED)
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+generate_dynamic_reconfigure_options(
+        cfg/tuning.cfg
+)
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES gimbal_controller
-   CATKIN_DEPENDS geometry_msgs roscpp std_msgs rm_cv
+   CATKIN_DEPENDS dynamic_reconfigure geometry_msgs roscpp std_msgs rm_cv
 #  DEPENDS system_lib vertice
 )
+
 
 ###########
 ## Build ##
@@ -48,11 +54,6 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
 )
-
-## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/gimbal_controller.cpp
-# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -104,7 +105,6 @@ set(VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/VisualServoControllerWithFeedForward.cpp
 )
 
-
 add_executable(visual_servo_controller_with_feedforward
     src/visual_servo_controller_with_feedforward.cpp
     ${VISUAL_SERVO_FEEDFORWARD_LIB_SOURCE_FILES}
@@ -113,3 +113,5 @@ add_executable(visual_servo_controller_with_feedforward
 target_link_libraries(visual_servo_controller_with_feedforward
     ${catkin_LIBRARIES}
 )
+
+add_dependencies(visual_servo_controller_with_feedforward ${PROJECT_NAME}_gencfg)
