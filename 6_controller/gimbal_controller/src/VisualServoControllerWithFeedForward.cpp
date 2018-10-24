@@ -20,13 +20,15 @@ VisualServoControllerWithFeedForward::VisualServoControllerWithFeedForward(
 {
     Kd = 0;
     ss = 3;
-    error_initialized = false;
     omega_initialized = false;
     kalman_initialized= false;
 
+    finite_state = 0;
+
     double kf_r0 = 0.01;
+    double kf_q0 = 0.01;
     if (ctrl_freq != 0)
-        initKalmanFilter( kf_r0, 1 / ctrl_freq);
+        initKalmanFilter( kf_r0, kf_q0, 1 / ctrl_freq);
 }
 
 VisualServoControllerWithFeedForward::VisualServoControllerWithFeedForward()
@@ -35,7 +37,8 @@ VisualServoControllerWithFeedForward::VisualServoControllerWithFeedForward()
     Kd = 0;
     ss = 3;
     ctrl_freq = 0;
-    error_initialized = false;
+
+    finite_state = 0;
     omega_initialized = false;
     kalman_initialized= false;
 }
@@ -43,7 +46,6 @@ VisualServoControllerWithFeedForward::VisualServoControllerWithFeedForward()
 void
 VisualServoControllerWithFeedForward::resetFlag()
 {
-    error_initialized = false;
     omega_initialized = false;
     // kalman_initialized= false;
 }
@@ -79,19 +81,11 @@ VisualServoControllerWithFeedForward::setTarget(
     this->target_points = target_points_in_image_frame;
 }
 
-/*
-Eigen::VectorXd
-VisualServoControllerWithFeedForward::getRawVisualOmega()
-{
-    return raw_visual_omega;
-}
- */
-
 /**
  * Initialize the Kalman filter for the omega
  */
 void
-VisualServoControllerWithFeedForward::initKalmanFilter(double kf_r0, double kf_dt)
+VisualServoControllerWithFeedForward::initKalmanFilter(double kf_r0, double kf_q0, double kf_dt)
 {
     const int nn = this->ss;
     Eigen::MatrixXd I = Eigen::MatrixXd::Identity(nn, nn);
@@ -114,7 +108,7 @@ VisualServoControllerWithFeedForward::initKalmanFilter(double kf_r0, double kf_d
          O, I;
     kf.setMatrices(kf_dt, A, H, Q, R, P0);
     */
-    kf.setMatrices(kf_dt, I, I, I, I * kf_r0, I);
+    kf.setMatrices(kf_dt, I, I, I * kf_q0, I * kf_r0, I * kf_q0);
     kf.init();
     kalman_initialized = true;
     std::cout << "Kalman filter initialized with A size " << 2 * nn << std::endl;
@@ -144,8 +138,26 @@ VisualServoControllerWithFeedForward::setKalmanQ(double kf_q0)
     kf.setQ(I * kf_q0);
 }
 
+
+/**
+ * Update the body frame angular velocity w in camera frame
+ * @param omega angular velocity in camera frame \in R^3
+ */
+void
+VisualServoControllerWithFeedForward::updateOmega(const Eigen::MatrixXd &omega)
+{
+    if (omega.rows() != ss)
+        throw std::runtime_error("angular velocity dimension error.");
+
+    omega_gyro = omega;
+    if (!omega_initialized) {
+        omega_initialized = true;
+    }
+}
+
 /**
  * Update the interaction matrix, its inverse, and error
+ * And run the finite state machine
  * @param input_points \in R^8
  */
 void
@@ -187,7 +199,6 @@ VisualServoControllerWithFeedForward::updateFeatures(const Eigen::MatrixXd &inpu
     }
     Le_hat = 0.5 * (Le + Le_star);
 
-
     /**
      * Calculate the Le_inverse
      * K is the form: 8 x 1 matrix
@@ -210,86 +221,63 @@ VisualServoControllerWithFeedForward::updateFeatures(const Eigen::MatrixXd &inpu
     Le_hat_inverse = Le_svd.matrixV() * singularValueInv.asDiagonal() * Le_svd.matrixU().transpose();
 
     /**
-     * Update the visual error
-     */
+      * Update the visual error
+      */
     error = Eigen::MatrixXd::Zero(n * m, 1);
     for ( i = 0; i < n; ++i) {
         error(m * i, 0) = input_points(i, 0) - target_points(i, 0);
         error(m * i + 1, 0) = input_points(i, 1) - target_points(i, 1);
     }
 
-    prev_error_initialized = error_initialized;
-    if (!error_initialized) {
-        error_prev = Eigen::MatrixXd::Zero(n * m, 1);
-        dot_error = Eigen::MatrixXd::Zero(n * m, 1);
-        error_initialized = true;
-    }
-    else if (prev_error_initialized != error_initialized){
-        dot_error = Eigen::MatrixXd::Zero(n * m, 1);
-        error_prev = error;
-    }
-    else {
-        dot_error = (error - error_prev) * ctrl_freq;
-        error_prev = error;
-    }
+    runFiniteStateMachine();
 }
 
-/**
- * Update the body frame angular velocity w in camera frame
- * @param omega angular velocity in camera frame \in R^3
- */
 void
-VisualServoControllerWithFeedForward::updateOmega(const Eigen::MatrixXd &omega)
+VisualServoControllerWithFeedForward::runFiniteStateMachine()
 {
-    if (omega.rows() != ss)
-        throw std::runtime_error("angular velocity dimension error.");
-
-    angular_velocity = omega;
-    if (!omega_initialized) {
-        omega_initialized = true;
+    switch (finite_state) {
+        case 0:
+            dot_error  = Eigen::MatrixXd::Zero(n * m, 1);
+            error_prev = Eigen::MatrixXd::Zero(n * m, 1);
+            break;
+        case 1:
+            dot_error  = Eigen::MatrixXd::Zero(n * m, 1);
+            error_prev = error;
+            std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
+            std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
+            break;
+        case 2:
+            dot_error = (error - error_prev) * ctrl_freq;
+            error_prev = error;
+            runKalman();
+            break;
     }
 }
-
 
 /**
  * Kalman filter update to estimate the target angular velocity \in R^3
  */
 void
-VisualServoControllerWithFeedForward::estimatePartialError()
+VisualServoControllerWithFeedForward::runKalman()
 {
-    if (error_initialized && omega_initialized) {
-        // estimated_error_partial = dot_error - Le_hat * angular_velocity;
-	    estimated_angular_velocity_ff = Le_hat_inverse * dot_error - angular_velocity;
+    if (omega_initialized) {
+        // estimated_error_partial = dot_error - Le_hat * omega_gyro;
+	    omega_hat_target = Le_hat_inverse * dot_error - omega_gyro;
 
-        std::cout << "enter kf update with visual" << std::endl << estimated_angular_velocity_ff.transpose() << std::endl;
-        
         kf.propagate();
-        kf.update(estimated_angular_velocity_ff);
-        std::cout << "end kf update" << std::endl;
+        kf.update(omega_hat_target);
 
         raw_visual_omega = Le_hat_inverse * dot_error;
-
         
         estimated_visual_omega = kf.state().topRows(ss);
-        /**
-         * print the debugging message
-         */
-        std::cout << "Kalman filter state " << std::endl << kf.state().transpose() << std::endl;
-        std::cout << "Kalman filter covariance " << std::endl << kf.covariance().transpose() << std::endl;
-//        std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
-//        std::cout << "e(t - dt) is " << std::endl << error_prev.transpose()  << std::endl;
-//        std::cout << "e.^ is " << std::endl << dot_error.transpose() << std::endl;
-//        std::cout << "^de/dt is " << std::endl << estimated_error_partial.transpose() << std::endl;
-//        std::cout << "hat_Le is " << std::endl << Le_hat << std::endl;
-//        std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
+
+        printDebugging();
     }
     else {
-        estimated_angular_velocity_ff = Eigen::MatrixXd::Zero(ss, 1);
+        omega_hat_target = Eigen::MatrixXd::Zero(ss, 1);
         raw_visual_omega = Eigen::MatrixXd::Zero(ss, 1);
         estimated_visual_omega = Eigen::MatrixXd::Zero(ss, 1);
     }
-
-//    return estimated_visual_omega;
 }
 
 /**
@@ -301,18 +289,30 @@ VisualServoControllerWithFeedForward::control()
 {
     Eigen::VectorXd control_val(ss);
 
-    if (!error_initialized && !omega_initialized) {
-        control_val << Eigen::MatrixXd::Zero(ss, 1);
-    }
-    else if (!error_initialized || !omega_initialized) {
-        control_val << -Kp * Le_hat_inverse * error;
-    }
-    else {
-        estimatePartialError();
-        control_val << -Kp * Le_hat_inverse * error - Kd * getKalmanOutput();
+    switch (finite_state) {
+        case 0: control_val << Eigen::MatrixXd::Zero(ss, 1); break;
+        case 1: control_val << -Kp * Le_hat_inverse * error; break;
+        case 2: control_val << -Kp * Le_hat_inverse * error - Kd * getKalmanOutput(); break;
     }
 
-//    std::cout << "control_val is " << std::endl << control_val << std::endl;
+    // std::cout << "control_val is " << std::endl << control_val << std::endl;
 
     return control_val;
+}
+
+/**
+ * print the debugging message
+ */
+void
+VisualServoControllerWithFeedForward::printDebugging()
+{
+    std::cout << "Kalman filter input " << std::endl << omega_hat_target.transpose() << std::endl;
+    std::cout << "Kalman filter output " << std::endl << kf.state().transpose() << std::endl;
+    std::cout << "Kalman filter covariance " << std::endl << kf.covariance().transpose() << std::endl;
+    std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
+    std::cout << "e(t - dt) is " << std::endl << error_prev.transpose()  << std::endl;
+//        std::cout << "e.^ is " << std::endl << dot_error.transpose() << std::endl;
+//        std::cout << "^de/dt is " << std::endl << estimated_error_partial.transpose() << std::endl;
+//        std::cout << "hat_Le is " << std::endl << Le_hat << std::endl;
+//        std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
 }

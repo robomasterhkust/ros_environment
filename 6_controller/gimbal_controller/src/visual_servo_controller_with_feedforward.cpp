@@ -55,6 +55,10 @@ MatrixXd target_image_frame(n, m);
 
 VisualServoControllerWithFeedForward ctl;
 
+enum class fsm {idle = 0, once = 1, multi = 2};
+
+MatrixXd last_input_image_frame(n, m);
+
 void
 publish_cmd(const double wz, const ros::Publisher& pub)
 {
@@ -77,6 +81,8 @@ publish_angular_velocity(const Eigen::VectorXd &estimated_omega, const ros::Publ
 void
 visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 {
+    visual_updated = true;
+
     // convert the pixel value to image coordinate value
     MatrixXd input_pixel(n, m);
     Vector3d input_pixel_output[n];
@@ -90,13 +96,15 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
     }
     // std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
 
+    last_input_image_frame = input_image_frame;
     // use the image frame coordinate value to control
-    ctl.updateFeatures(input_image_frame);
-    visual_updated = true;
+    // ctl.updateFeatures(input_image_frame);
 }
 
 void
 omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
+    gyro_updated = true;
+
     MatrixXd input_omega(3, 1);
     input_omega(0, 0) = omega_ptr->twist.angular.x;
     input_omega(1, 0) = omega_ptr->twist.angular.y;
@@ -114,7 +122,6 @@ omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
     publish_angular_velocity(input_omega_cam, omega_raw_pub);
 
     ctl.updateOmega(input_omega_cam);
-    gyro_updated = true;
 }
 
 
@@ -138,7 +145,6 @@ int main(int argc, char **argv) {
     nh.param("cfg_file_name", cfg_file_name, string("/home/ros/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml"));
 
 
-
     ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
     ros::Subscriber sub2 = nh.subscribe(omega_input_topic, 10, omega_cam_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
@@ -149,6 +155,8 @@ int main(int argc, char **argv) {
 
     // create a camera model
     m_camera = camera_model::CameraFactory::instance()->generateCameraFromYamlFile(cfg_file_name);
+
+    fsm finite_state = fsm::idle;
 
 	// setup the target coordinate
 	MatrixXd target_pixel(n, m);
@@ -170,51 +178,75 @@ int main(int argc, char **argv) {
 
     ctl.setControlFrequency(ctrl_freq);
 
-    ctl.initKalmanFilter(Kf_r0, 1 / ctrl_freq);
+    ctl.initKalmanFilter(Kf_r0, Kf_q0, 1 / ctrl_freq);
 
    
     ros::Rate rate(ctrl_freq);
 
     while (ros::ok()) {
-        // publish the command in camera y axis
+        /**
+         * Change setable values in the controller with dynamics configure
+         */
         ctl.setKp(Kp);
         ctl.setKd(Kd);
         ctl.setKalmanR(Kf_r0);
         ctl.setKalmanQ(Kf_q0);
-        
-        
-        if (visual_updated) {
-            VectorXd ctl_val = ctl.control();
-            publish_cmd(ctl_val(1), cmd_pub);
-            visual_updated = false;
-            prev_ctl_val = ctl_val(1);
-            cv_state_machine = 1;
 
-			// publish the estimated velocity
-			if (gyro_updated) {
-		        VectorXd kalman_output = ctl.getKalmanOutput();
-		        VectorXd kalman_input  = ctl.getKalmanInput();
-		        VectorXd raw_visual_w  = ctl.getRawVisualOmega();
-		        publish_angular_velocity(kalman_output, kalman_output_pub);
-		        publish_angular_velocity(kalman_input, kalman_input_pub);
-		        publish_angular_velocity(raw_visual_w, omega_visual_pub);
-
-		        gyro_updated = false;
-		    }
-
+        /**
+         * finite finite_state machine
+         */
+        switch (finite_state){
+            case fsm::idle:
+                if (visual_updated) finite_state = fsm::once;
+                else                finite_state = fsm::idle;
+                break;
+            case fsm::once:
+                if (visual_updated) finite_state = fsm::multi;
+                else                finite_state = fsm::idle;
+                break;
+            case fsm::multi:
+                if (visual_updated) finite_state = fsm::multi;
+                else                finite_state = fsm::idle;
+                break;
         }
-        else if (cv_state_machine != 0){
+
+        if (finite_state == fsm::idle) {
+            ctl.finite_state = 0;
+
             publish_cmd(prev_ctl_val, cmd_pub);
-			prev_ctl_val = 0.0;
-			cv_state_machine = 0;
+            prev_ctl_val = 0.0;
         }
-        else {
-            publish_cmd(0.0, cmd_pub);
-            ctl.resetFlag();
+        else if (finite_state == fsm::once) {
+            ctl.finite_state = 1;
+
+            ctl.updateFeatures(last_input_image_frame);
+            VectorXd ctl_val = ctl.control();
+
+            publish_cmd(ctl_val(1), cmd_pub);
+            prev_ctl_val = ctl_val(1);
+        }
+        else if (finite_state == fsm::multi) {
+            ctl.finite_state = 2;
+
+            ctl.updateFeatures(last_input_image_frame);
+            VectorXd ctl_val = ctl.control();
+
+            publish_cmd(ctl_val(1), cmd_pub);
+            prev_ctl_val = ctl_val(1);
         }
 
-       
-        
+        if (finite_state == fsm::multi && gyro_updated) {
+            VectorXd kalman_output = ctl.getKalmanOutput();
+            VectorXd kalman_input  = ctl.getKalmanInput();
+            VectorXd raw_visual_w  = ctl.getRawVisualOmega();
+            publish_angular_velocity(kalman_output, kalman_output_pub);
+            publish_angular_velocity(kalman_input, kalman_input_pub);
+            publish_angular_velocity(raw_visual_w, omega_visual_pub);
+        }
+
+        // remove flag
+        visual_updated = false;
+        gyro_updated = false;
         rate.sleep();
         ros::spinOnce();
     }
