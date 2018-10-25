@@ -5,6 +5,7 @@
 #ifndef ROS_ENVIRONMENT_VISUALSERVOCONTROLLER_WITH_FEEDFORWARD_H
 #define ROS_ENVIRONMENT_VISUALSERVOCONTROLLER_WITH_FEEDFORWARD_H
 
+#include <queue>
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 #include "kalman.h"
@@ -141,5 +142,9 @@ private:
      * @return the estimated target movement considering the body movement
      */
     void runKalman();
+
+    void timestamp_sync(const Eigen::MatrixXd &omega);
+
+    std::queue<Eigen::Matrix<double, 3, 1>> gyro_queue;
 };
 #endif //ROS_ENVIRONMENT_VISUALSERVOCONTROLLER_WITH_FEEDFORWARD_H

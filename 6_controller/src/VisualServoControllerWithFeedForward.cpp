@@ -138,6 +138,23 @@ VisualServoControllerWithFeedForward::setKalmanQ(double kf_q0)
     kf.setQ(I * kf_q0);
 }
 
+/**
+ * Synchronize the timestamp between camera and gyroscope
+ * Hertz: 100Hz imu, 30Hz visual
+ * @related gyro_stack
+ * @return  the gyro_stack where the top has timestamp the same as visual velocity
+ */
+void
+VisualServoControllerWithFeedForward::timestamp_sync(const Eigen::MatrixXd &omega)
+{
+    gyro_queue.push(omega);
+
+    if (gyro_queue.size() > 4) {
+        while (gyro_queue.size() > 4) {
+            gyro_queue.pop();
+        }
+    }
+}
 
 /**
  * Update the body frame angular velocity w in camera frame
@@ -149,7 +166,10 @@ VisualServoControllerWithFeedForward::updateOmega(const Eigen::MatrixXd &omega)
     if (omega.rows() != ss)
         throw std::runtime_error("angular velocity dimension error.");
 
-    omega_gyro = omega;
+    timestamp_sync(omega);
+
+    omega_gyro = gyro_queue.front();
+
     if (!omega_initialized) {
         omega_initialized = true;
     }
