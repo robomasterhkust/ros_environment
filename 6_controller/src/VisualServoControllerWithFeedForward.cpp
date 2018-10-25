@@ -309,8 +309,8 @@ VisualServoControllerWithFeedForward::printDebugging()
     std::cout << "Kalman filter input " << std::endl << omega_hat_target.transpose() << std::endl;
     std::cout << "Kalman filter output " << std::endl << kf.state().transpose() << std::endl;
     std::cout << "Kalman filter covariance " << std::endl << kf.covariance().transpose() << std::endl;
-    std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
-    std::cout << "e(t - dt) is " << std::endl << error_prev.transpose()  << std::endl;
+//    std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
+//    std::cout << "e(t - dt) is " << std::endl << error_prev.transpose()  << std::endl;
 //        std::cout << "e.^ is " << std::endl << dot_error.transpose() << std::endl;
 //        std::cout << "^de/dt is " << std::endl << estimated_error_partial.transpose() << std::endl;
 //        std::cout << "hat_Le is " << std::endl << Le_hat << std::endl;

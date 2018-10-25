@@ -42,11 +42,11 @@
                                     <field>twist/angular/x</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>4</absolute_maximum>
+                                        <absolute_minimum>-4</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
+                                        <type>1</type>
                                     </scale>
                                     <topic>/visual_servo/raw_omega_cam</topic>
                                     <type>geometry_msgs/TwistStamped</type>
@@ -371,11 +371,11 @@
                                     <field>angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>1.5</absolute_maximum>
+                                        <absolute_minimum>-1.5</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
+                                        <type>1</type>
                                     </scale>
                                     <topic>/cmd_vel</topic>
                                     <type>geometry_msgs/Twist</type>
@@ -498,11 +498,11 @@
                                     <field>twist/angular/x</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1000</absolute_maximum>
-                                        <absolute_minimum>0</absolute_minimum>
+                                        <absolute_maximum>4</absolute_maximum>
+                                        <absolute_minimum>-4</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
-                                        <type>0</type>
+                                        <type>1</type>
                                     </scale>
                                     <topic>/visual_servo/kalman_output</topic>
                                     <type>geometry_msgs/TwistStamped</type>

@@ -4,10 +4,10 @@
     <!--<node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>-->
 
     <node name="feedforward_ctl" pkg="visual_servo_control" type="visual_servo_controller_with_feedforward" output="screen">
-        <param name="Kp" type="double" value="-1.0"/>
+        <param name="Kp" type="double" value="-2.5"/>
         <param name="Kd" type="double" value="0.0"/>
-        <param name="Kf_r0" type="double" value="0.1"/>
-        <param name="Kf_q0" type="double" value="0.01"/>
+        <param name="Kf_r0" type="double" value="0.5"/>
+        <param name="Kf_q0" type="double" value="0.1"/>
         <param name="publisher_topic" type="string" value="/cmd_vel"/>
         <param name="kalman_input_topic" type="string" value="/visual_servo/kalman_input"/>
         <param name="kalman_output_topic" type="string" value="/visual_servo/kalman_output"/>
