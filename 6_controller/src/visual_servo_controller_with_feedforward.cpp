@@ -51,7 +51,7 @@ double Kf_q0 = 1.0;
 double ctrl_freq = 30;
 
 // Handle acyronized observer and control
-double prev_ctl_val = 0;
+VectorXd prev_ctl_val(3);
 int cv_state_machine = 0;
 
 bool visual_updated = false;
@@ -65,10 +65,12 @@ enum class fsm {idle = 0, once = 1, multi = 2};
 MatrixXd last_input_image_frame(n, m);
 
 void
-publish_cmd(const double wz, const ros::Publisher& pub)
+publish_cmd(const Eigen::VectorXd &cmd, const ros::Publisher& pub)
 {
     geometry_msgs::Twist vel_msg;
-    vel_msg.angular.z = wz;
+    vel_msg.angular.x = cmd[0];
+    vel_msg.angular.y = cmd[1];
+    vel_msg.angular.z = cmd[2];
     pub.publish(vel_msg);
 }
 
@@ -202,6 +204,12 @@ int main(int argc, char **argv) {
 
     ctl.initKalmanFilter(Kf_r0, Kf_q0, 1 / ctrl_freq);
 
+    Eigen::MatrixXd cam_R_end(3, 3);
+    cam_R_end << 
+         0, 0, 1,
+        -1, 0, 0,
+         0,-1, 0;
+
    
     ros::Rate rate(ctrl_freq);
 
@@ -236,7 +244,7 @@ int main(int argc, char **argv) {
             ctl.finite_state = 0;
 
             publish_cmd(prev_ctl_val, cmd_pub);
-            prev_ctl_val = 0.0;
+            prev_ctl_val.setZero();
         }
         else if (finite_state == fsm::once) {
             ctl.finite_state = 1;
@@ -244,8 +252,8 @@ int main(int argc, char **argv) {
             ctl.updateFeatures(last_input_image_frame);
             VectorXd ctl_val = ctl.control();
 
-            publish_cmd(ctl_val(1), cmd_pub);
-            prev_ctl_val = ctl_val(1);
+            publish_cmd(cam_R_end * ctl_val, cmd_pub);
+            prev_ctl_val = cam_R_end * ctl_val;
         }
         else if (finite_state == fsm::multi) {
             ctl.finite_state = 2;
@@ -253,8 +261,8 @@ int main(int argc, char **argv) {
             ctl.updateFeatures(last_input_image_frame);
             VectorXd ctl_val = ctl.control();
 
-            publish_cmd(ctl_val(1), cmd_pub);
-            prev_ctl_val = ctl_val(1);
+            publish_cmd(cam_R_end * ctl_val, cmd_pub);
+            prev_ctl_val = cam_R_end * ctl_val;
         }
 
         if (finite_state == fsm::multi && gyro_updated) {
