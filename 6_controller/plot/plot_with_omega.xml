@@ -120,7 +120,7 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
+                                <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>wy</title>
@@ -273,7 +273,7 @@
                                 <steps_invert>false</steps_invert>
                                 <sticks_baseline>0</sticks_baseline>
                                 <sticks_orientation>2</sticks_orientation>
-                                <type>0</type>
+                                <type>3</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>wy_visual</title>
@@ -329,6 +329,57 @@
                             <subscriber_queue_size>100</subscriber_queue_size>
                             <title>wz_visual</title>
                         </curve_5>
+                        <curve_6>
+                            <axes>
+                                <x_axis>
+                                    <field>header/stamp</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>1000</absolute_maximum>
+                                        <absolute_minimum>0</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-10</relative_minimum>
+                                        <type>2</type>
+                                    </scale>
+                                    <topic>/visual_servo/delayed_gyro</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
+                                </x_axis>
+                                <y_axis>
+                                    <field>twist/angular/y</field>
+                                    <field_type>0</field_type>
+                                    <scale>
+                                        <absolute_maximum>4</absolute_maximum>
+                                        <absolute_minimum>-4</absolute_minimum>
+                                        <relative_maximum>0</relative_maximum>
+                                        <relative_minimum>-1000</relative_minimum>
+                                        <type>1</type>
+                                    </scale>
+                                    <topic>/visual_servo/delayed_gyro</topic>
+                                    <type>geometry_msgs/TwistStamped</type>
+                                </y_axis>
+                            </axes>
+                            <color>
+                                <custom_color>#ff0000</custom_color>
+                                <type>0</type>
+                            </color>
+                            <data>
+                                <circular_buffer_capacity>1000</circular_buffer_capacity>
+                                <time_frame_length>10</time_frame_length>
+                                <type>0</type>
+                            </data>
+                            <style>
+                                <lines_interpolate>false</lines_interpolate>
+                                <pen_style>1</pen_style>
+                                <pen_width>3</pen_width>
+                                <render_antialias>false</render_antialias>
+                                <steps_invert>false</steps_invert>
+                                <sticks_baseline>0</sticks_baseline>
+                                <sticks_orientation>2</sticks_orientation>
+                                <type>3</type>
+                            </style>
+                            <subscriber_queue_size>100</subscriber_queue_size>
+                            <title>wy_delayed</title>
+                        </curve_6>
                     </curves>
                     <legend>
                         <visible>true</visible>
@@ -371,8 +422,8 @@
                                     <field>angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1.5</absolute_maximum>
-                                        <absolute_minimum>-2.5</absolute_minimum>
+                                        <absolute_maximum>3.5</absolute_maximum>
+                                        <absolute_minimum>-3.5</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>1</type>
@@ -422,8 +473,8 @@
                                     <field>angular/z</field>
                                     <field_type>0</field_type>
                                     <scale>
-                                        <absolute_maximum>1.5</absolute_maximum>
-                                        <absolute_minimum>-2.5</absolute_minimum>
+                                        <absolute_maximum>3.5</absolute_maximum>
+                                        <absolute_minimum>-3.5</absolute_minimum>
                                         <relative_maximum>0</relative_maximum>
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>1</type>

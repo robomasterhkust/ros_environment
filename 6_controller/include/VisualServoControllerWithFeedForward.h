@@ -66,6 +66,8 @@ public:
 
     Eigen::VectorXd getRawVisualOmega(){ return raw_visual_omega; }
 
+    Eigen::VectorXd getDelayedGyro(){ return omega_gyro; }
+
     Eigen::VectorXd getKalmanInput(){ return omega_hat_target; }
 
     Eigen::VectorXd getKalmanOutput(){ return estimated_visual_omega; }

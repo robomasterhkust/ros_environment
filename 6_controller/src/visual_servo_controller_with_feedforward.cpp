@@ -26,6 +26,7 @@ ros::Publisher kalman_output_pub;
 ros::Publisher omega_raw_pub;
 ros::Publisher omega_visual_pub;
 ros::Publisher kalman_input_pub;
+ros::Publisher delayed_gyro_pub;
 string cv_topic;
 string omega_input_topic;
 string kalman_input_topic;
@@ -33,6 +34,7 @@ string kalman_output_topic;
 string omega_raw_topic;
 string omega_visual_topic;
 string publisher_topic;
+string delayed_gyro_topic;
 
 // Camera
 std::string cfg_file_name;
@@ -154,6 +156,7 @@ int main(int argc, char **argv) {
     nh.param("kalman_output_topic", kalman_output_topic, string("/visual_servo/kalman_output"));
     nh.param("omega_raw_topic", omega_raw_topic, string("/visual_servo/raw_omega_cam"));
     nh.param("omega_visual_topic", omega_visual_topic, string("/visual_servo/omega_visual"));
+    nh.param("delayed_gyro_topic", delayed_gyro_topic, string("/visual_servo/delayed_gyro"));
 
     nh.param("cfg_file_name", cfg_file_name, string("/home/ros/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml"));
 
@@ -170,6 +173,7 @@ int main(int argc, char **argv) {
     omega_visual_pub  = nh.advertise<geometry_msgs::TwistStamped>(omega_visual_topic, 10);
     kalman_input_pub  = nh.advertise<geometry_msgs::TwistStamped>(kalman_input_topic, 10);
     kalman_output_pub = nh.advertise<geometry_msgs::TwistStamped>(kalman_output_topic, 10);
+    delayed_gyro_pub  = nh.advertise<geometry_msgs::TwistStamped>(delayed_gyro_topic, 10);
 
     // create a camera model
     m_camera = camera_model::CameraFactory::instance()->generateCameraFromYamlFile(cfg_file_name);
@@ -257,9 +261,11 @@ int main(int argc, char **argv) {
             VectorXd kalman_output = ctl.getKalmanOutput();
             VectorXd kalman_input  = ctl.getKalmanInput();
             VectorXd raw_visual_w  = ctl.getRawVisualOmega();
+            VectorXd delay_gyro    = ctl.getDelayedGyro();
             publish_angular_velocity(kalman_output, kalman_output_pub);
             publish_angular_velocity(kalman_input, kalman_input_pub);
             publish_angular_velocity(raw_visual_w, omega_visual_pub);
+            publish_angular_velocity(delay_gyro, delayed_gyro_pub);
         }
 
         // remove flag
