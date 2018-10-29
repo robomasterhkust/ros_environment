@@ -34,6 +34,7 @@
 #define CAN_CHASSIS_DEBUG_BL 0x213
 #define CAN_CHASSIS_DEBUG_BR 0x214
 #define CAN_GIMBAL_END_EFFECTOR_ANGULAR_VEL 0x215
+#define CAN_CHASSIS_WHEEL 0x216
 
 std::string receiver_topic;
 
@@ -229,16 +230,32 @@ void msgCallback(const can_msgs::Frame &f)
 
         case CAN_GIMBAL_END_EFFECTOR_ANGULAR_VEL: {
             geometry_msgs::TwistStamped omega_msg;
-            omega_msg.header.stamp = ros::Time::now();
+            omega_msg.header = f.header;
             // premultipled by 64
             int16_t x = (int16_t)((uint16_t) f.data[0] << 8 | (uint16_t) f.data[1]);
             int16_t y = (int16_t)((uint16_t) f.data[2] << 8 | (uint16_t) f.data[3]);
             int16_t z = (int16_t)((uint16_t) f.data[4] << 8 | (uint16_t) f.data[5]);
-            // int16_t d = (int16_t)((uint16_t) f.data[7] << 8 | (uint16_t) f.data[6]);
+
             omega_msg.twist.angular.x = (float)(x * 0.015625);
             omega_msg.twist.angular.y = (float)(y * 0.015625);
             omega_msg.twist.angular.z = (float)(z * 0.015625);
             end_eff_omega_publisher.publish(omega_msg);
+        }
+
+        case CAN_CHASSIS_WHEEL: {
+            can_receive_msg::motor_debug wheel_raw_msg;
+            wheel_raw_msg.header = f.header;
+            // premultipled by 64
+            int16_t front_left  = (int16_t)((uint16_t) f.data[0] << 8 | (uint16_t) f.data[1]);
+            int16_t front_right = (int16_t)((uint16_t) f.data[2] << 8 | (uint16_t) f.data[3]);
+            int16_t bottom_left = (int16_t)((uint16_t) f.data[4] << 8 | (uint16_t) f.data[5]);
+            int16_t bottom_right= (int16_t)((uint16_t) f.data[6] << 8 | (uint16_t) f.data[7]);
+
+            wheel_raw_msg.speed_[0] = (float)(0.015625 * front_left);
+            wheel_raw_msg.speed_[1] = (float)(0.015625 * front_right);
+            wheel_raw_msg.speed_[2] = (float)(0.015625 * bottom_left);
+            wheel_raw_msg.speed_[3] = (float)(0.015625 * bottom_right);
+            motor_debug_publisher.publish(wheel_raw_msg);
         }
     }
 }
