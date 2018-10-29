@@ -44,8 +44,8 @@ void cmd_cb(const geometry_msgs::Twist &t) {
   f.id = CAN_NVIDIA_TX2_BOARD_ID;
   f.dlc = (16 / 8) * 4;
 
+  int16_t px = (int16_t)(t.linear.x * 1000);  // convert to mm/s
   int16_t py = (int16_t)(t.linear.y * 1000);  // convert to mm/s
-  int16_t pz = (int16_t)(t.linear.z * 1000);  // convert to mm/s
   int16_t vy = (int16_t)(t.angular.y * 1000); // pitch, rotate by Y axis
   int16_t vz = (int16_t)(t.angular.z * 1000); // yaw,   rotate by Z axis
   // int16_t py = (int16_t) (t.z * 100000); // convert to mm/s
