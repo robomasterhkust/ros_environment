@@ -115,3 +115,24 @@ target_link_libraries(visual_servo_controller_with_feedforward
 )
 
 add_dependencies(visual_servo_controller_with_feedforward ${PROJECT_NAME}_gencfg)
+
+## 20181029 visual servo controller with wheel command
+set(Kalman_filter_LIB_SOURCE_FILES
+        ${PROJECT_SOURCE_DIR}/src/kalman/kalman.cpp
+        )
+
+set(III_VISUAL_SERVO_LIB_SOURCE_FILES
+        ${Kalman_filter_LIB_SOURCE_FILES}
+        ${PROJECT_SOURCE_DIR}/src/III_VisualServoController.cpp
+        )
+
+add_executable(III_visual_servo_with_wheel
+        src/III_visual_servo_with_wheel.cpp
+        ${III_VISUAL_SERVO_LIB_SOURCE_FILES}
+        )
+
+target_link_libraries(III_visual_servo_with_wheel
+        ${catkin_LIBRARIES}
+        )
+
+add_dependencies(III_visual_servo_with_wheel ${PROJECT_NAME}_gencfg)
