@@ -221,6 +221,13 @@ int main(int argc, char **argv) {
 
     Eigen::MatrixXd cam_R_end(6, 6);
     cam_R_end.setIdentity();
+
+//    // linear velocity vx, vy, and vz also need to switch to chassis frame
+//    cam_R_end.block(0, 0, 3, 3) <<
+//            0, 0, 1,
+//            -1, 0, 0,
+//            0,-1, 0;
+
     cam_R_end.block(3, 3, 3, 3) <<
          0, 0, 1,
         -1, 0, 0,
