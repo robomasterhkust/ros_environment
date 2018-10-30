@@ -51,11 +51,11 @@ void cmd_cb(const geometry_msgs::Twist &t) {
   // int16_t py = (int16_t) (t.z * 100000); // convert to mm/s
   // int16_t vy = (int16_t) (t.x * 100000); // convert to mm/s
   // int16_t vw = (int16_t) (t.y * 100000); // convert to mm/s
-  f.data[1] = (uint8_t)(py >> 8) & 0xff;
-  f.data[0] = (uint8_t)py & 0xff;
+  f.data[1] = (uint8_t)(px >> 8) & 0xff;
+  f.data[0] = (uint8_t)px & 0xff;
 
-  f.data[3] = (uint8_t)(pz >> 8) & 0xff;
-  f.data[2] = (uint8_t)pz & 0xff;
+  f.data[3] = (uint8_t)(py >> 8) & 0xff;
+  f.data[2] = (uint8_t)py & 0xff;
 
   f.data[5] = (uint8_t)(vy >> 8) & 0xff;
   f.data[4] = (uint8_t)vy & 0xff;
