@@ -29,8 +29,8 @@ void
 wheel_odom::MecanumWheel::calcOdom( )
 {
     Eigen::MatrixXd F( 3, 4 );
-    F << 1, 1, 1, 1, //
-    -1, 1, -1, 1,    //
+    F << 1, 1, 1, 1,
+    -1, 1, -1, 1,
     - 1 / ( m_a + m_b ), 1 / ( m_a + m_b ), 1 / ( m_a + m_b ), -1 / ( m_a + m_b );
 
     F = 0.25 * F;
