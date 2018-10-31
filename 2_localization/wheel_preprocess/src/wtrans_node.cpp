@@ -20,10 +20,10 @@ chatterCallback( const can_receive_msg::motor_debugConstPtr& msg )
     speeds.header.stamp    = msg->header.stamp;
     speeds.header.seq      = msg->header.seq;
 
-    speeds.speedRF = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[0] * R * -1;
+    speeds.speedRF = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[0] * R;
     speeds.speedLF = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[1] * R;
     speeds.speedLB = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[2] * R;
-    speeds.speedRB = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[3] * R * -1;
+    speeds.speedRB = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[3] * R;
 
     pub.publish( speeds );
 }
