@@ -13,11 +13,11 @@
 //    - [2]-------[3]
 //
 // config of Mecanum Wheel:
-//      [//]-------[\\]
-//           | |
-//           | |
-//           | |
 //      [\\]-------[//]
+//           | |
+//           | |
+//           | |
+//      [//]-------[\\]
 //
 
 #define m_speed0 speedIndex( 0 )
@@ -28,21 +28,10 @@
 void
 wheel_odom::MecanumWheel::calcOdom( )
 {
-    /*
-      Eigen::MatrixXd R( 4, 3, Eigen::RowMajor );
-      R << 1, 1, -( m_a + m_b ), //
-      1, -1, -( m_a + m_b ),     //
-      1, 1, ( m_a + m_b ),       //
-      1, -1, ( m_a + m_b );
-
-      Eigen::MatrixXd F;
-      F = ( R.transpose( ) * R ).inverse( ) * R.transpose( );
-  */
-
     Eigen::MatrixXd F( 3, 4 );
     F << 1, 1, 1, 1, //
-    1, -1, 1, -1,    //
-    1 / ( m_a + m_b ), -1 / ( m_a + m_b ), -1 / ( m_a + m_b ), 1 / ( m_a + m_b );
+    -1, 1, -1, 1,    //
+    - 1 / ( m_a + m_b ), 1 / ( m_a + m_b ), 1 / ( m_a + m_b ), -1 / ( m_a + m_b );
 
     F = 0.25 * F;
 
@@ -59,10 +48,10 @@ wheel_odom::MecanumWheel::velToWheelVel( const Pose2Dd vel )
 {
     // v = [R] * [V]
 
-    double v0 = vel.x + vel.y + ( m_a + m_b ) * vel.yaw;
-    double v1 = vel.x - vel.y - ( m_a + m_b ) * vel.yaw;
-    double v2 = vel.x + vel.y - ( m_a + m_b ) * vel.yaw;
-    double v3 = vel.x - vel.y + ( m_a + m_b ) * vel.yaw;
+    double v0 = vel.x - vel.y - ( m_a + m_b ) * vel.yaw;
+    double v1 = vel.x + vel.y + ( m_a + m_b ) * vel.yaw;
+    double v2 = vel.x - vel.y + ( m_a + m_b ) * vel.yaw;
+    double v3 = vel.x + vel.y - ( m_a + m_b ) * vel.yaw;
 
     std::vector< double > vels;
     vels.push_back( v0 );
