@@ -11,7 +11,8 @@
 #include <Eigen/Dense>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
-#include "rm_cv/vertice.h"
+//#include "rm_cv/vertice.h"
+#include "filt.h"
 #include "rm_cv/ArmorRecord.h"
 #include "III_VisualServoController.h"
 #include "camera_model/camera_models/CameraFactory.h"
@@ -56,6 +57,9 @@ double pixel_x_max = 640;
 double pixel_y_max = 512;
 double pixel_dx = 68;
 double pixel_dy = 25;
+
+// low pass Filter for distance
+Filter *z_low_pass;
 
 // Handle acyronized observer and control
 VectorXd prev_ctl_val(6);
@@ -105,6 +109,9 @@ visual_handle_feature(const Eigen::MatrixXd &input_pixel)
 {
     visual_updated = true;
 
+    Vector3d input_pixel_output[n];
+    MatrixXd input_image_frame(n, m);
+
     for (int i = 0; i < n; ++i) {
         m_camera->liftSphere(input_pixel.row(i), input_pixel_output[i] );
         input_image_frame.row(i) << input_pixel_output[i](0), input_pixel_output[i](1);
@@ -114,6 +121,7 @@ visual_handle_feature(const Eigen::MatrixXd &input_pixel)
     last_input_image_frame = input_image_frame;
 }
 
+/*
 void
 visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 {
@@ -127,10 +135,11 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 
     visual_handle_feature(input_pixel);
 }
+ */
 
 
 void
-visual_feature_cb_with_Z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
+visual_feature_cb_with_z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
 {
     MatrixXd input_pixel(n, m);
 
@@ -141,9 +150,8 @@ visual_feature_cb_with_Z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
 
     visual_handle_feature(input_pixel);
 
-    // TODO: Add a low pass filter for Z
-    double Z = cv_ptr->armorPose.linear.z;
-
+    double z_filt = z_low_pass->do_sample(cv_ptr->armorPose.linear.z);
+    ctl.setZ(z_filt);
 }
 
 void
@@ -157,7 +165,7 @@ omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
 
     Eigen::MatrixXd end_R_cam(3, 3);
 
-    end_R_cam << 
+    end_R_cam <<
         0, -1, 0,
         0, 0, -1,
         1, 0, 0;
@@ -188,9 +196,9 @@ int main(int argc, char **argv) {
     nh.param("Kd", Kd, 0.0);
     nh.param("Kf_r0", Kf_r0, 0.01);
     nh.param("Kf_r0", Kf_r0, 1.0);
-    nh.param("cv_topic", cv_topic, string("/detected_vertice"));
+    nh.param("cv_topic", cv_topic, string("/detected_armor"));
     nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
-    
+
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
     nh.param("kalman_input_topic",  kalman_input_topic,  string("/visual_servo/kalman_input"));
     nh.param("kalman_output_topic", kalman_output_topic, string("/visual_servo/kalman_output"));
@@ -206,7 +214,7 @@ int main(int argc, char **argv) {
     dr_callback = boost::bind(&configCallback, _1, _2);
     dr_server.setCallback(dr_callback);
 
-    ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
+    ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb_with_z);
     ros::Subscriber sub2 = nh.subscribe(omega_input_topic, 10, omega_cam_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
     omega_raw_pub     = nh.advertise<geometry_msgs::TwistStamped>(omega_raw_topic, 10);
@@ -220,30 +228,34 @@ int main(int argc, char **argv) {
 
     fsm finite_state = fsm::idle;
 
-	// setup the target coordinate
-	MatrixXd target_pixel(n, m);
-	MatrixXd target_image_frame(n, m);
+    // create the low pass filter
+    z_low_pass = new Filter(LPF, 4, 30, 3);
+
+    // setup the target coordinate
+    MatrixXd target_pixel(n, m);
+    MatrixXd target_image_frame(n, m);
 
     double pixel_x_down= (pixel_x_max - pixel_dx) * 0.5;
     double pixel_x_top_= (pixel_x_max + pixel_dx) * 0.5;
     double pixel_y_down= (pixel_y_max - pixel_dy) * 0.5;
     double pixel_y_top_= (pixel_y_max + pixel_dy) * 0.5;
 
-	target_pixel << 
-            pixel_x_down, pixel_y_down,
-		    pixel_x_down, pixel_y_top_,
-		    pixel_x_top_, pixel_y_down,
-		    pixel_x_top_, pixel_y_top_; // 1000 mm
+    target_pixel <<
+          pixel_x_down, pixel_y_down,
+    	    pixel_x_down, pixel_y_top_,
+    	    pixel_x_top_, pixel_y_down,
+    	    pixel_x_top_, pixel_y_top_; // 1000 mm
 
-	Vector3d target_pixel_output[n];
+    Vector3d target_pixel_output[n];
 
-	for	(int i=0; i < n; ++i) {
-	    m_camera->liftSphere(target_pixel.row(i), target_pixel_output[i] );
-	    target_image_frame.row(i) << target_pixel_output[i](0), target_pixel_output[i](1);
-	}
-	std::cout << "target in image frame " << std::endl << target_image_frame << std::endl;
+    for	(int i=0; i < n; ++i) {
+        m_camera->liftSphere(target_pixel.row(i), target_pixel_output[i] );
+        target_image_frame.row(i) << target_pixel_output[i](0), target_pixel_output[i](1);
+    }
+    std::cout << "target in image frame " << std::endl << target_image_frame << std::endl;
 
-	ctl.setTarget(target_image_frame);
+    // set up the controller
+    ctl.setTarget(target_image_frame);
 
     ctl.setTargetZ(target_Z);
 
@@ -269,7 +281,7 @@ int main(int argc, char **argv) {
         -1, 0, 0,
          0,-1, 0;
     std::cout << "cam_R_end_effector: " << std::endl << cam_R_end << std::endl;
-   
+
     ros::Rate rate(ctrl_freq);
 
     while (ros::ok()) {

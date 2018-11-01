@@ -9,7 +9,6 @@
 #include <stdexcept>
 
 #include "III_VisualServoController.h"
-#include "low_pass_filter.h"
 
 VisualServoController::VisualServoController(
         const double Kp,
