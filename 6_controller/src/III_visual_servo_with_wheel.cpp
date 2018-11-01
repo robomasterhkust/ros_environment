@@ -12,6 +12,7 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
 #include "rm_cv/vertice.h"
+#include "rm_cv/ArmorRecord.h"
 #include "III_VisualServoController.h"
 #include "camera_model/camera_models/CameraFactory.h"
 
@@ -100,26 +101,49 @@ publish_angular_velocity(const Eigen::VectorXd &estimated_omega, const ros::Publ
 }
 
 void
-visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
+visual_handle_feature(const Eigen::MatrixXd &input_pixel)
 {
     visual_updated = true;
 
-    // convert the pixel value to image coordinate value
-    MatrixXd input_pixel(n, m);
-    Vector3d input_pixel_output[n];
-    MatrixXd input_image_frame(n, m);
-	int i;
-    for ( i = 0; i < n; ++i) {
-        input_pixel(i, 0) = cv_ptr->vertex[i].x;
-        input_pixel(i, 1) = cv_ptr->vertex[i].y;
+    for (int i = 0; i < n; ++i) {
         m_camera->liftSphere(input_pixel.row(i), input_pixel_output[i] );
         input_image_frame.row(i) << input_pixel_output[i](0), input_pixel_output[i](1);
     }
     // std::cout << "input in image frame " << std::endl << input_image_frame << std::endl;
 
     last_input_image_frame = input_image_frame;
-    // use the image frame coordinate value to control
-    // ctl.updateFeatures(input_image_frame);
+}
+
+void
+visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
+{
+    // convert the pixel value to image coordinate value
+    MatrixXd input_pixel(n, m);
+
+    for (int i = 0; i < n; ++i) {
+        input_pixel(i, 0) = cv_ptr->vertex[i].x;
+        input_pixel(i, 1) = cv_ptr->vertex[i].y;
+    }
+
+    visual_handle_feature(input_pixel);
+}
+
+
+void
+visual_feature_cb_with_Z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
+{
+    MatrixXd input_pixel(n, m);
+
+    for (int i = 0; i < n; ++i) {
+        input_pixel(i, 0) = cv_ptr->vertex[i].x;
+        input_pixel(i, 1) = cv_ptr->vertex[i].y;
+    }
+
+    visual_handle_feature(input_pixel);
+
+    // TODO: Add a low pass filter for Z
+    double Z = cv_ptr->armorPose.linear.z;
+
 }
 
 void
@@ -234,8 +258,8 @@ int main(int argc, char **argv) {
     Eigen::MatrixXd cam_R_end(6, 6);
     cam_R_end.setIdentity();
 
-//    // linear velocity vx, vy, and vz also need to switch to chassis frame
-   cam_R_end.block(0, 0, 3, 3) <<
+    // linear velocity vx, vy, and vz also need to switch to chassis frame
+    cam_R_end.block(0, 0, 3, 3) <<
            0, -1, 0,
            -1, 0, 0,
            0,  0, 1;
@@ -244,7 +268,7 @@ int main(int argc, char **argv) {
          0, 0, 1,
         -1, 0, 0,
          0,-1, 0;
-
+    std::cout << "cam_R_end_effector: " << std::endl << cam_R_end << std::endl;
    
     ros::Rate rate(ctrl_freq);
 
@@ -283,25 +307,21 @@ int main(int argc, char **argv) {
         }
         else if (finite_state == fsm::once) {
             ctl.finite_state = 1;
-            // std::cout << "enter state 1" << std::endl;
 
             ctl.updateFeatures(last_input_image_frame);
             VectorXd ctl_val = ctl.control();
 
             publish_cmd(cam_R_end * ctl_val, cmd_pub);
             prev_ctl_val = cam_R_end * ctl_val;
-            // std::cout << "exit state 1" << std::endl;
         }
         else if (finite_state == fsm::multi) {
             ctl.finite_state = 2;
-            // std::cout << "enter state 2" << std::endl;
 
             ctl.updateFeatures(last_input_image_frame);
             VectorXd ctl_val = ctl.control();
 
             publish_cmd(cam_R_end * ctl_val, cmd_pub);
             prev_ctl_val = cam_R_end * ctl_val;
-            // std::cout << "exit state 2" << std::endl;
         }
 
         if (finite_state == fsm::multi && gyro_updated) {

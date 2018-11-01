@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 #include "III_VisualServoController.h"
+#include "low_pass_filter.h"
 
 VisualServoController::VisualServoController(
         const double Kp,
@@ -290,18 +291,18 @@ VisualServoController::runFiniteStateMachine()
         case 0:
             dot_error  = Eigen::MatrixXd::Zero(n * m, 1);
             error_prev = Eigen::MatrixXd::Zero(n * m, 1);
-            std::cout << "state 0, interaction matrix inited" << std::endl;
+            // std::cout << "state 0, interaction matrix inited" << std::endl;
             break;
         case 1:
             dot_error  = Eigen::MatrixXd::Zero(n * m, 1);
             error_prev = error;
-            std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
-            std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
+            // std::cout << "e(t) is " << std::endl << error.transpose() << std::endl;
+            // std::cout << "hat_Le_+ is " << std::endl << Le_hat_inverse << std::endl;
             break;
         case 2:
             dot_error = (error - error_prev) * ctrl_freq;
             error_prev = error;
-            std::cout << "state 2, start Kalman filter" << std::endl;
+            // std::cout << "state 2, start Kalman filter" << std::endl;
             runKalman();
             break;
     }
@@ -324,7 +325,7 @@ VisualServoController::runKalman()
         
         estimated_visual_omega = kf.state().topRows(ss);
 
-        printDebugging();
+        // printDebugging();
     }
     else {
         omega_hat_target = Eigen::MatrixXd::Zero(ss, 1);
