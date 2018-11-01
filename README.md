@@ -1,39 +1,33 @@
 # ros_environment
-ROS src packages that support the computer vision team's result
+ROS source code that for visual servo controller and localization
 
 System: Ubuntu 16.04 LTS
 
 ROS Version: Kinetic
 
-## Network setting
--- rmsoldierX uses ip 192.168.1.22X in ASUS wifi network. All usernames are victory.
--- copy the file tools/lsusb.sh to /etc
-
-## Attention
-1. Never add CMakeList.txt to git repo.
-2. Never add CMakeList.txt to git ignore.
-3. There will be reminder that CMakeList.txt is not tracked in git. Just leave it there. Every computer has different src CMakeList.txt which linked to the place where ros is installed.
+Hardware: NVIDIA Jeston TX2
 
 ## Software architecture
-
 - modules
   - 0_driver
-    - external library
   - 1_perception_cv
   - 2_perception_others
   - 3_estimator
-  - 4_control
-  - 5_planning
-  - 6_decision
+  - 4_planning
+  - 5_decision
+  - 6_control
 - tools
 
-## Frame definition(right handed, all z axises heading upward)
-1. World frame. At t = 0, x axis points to the starting direction of gimbal gunner, origin is at the starting rotation center of gimbal.
-2. Chassis frame. Any time instant, x axis points to current direction of soldier heading, origin is at the current camera position on the chassis.
-3. Transition frame. At any time instant, x axis points to current direction of soldier heading, origin is at the current rotation center of gimbal.
-4. Gimbal frame. At any time instant, x axis points to current direction of gimbal gunner, origin is at the current rotation center of gimbal.
+Most used
+- 0_driver: CAN driver; dynamic reconfigure; rqt_multiplot.
+- 1_perception_cv: RMComputerVision, the visual frontend.
+- 3_estimator: wheel_odom, wheel_driver.
+- 6_control: the visual servo control backend, handling control and target velocity estimation.
+
 
 ## Get started
+If you compile the source code for the first time, start with the minimum code necessary: The CAN driver, the 1_perception_cv, and 6_control.
+
 1. install Robotics Operating System Kinetic in your Ubuntu computer
 http://wiki.ros.org/ROS/Installation
 
@@ -53,8 +47,8 @@ http://wiki.ros.org/ROS/Installation
 
 `sudo apt-get install terminator cmake vim htop libmuparser-dev ntp* -y`
 
-install these for rqt_multiplot
-`sudo apt-get install ros-kinetic-rqt libqwt-dev ros-kinetic-rqt-multiplot -y`
+install these dependency for the visualization tool rqt_multiplot
+`sudo apt-get install ros-kinetic-rqt libqwt-dev libqwt-qt5-dev ros-kinetic-rqt-multiplot -y`
 
 2. set up the .bashrc for speed up the development process
 
@@ -74,19 +68,36 @@ and add the following:
 
 and `source ~/.bashrc` after saving the vim file.
 
-3. install DJI-SDK
-http://wiki.ros.org/dji_sdk/Tutorials/Getting%20Started
+3. install Computer vision related dependences
 
-4. install CV related dependences
+openCV, Eigen
 
-openCV, Eigen, PCL, Ceres
-
-5. install RMOC open sourced dependency
+Reference I: RMOC open sourced repository
 https://github.com/robomasterhkust/RoboRTS
 
-Reference: My TA GAO Wenliang's repository for ELEC 5660 code setup:
+Reference II: My TA GAO Wenliang's repository for visual inertial localization
 
-https://github.com/gaowenliang/ELEC5660_lab_code
+https://github.com/gaowenliang
+
+## Frame definition(right handed, all z axises heading upward)
+1. World frame. At t = 0, x axis points to the starting direction of gimbal gunner, origin is at the starting rotation center of gimbal.
+2. Chassis frame. Any time instant, x axis points to current direction of soldier heading, origin is at the current camera position on the chassis.
+3. Transition frame. At any time instant, x axis points to current direction of soldier heading, origin is at the current rotation center of gimbal.
+4. Gimbal frame. At any time instant, x axis points to current direction of gimbal gunner, origin is at the current rotation center of gimbal.
+
+## For NVIDIA TX2
+1. flycapture has one extra step to configure, see https://www.ptgrey.com/tan/10699
+2. for rqt_multiplot, `sudo apt install libqwt-qt5-dev libqwt5-qt4 -y`, and in the running sequence, use `rosrun rqt_multiplot rqt_multiplot --force-discover`
+
+
+## Network setting
+-- rmsoldierX uses ip 192.168.1.22X in ASUS wifi network. All usernames are victory.
+-- copy the file tools/lsusb.sh to /etc
+
+## Attention
+1. Never add CMakeList.txt to git repo.
+2. Never add CMakeList.txt to git ignore.
+3. There will be reminder that CMakeList.txt is not tracked in git. Just leave it there. Every computer has different src CMakeList.txt which linked to the place where ros is installed.
 
 ## Multi-machine debugging
 Two ros machines, one Intel Nuc, one TX2.
@@ -108,9 +119,4 @@ On both machines, add the ip address of the itself and the slave in the `/etc/ho
 10.0.0.1   	tegra-ubuntu
 ```
 
-
 Then launch roscore in the master machine, and all nodes don't need to launch roscore and can receive topics from each others.
-
-## For NVIDIA TX2
-1. flycapture has one extra step to configure, see https://www.ptgrey.com/tan/10699
-2. for rqt_multiplot, `sudo apt install libqwt-qt5-dev libqwt5-qt4 -y`, and in the running sequence, use `rosrun rqt_multiplot rqt_multiplot --force-discover`

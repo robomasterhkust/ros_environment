@@ -69,13 +69,13 @@ set(WheelOdom_ROS_LIB_SOURCE_FILES
 
 
 
-add_executable(wheel_odom
-    ${WheelOdom_LIB_SOURCE_FILES}
-    ${WheelOdom_ROS_LIB_SOURCE_FILES}
-    src/wheelOdomNode.cpp )
-target_link_libraries(wheel_odom    dw     ${catkin_LIBRARIES}  )
+# add_executable(wheel_odom
+#     ${WheelOdom_LIB_SOURCE_FILES}
+#     ${WheelOdom_ROS_LIB_SOURCE_FILES}
+#     src/wheelOdomNode.cpp )
+# target_link_libraries(wheel_odom    dw     ${catkin_LIBRARIES}  )
 
-add_executable(wheel_pub    src/wheel_pub.cpp )
-target_link_libraries(wheel_pub    dw     ${catkin_LIBRARIES}  )
+# add_executable(wheel_pub    src/wheel_pub.cpp )
+# target_link_libraries(wheel_pub    dw     ${catkin_LIBRARIES}  )
 
 
