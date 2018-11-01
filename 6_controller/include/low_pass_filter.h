@@ -1,0 +1,8 @@
+//
+// Created by beck on 1/11/18.
+//
+
+#ifndef ROS_ENVIRONMENT_LOW_PASS_FILTER_H
+#define ROS_ENVIRONMENT_LOW_PASS_FILTER_H
+
+#endif //ROS_ENVIRONMENT_LOW_PASS_FILTER_H

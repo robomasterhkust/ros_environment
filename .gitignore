@@ -36,4 +36,3 @@ cmake-build-debug
 *.DS_Store
 
 .vscode
-CATKIN_IGNORE
