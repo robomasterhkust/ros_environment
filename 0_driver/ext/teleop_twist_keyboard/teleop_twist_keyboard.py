@@ -101,9 +101,9 @@ if __name__ == "__main__":
                     break
 
             twist = Twist()
-            twist.linear.x = 0
-            twist.linear.y = py
-            twist.linear.z = pz
+            twist.linear.x = py
+            twist.linear.y = pz
+            twist.linear.z = 0
             twist.angular.x = 0
             twist.angular.y = vy
             twist.angular.z = vz

@@ -26,6 +26,13 @@ camera_model::CameraPtr m_camera;
 int n = 4;
 int m = 2;
 double Kp = 1.0;
+
+double target_Z = 1;
+double pixel_x_max = 640;
+double pixel_y_max = 512;
+double pixel_dx = 68;
+double pixel_dy = 25;
+
 MatrixXd target_image_frame(n, m);
 
 VisualServoController ctl;
@@ -95,10 +102,17 @@ int main(int argc, char **argv) {
 	// setup the target coordinate
 	MatrixXd target_pixel(n, m);
 	MatrixXd target_image_frame(n, m);
-	target_pixel << 595, 496,
-                    595, 528,
-                    685, 496,
-                    685, 528; // 1650 mm
+
+    double pixel_x_down= (pixel_x_max - pixel_dx) * 0.5;
+    double pixel_x_top_= (pixel_x_max + pixel_dx) * 0.5;
+    double pixel_y_down= (pixel_y_max - pixel_dy) * 0.5;
+    double pixel_y_top_= (pixel_y_max + pixel_dy) * 0.5;
+
+	target_pixel << 
+            pixel_x_down, pixel_y_down,
+		    pixel_x_down, pixel_y_top_,
+		    pixel_x_top_, pixel_y_down,
+		    pixel_x_top_, pixel_y_top_; // 1000 mm
 	
 	Vector3d target_pixel_output[n];
 	

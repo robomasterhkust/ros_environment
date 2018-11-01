@@ -49,7 +49,12 @@ double Kd = 0.0;
 double Kf_r0 = 0.01;
 double Kf_q0 = 1.0;
 double ctrl_freq = 30;
-double target_Z = 1.5;
+
+double target_Z = 1;
+double pixel_x_max = 640;
+double pixel_y_max = 512;
+double pixel_dx = 68;
+double pixel_dy = 25;
 
 // Handle acyronized observer and control
 VectorXd prev_ctl_val(6);
@@ -194,10 +199,17 @@ int main(int argc, char **argv) {
 	// setup the target coordinate
 	MatrixXd target_pixel(n, m);
 	MatrixXd target_image_frame(n, m);
-	target_pixel << 595, 496,
-		    595, 528,
-		    685, 496,
-		    685, 528; // 1650 mm
+
+    double pixel_x_down= (pixel_x_max - pixel_dx) * 0.5;
+    double pixel_x_top_= (pixel_x_max + pixel_dx) * 0.5;
+    double pixel_y_down= (pixel_y_max - pixel_dy) * 0.5;
+    double pixel_y_top_= (pixel_y_max + pixel_dy) * 0.5;
+
+	target_pixel << 
+            pixel_x_down, pixel_y_down,
+		    pixel_x_down, pixel_y_top_,
+		    pixel_x_top_, pixel_y_down,
+		    pixel_x_top_, pixel_y_top_; // 1000 mm
 
 	Vector3d target_pixel_output[n];
 
@@ -223,10 +235,10 @@ int main(int argc, char **argv) {
     cam_R_end.setIdentity();
 
 //    // linear velocity vx, vy, and vz also need to switch to chassis frame
-//    cam_R_end.block(0, 0, 3, 3) <<
-//            0, 0, 1,
-//            -1, 0, 0,
-//            0,-1, 0;
+   cam_R_end.block(0, 0, 3, 3) <<
+           0, -1, 0,
+           -1, 0, 0,
+           0,  0, 1;
 
     cam_R_end.block(3, 3, 3, 3) <<
          0, 0, 1,
