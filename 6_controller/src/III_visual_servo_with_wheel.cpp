@@ -382,10 +382,11 @@ int main(int argc, char **argv) {
             ctl.updateFeatures(last_input_image_frame);
             VectorXd ctl_val = ctl.control();
 
-            publish_cmd(cam_R_end * ctl_val, cmd_pub);
-            prev_ctl_val = cam_R_end * ctl_val;
+            VectorXd ctl_val_rot = cam_R_end * ctl_val;
+            ctl_val_rot(0) += Kp_z * error_z;
 
-            prev_ctl_val(0) += Kp_z * error_z;
+            publish_cmd(ctl_val_rot, cmd_pub);
+            prev_ctl_val = ctl_val_rot;
         }
         else if (finite_state == fsm::multi) {
             ctl.finite_state = 2;
@@ -393,10 +394,11 @@ int main(int argc, char **argv) {
             ctl.updateFeatures(last_input_image_frame);
             VectorXd ctl_val = ctl.control();
 
-            publish_cmd(cam_R_end * ctl_val, cmd_pub);
-            prev_ctl_val = cam_R_end * ctl_val;
+            VectorXd ctl_val_rot = cam_R_end * ctl_val;
+            ctl_val_rot(0) += Kp_z * error_z;
 
-            prev_ctl_val(0) += Kp_z * error_z;
+            publish_cmd(ctl_val_rot, cmd_pub);
+            prev_ctl_val = ctl_val_rot;
         }
 
         if (finite_state == fsm::multi && gyro_updated) {
