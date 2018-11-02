@@ -29,6 +29,7 @@ ros::Publisher omega_raw_pub;
 ros::Publisher omega_visual_pub;
 ros::Publisher kalman_input_pub;
 ros::Publisher delayed_gyro_pub;
+ros::Publisher debug_z_pub;
 string cv_topic;
 string omega_input_topic;
 string kalman_input_topic;
@@ -37,6 +38,7 @@ string omega_raw_topic;
 string omega_visual_topic;
 string publisher_topic;
 string delayed_gyro_topic;
+string debug_distance_topic;
 
 // Camera
 std::string cfg_file_name;
@@ -51,6 +53,7 @@ double Kd = 0.0;
 double Kf_r0 = 0.01;
 double Kf_q0 = 1.0;
 double ctrl_freq = 30;
+double distance_cuttoff_freq = 3;
 
 double target_Z = 1;
 double pixel_x_max = 640;
@@ -105,6 +108,16 @@ publish_angular_velocity(const Eigen::VectorXd &estimated_omega, const ros::Publ
 }
 
 void
+publish_distance_debug(double z_in, double z_out)
+{
+    geometry_msgs::TwistStamped distance_msg;
+    distance_msg.header.stamp = ros::Time::now();
+    distance_msg.twist.linear.z = z_in;
+    distance_msg.twist.angular.z = z_out;
+    debug_z_pub.publish(distance_msg);
+}
+
+void
 visual_handle_feature(const Eigen::MatrixXd &input_pixel)
 {
     visual_updated = true;
@@ -150,8 +163,10 @@ visual_feature_cb_with_z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
 
     visual_handle_feature(input_pixel);
 
-    double z_filt = z_low_pass->do_sample(cv_ptr->armorPose.linear.z);
+    double z_raw  = cv_ptr->armorPose.linear.z;
+    double z_filt = z_low_pass->do_sample(z_raw);
     ctl.setZ(z_filt);
+    publish_distance_debug(z_raw, z_filt);
 }
 
 void
@@ -196,6 +211,8 @@ int main(int argc, char **argv) {
     nh.param("Kd", Kd, 0.0);
     nh.param("Kf_r0", Kf_r0, 0.01);
     nh.param("Kf_r0", Kf_r0, 1.0);
+    nh.param("ctrl_freq", ctrl_freq, 30.0);
+    nh.param("distance_cuttoff_freq", distance_cuttoff_freq, 3.0);
     nh.param("cv_topic", cv_topic, string("/detected_armor"));
     nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
 
@@ -205,6 +222,7 @@ int main(int argc, char **argv) {
     nh.param("omega_raw_topic", omega_raw_topic, string("/visual_servo/raw_omega_cam"));
     nh.param("omega_visual_topic", omega_visual_topic, string("/visual_servo/omega_visual"));
     nh.param("delayed_gyro_topic", delayed_gyro_topic, string("/visual_servo/delayed_gyro"));
+    nh.param("debug_distance_topic", debug_distance_topic, string("/visual_servo/distance_compare"));
 
     nh.param("cfg_file_name", cfg_file_name, string("/home/nvidia/ws/src/6_controller/gimbal_controller/cfg/camera_tracking_camera_calib.yaml"));
 
@@ -222,6 +240,7 @@ int main(int argc, char **argv) {
     kalman_input_pub  = nh.advertise<geometry_msgs::TwistStamped>(kalman_input_topic, 10);
     kalman_output_pub = nh.advertise<geometry_msgs::TwistStamped>(kalman_output_topic, 10);
     delayed_gyro_pub  = nh.advertise<geometry_msgs::TwistStamped>(delayed_gyro_topic, 10);
+    debug_z_pub       = nh.advertise<geometry_msgs::TwistStamped>(debug_distance_topic, 10);
 
     // create a camera model
     m_camera = camera_model::CameraFactory::instance()->generateCameraFromYamlFile(cfg_file_name);
@@ -229,7 +248,7 @@ int main(int argc, char **argv) {
     fsm finite_state = fsm::idle;
 
     // create the low pass filter
-    z_low_pass = new Filter(LPF, 4, 30, 3);
+    z_low_pass = new Filter(LPF, 4, ctrl_freq, distance_cuttoff_freq);
 
     // setup the target coordinate
     MatrixXd target_pixel(n, m);
@@ -241,7 +260,7 @@ int main(int argc, char **argv) {
     double pixel_y_top_= (pixel_y_max + pixel_dy) * 0.5;
 
     target_pixel <<
-          pixel_x_down, pixel_y_down,
+            pixel_x_down, pixel_y_down,
     	    pixel_x_down, pixel_y_top_,
     	    pixel_x_top_, pixel_y_down,
     	    pixel_x_top_, pixel_y_top_; // 1000 mm
