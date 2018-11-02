@@ -1,5 +1,7 @@
 <launch>
 
+     <include file="$(find wheel_odom)/launch/odom.launch"/>
+
     <node pkg="rqt_reconfigure" name="rqt_reconfigure" type="rqt_reconfigure" output="screen"/>
 
     <node name="wheel_visual_servo" pkg="visual_servo_control" type="III_visual_servo_with_wheel" output="screen">
