@@ -6,6 +6,9 @@ wheel_odom::WheelOdometryROS::WheelOdometryROS( ros::NodeHandle nh, double lengt
     model_type = MECANUM_WHEEL;
     odom = wheel_odom::WheelOdomFactory::newWheelOdom( )->init( model_type, length, width );
 
+	std::string wheel_odom_topic;
+	nh.param("wheel_odom_topic", wheel_odom_topic, std::string("/wheel_odom_output"));
+	
     steering_sub
     = nh.subscribe< wheel_odom::steeringAngle >( "steering", //
                                                  1,
@@ -20,7 +23,7 @@ wheel_odom::WheelOdometryROS::WheelOdometryROS( ros::NodeHandle nh, double lengt
                                                this,
                                                ros::TransportHints( ).tcpNoDelay( true ) );
 
-    odom_pub = nh.advertise< nav_msgs::Odometry >( "wheel_odom", 1 );
+    odom_pub = nh.advertise< nav_msgs::Odometry >( wheel_odom_topic, 1 );
 }
 
 void

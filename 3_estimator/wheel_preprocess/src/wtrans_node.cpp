@@ -5,7 +5,6 @@
 
 #define CON_PI_F 3.14159265359
 #define CON_RPM_TO_RAD ( 2.0 * CON_PI_F / 60.0 )
-#define GEAR_SCALE 1
 
 ros::Publisher pub;
 
@@ -20,10 +19,10 @@ chatterCallback( const can_receive_msg::motor_debugConstPtr& msg )
     speeds.header.stamp    = msg->header.stamp;
     speeds.header.seq      = msg->header.seq;
 
-    speeds.speedRF = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[0] * R;
-    speeds.speedLF = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[1] * R;
-    speeds.speedLB = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[2] * R;
-    speeds.speedRB = GEAR_SCALE * CON_RPM_TO_RAD * msg->speed_[3] * R;
+    speeds.speedRF = msg->speed_[0] * R;
+    speeds.speedLF = msg->speed_[1] * R;
+    speeds.speedLB = msg->speed_[2] * R;
+    speeds.speedRB = msg->speed_[3] * R;
 
     pub.publish( speeds );
 }

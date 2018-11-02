@@ -16,6 +16,7 @@
       <param name="vehicle_width" value="2.0"/>
       <param name="vehicle_wheelbase" value="3.0"/>
       <param name="time_delay" value="0.0"/>
+      <param name="wheel_odom_topic" type="string" value="/wheel_odom_output"/>
 
 </node>
 
