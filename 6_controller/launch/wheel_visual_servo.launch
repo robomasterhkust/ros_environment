@@ -9,11 +9,12 @@
         <param name="Kd" type="double" value="0.0"/>
         <param name="Kf_r0" type="double" value="0.5"/>
         <param name="Kf_q0" type="double" value="0.1"/>
-        <param name="distance_cutoff_freq" type="double" value="3.0"/>
+        <param name="distance_cutoff_freq" type="double" value="15.0"/>
         <param name="ctrl_freq" type="double" value="30.0"/>
         <param name="target_Z" type="double" value="1.0"/>
         <param name="pixel_dx" type="double" value="68.0"/>
         <param name="pixel_dy" type="double" value="25.0"/>
+        <param name="FIR_gain" type="double" value="1.14"/>
         <param name="publisher_topic" type="string" value="/cmd_vel"/>
         <param name="kalman_input_topic" type="string" value="/visual_servo/kalman_input"/>
         <param name="kalman_output_topic" type="string" value="/visual_servo/kalman_output"/>

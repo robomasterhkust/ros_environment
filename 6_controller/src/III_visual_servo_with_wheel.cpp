@@ -11,9 +11,9 @@
 #include <Eigen/Dense>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TwistStamped.h>
-//#include "rm_cv/vertice.h"
+#include "rm_cv/vertice.h"
 #include "filt.h"
-#include "rm_cv/ArmorRecord.h"
+// #include "rm_cv/ArmorRecord.h"
 #include "III_VisualServoController.h"
 #include "camera_model/camera_models/CameraFactory.h"
 
@@ -52,10 +52,11 @@ double Kp = 1.0;
 double Kd = 0.0;
 double Kf_r0 = 0.01;
 double Kf_q0 = 1.0;
+double FIR_gain = 1.0;
 double ctrl_freq = 30;
 double distance_cuttoff_freq = 3;
 
-double target_Z = 1;
+double target_Z = 1.0;
 double pixel_x_max = 640;
 double pixel_y_max = 512;
 double pixel_dx = 68;
@@ -133,8 +134,27 @@ visual_handle_feature(const Eigen::MatrixXd &input_pixel)
 
     last_input_image_frame = input_image_frame;
 }
+const double MAX_DISTANCE = 3.0;
 
-/*
+void
+visual_handle_distance(const Eigen::MatrixXd &input_pixel)
+{
+    double pixel_dy_n = 0.5 * ( input_pixel(1, 1) - input_pixel(0, 1) + input_pixel(3, 1) - input_pixel(2, 1) );
+
+    double z_raw;
+    if (pixel_dy_n * MAX_DISTANCE > pixel_dy) {
+        z_raw  = target_Z * pixel_dy / pixel_dy_n;
+    }
+    else {
+        z_raw  = target_Z;
+    }
+    
+    double z_filt = FIR_gain * z_low_pass->do_sample(z_raw);
+
+    ctl.setZ(z_filt);
+    publish_distance_debug(z_raw * 1000, z_filt * 1000);
+}
+
 void
 visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
 {
@@ -147,10 +167,12 @@ visual_feature_cb(const rm_cv::vertice::ConstPtr cv_ptr)
     }
 
     visual_handle_feature(input_pixel);
+
+    visual_handle_distance(input_pixel);
 }
- */
 
 
+/*
 void
 visual_feature_cb_with_z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
 {
@@ -164,10 +186,11 @@ visual_feature_cb_with_z(const rm_cv::ArmorRecord::ConstPtr cv_ptr)
     visual_handle_feature(input_pixel);
 
     double z_raw  = cv_ptr->armorPose.linear.z;
-    double z_filt = z_low_pass->do_sample(z_raw);
+    double z_filt = FIR_gain * z_low_pass->do_sample(z_raw);
     ctl.setZ(z_filt);
     publish_distance_debug(z_raw, z_filt);
 }
+ */
 
 void
 omega_cam_cb(const geometry_msgs::TwistStamped::ConstPtr omega_ptr){
@@ -201,6 +224,7 @@ void configCallback(visual_servo_control::tuningConfig &config, uint32_t level _
     Kd = config.Kd;
     Kf_r0 = config.Kf_r0;
     Kf_q0 = config.Kf_q0;
+    FIR_gain = config.FIR_gain;
 }
 
 int main(int argc, char **argv) {
@@ -216,7 +240,8 @@ int main(int argc, char **argv) {
     nh.param("target_Z", target_Z, 1.0);
     nh.param("pixel_dx", pixel_dx, 68.0);
     nh.param("pixel_dy", pixel_dy, 25.0);
-    nh.param("cv_topic", cv_topic, string("/detected_armor"));
+    nh.param("FIR_gain", FIR_gain, 1.0);
+    nh.param("cv_topic", cv_topic, string("/detected_vertice"));
     nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
 
     nh.param("publisher_topic", publisher_topic, string("/cmd_vel"));
@@ -235,7 +260,7 @@ int main(int argc, char **argv) {
     dr_callback = boost::bind(&configCallback, _1, _2);
     dr_server.setCallback(dr_callback);
 
-    ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb_with_z);
+    ros::Subscriber sub1 = nh.subscribe(cv_topic, 10, visual_feature_cb);
     ros::Subscriber sub2 = nh.subscribe(omega_input_topic, 10, omega_cam_cb);
     cmd_pub = nh.advertise<geometry_msgs::Twist>(publisher_topic, 10);
     omega_raw_pub     = nh.advertise<geometry_msgs::TwistStamped>(omega_raw_topic, 10);
@@ -251,7 +276,7 @@ int main(int argc, char **argv) {
     fsm finite_state = fsm::idle;
 
     // create the low pass filter
-    z_low_pass = new Filter(LPF, 4, ctrl_freq, distance_cuttoff_freq);
+    z_low_pass = new Filter(LPF, 10, 2 * ctrl_freq, distance_cuttoff_freq);
 
     // setup the target coordinate
     MatrixXd target_pixel(n, m);
