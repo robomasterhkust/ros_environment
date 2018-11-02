@@ -213,6 +213,9 @@ int main(int argc, char **argv) {
     nh.param("Kf_r0", Kf_r0, 1.0);
     nh.param("ctrl_freq", ctrl_freq, 30.0);
     nh.param("distance_cuttoff_freq", distance_cuttoff_freq, 3.0);
+    nh.param("target_Z", target_Z, 1.0);
+    nh.param("pixel_dx", pixel_dx, 68.0);
+    nh.param("pixel_dy", pixel_dy, 25.0);
     nh.param("cv_topic", cv_topic, string("/detected_armor"));
     nh.param("omega_input_topic", omega_input_topic, string("/can_receive_1/end_effector_omega"));
 
