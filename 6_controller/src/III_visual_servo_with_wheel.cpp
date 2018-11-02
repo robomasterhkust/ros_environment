@@ -57,10 +57,16 @@ double ctrl_freq = 30;
 double distance_cuttoff_freq = 3;
 
 double target_Z = 1.0;
+const double MAX_DISTANCE = 3.0;
 double pixel_x_max = 640;
 double pixel_y_max = 512;
 double pixel_dx = 68;
 double pixel_dy = 25;
+double Kp_z = 0.0;
+double Kd_z = 0.0;
+
+double z_filt = 1.0;
+double error_z = 0.0;
 
 // low pass Filter for distance
 Filter *z_low_pass;
@@ -134,7 +140,7 @@ visual_handle_feature(const Eigen::MatrixXd &input_pixel)
 
     last_input_image_frame = input_image_frame;
 }
-const double MAX_DISTANCE = 3.0;
+
 
 void
 visual_handle_distance(const Eigen::MatrixXd &input_pixel)
@@ -153,6 +159,8 @@ visual_handle_distance(const Eigen::MatrixXd &input_pixel)
 
     ctl.setZ(z_filt);
     publish_distance_debug(z_raw * 1000, z_filt * 1000);
+
+    error_z = target_Z - z_filt;
 }
 
 void
@@ -222,6 +230,8 @@ void configCallback(visual_servo_control::tuningConfig &config, uint32_t level _
 {
     Kp = config.Kp;
     Kd = config.Kd;
+    Kp_z = config.Kp_z;
+    Kd_z = config.Kd_z;
     Kf_r0 = config.Kf_r0;
     Kf_q0 = config.Kf_q0;
     FIR_gain = config.FIR_gain;
@@ -233,6 +243,8 @@ int main(int argc, char **argv) {
 
     nh.param("Kp", Kp, -1.0);
     nh.param("Kd", Kd, 0.0);
+    nh.param("Kp_z", Kp_z, 0.0);
+    nh.param("Kd_z", Kd_z, 0.0);
     nh.param("Kf_r0", Kf_r0, 0.01);
     nh.param("Kf_r0", Kf_r0, 1.0);
     nh.param("ctrl_freq", ctrl_freq, 30.0);
@@ -372,6 +384,8 @@ int main(int argc, char **argv) {
 
             publish_cmd(cam_R_end * ctl_val, cmd_pub);
             prev_ctl_val = cam_R_end * ctl_val;
+
+            prev_ctl_val(0) += Kp_z * error_z;
         }
         else if (finite_state == fsm::multi) {
             ctl.finite_state = 2;
@@ -381,6 +395,8 @@ int main(int argc, char **argv) {
 
             publish_cmd(cam_R_end * ctl_val, cmd_pub);
             prev_ctl_val = cam_R_end * ctl_val;
+
+            prev_ctl_val(0) += Kp_z * error_z;
         }
 
         if (finite_state == fsm::multi && gyro_updated) {

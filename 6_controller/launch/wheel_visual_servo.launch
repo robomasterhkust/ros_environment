@@ -7,6 +7,8 @@
     <node name="wheel_visual_servo" pkg="visual_servo_control" type="III_visual_servo_with_wheel" output="screen">
         <param name="Kp" type="double" value="5.0"/>
         <param name="Kd" type="double" value="0.0"/>
+        <param name="Kp_z" type="double" value="0.0"/>
+        <param name="Kd_z" type="double" value="0.0"/>
         <param name="Kf_r0" type="double" value="0.5"/>
         <param name="Kf_q0" type="double" value="0.1"/>
         <param name="distance_cutoff_freq" type="double" value="15.0"/>
