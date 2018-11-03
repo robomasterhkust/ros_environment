@@ -34,7 +34,7 @@
 #define CAN_CHASSIS_DEBUG_BL 0x213
 #define CAN_CHASSIS_DEBUG_BR 0x214
 #define CAN_GIMBAL_END_EFFECTOR_ANGULAR_VEL 0x215
-#define CAN_CHASSIS_WHEEL 0x216
+#define CAN_CHASSIS_WHEEL 0x220
 
 std::string receiver_topic;
 
