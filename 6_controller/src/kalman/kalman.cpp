@@ -18,7 +18,7 @@ KalmanFilter::KalmanFilter(
       m(H.rows()), n(A.rows()), dt(dt), initialized(false),
       x(n)
 {
-
+    init();
 }
 
 KalmanFilter::KalmanFilter() {}

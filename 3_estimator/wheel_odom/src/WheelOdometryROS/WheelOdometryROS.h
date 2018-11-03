@@ -30,6 +30,10 @@ class WheelOdometryROS
     double m_dt;
     double m_timePrev;
     bool is_first_run;
+
+    // for error bag only
+    double pre_vx;
+    int count;
 };
 }
 #endif // WHEELODOMETRYROS_H

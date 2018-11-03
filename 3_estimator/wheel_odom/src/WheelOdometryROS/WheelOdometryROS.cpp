@@ -24,6 +24,9 @@ wheel_odom::WheelOdometryROS::WheelOdometryROS( ros::NodeHandle nh, double lengt
                                                ros::TransportHints( ).tcpNoDelay( true ) );
 
     odom_pub = nh.advertise< nav_msgs::Odometry >( wheel_odom_topic, 1 );
+
+    pre_vx = 0.0;
+    count = 0;
 }
 
 void
@@ -108,6 +111,22 @@ wheel_odom::WheelOdometryROS::speedCallback( const wheel_odom::wheelSpeedsConstP
         odom_msg->twist.twist.angular.x = 0;
         odom_msg->twist.twist.angular.y = 0;
         odom_msg->twist.twist.angular.z = vel2d.yaw;
-        odom_pub.publish( odom_msg );
+
+
+        if (abs(vel2d.x * 5) > abs(pre_vx)) {
+            odom_pub.publish( odom_msg );
+
+            pre_vx = vel2d.x;
+            count = 0;
+        }
+        else {
+            count++;
+            if (count > 3) {
+                odom_pub.publish( odom_msg );
+
+                pre_vx = vel2d.x;
+                count = 0;
+            }
+        }
     }
 }

@@ -3,8 +3,9 @@
 #include <can_receive_msg/motor_debug.h>
 #include <wheel_odom/wheelSpeeds.h>
 
-#define CON_PI_F 3.14159265359
-#define CON_RPM_TO_RAD ( 2.0 * CON_PI_F / 60.0 )
+int count = 0;
+
+double pre_speed_RF;
 
 ros::Publisher pub;
 
@@ -35,11 +36,14 @@ main( int argc, char** argv )
 
     double R_tmp = 0.076;
     int freq     = 0;
+    // count        = 0;
     nh.getParam( "radius_wheel", R_tmp );
     nh.getParam( "freq", freq );
 
     std::cout << " radius_wheel " << R_tmp << "\n";
     R = R_tmp;
+
+    pre_speed_RF = 0;
 
     ros::Subscriber sub = nh.subscribe( "/can_receive_1/motor_debug", 1000, chatterCallback );
     pub                 = nh.advertise< wheel_odom::wheelSpeeds >( "/wheelSpeeds", 50 );
