@@ -1,0 +1,10 @@
+<launch>
+    <node name="cam_reader" pkg="rm_cv" type="cam_reader" cwd="ROS_HOME" launch-prefix="sudo -E bash -c" output="screen">
+        <rosparam>
+            num_cams:   3
+            cam0: testv4l.xml
+            cam1: testflir.xml
+            cam2: testmv.xml
+        </rosparam>
+    </node>
+</launch>

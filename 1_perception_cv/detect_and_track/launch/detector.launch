@@ -1,0 +1,4 @@
+<launch>
+    <node name="armor_detection" pkg="rm_cv" type="armor_detection_node" cwd="ROS_HOME" launch-prefix="sudo -E bash -c" output="screen">
+    </node>
+</launch>

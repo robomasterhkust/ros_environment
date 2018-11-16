@@ -1,0 +1,20 @@
+<launch>
+    <node name="cv_shooter" pkg="rm_cv" type="armor_shooting_node" cwd="ROS_HOME" launch-prefix="sudo -E bash -c" output="screen">
+        <param name="yaw_kp" type="double " value="0.1"/>
+        <param name="yaw_ki" type="double " value="0"/>
+        <param name="yaw_kd" type="double " value="0"/>
+        <param name="pitch_kp" type="double " value="0.1"/>
+        <param name="pitch_ki" type="double " value="0"/>
+        <param name="pitch_kd" type="double " value="0"/>
+        <param name="forward_kp" type="double " value="0.00001"/>
+        <param name="forward_ki" type="double " value="0"/>
+        <param name="forward_kd" type="double " value="0"/>
+        <param name="maxPitchVelocity" type="double " value="1.0"/>
+        <param name="maxYawVelocity" type="double " value="1.0"/>
+        <param name="maxForwardVelocity" type="double " value="1.0"/>
+        <param name="GimbalControllerTimeout" type="double " value=" 0.2"/>
+        <param name="targetDistance" type="double " value=" 10"/>
+        <param name="Q_v" type="double " value=" 100000"/>
+        <param name="Q_a" type="double " value=" 100000"/>
+    </node>
+</launch>

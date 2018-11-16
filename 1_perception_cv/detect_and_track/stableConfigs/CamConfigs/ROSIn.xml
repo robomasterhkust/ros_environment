@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<driverType>2</driverType>
+<CameraBase>
+  <haveROI>0</haveROI>
+  <capture_width>0</capture_width>
+  <capture_height>0</capture_height>
+  <cameraMatrix type_id="opencv-matrix">
+    <rows>3</rows>
+    <cols>3</cols>
+    <dt>d</dt>
+    <data>
+      5.7415816032881912e+02 0. 3.2742003285305378e+02 0.
+      5.7415816032881912e+02 2.4936484992811634e+02 0. 0. 1.</data></cameraMatrix>
+  <distCoeffs type_id="opencv-matrix">
+    <rows>5</rows>
+    <cols>1</cols>
+    <dt>d</dt>
+    <data>
+      -3.2375228668428391e-01 -3.4872761190897344e-01
+      -1.1512756581913892e-03 -1.4712613269640719e-03
+      1.8355566025520382e+00</data></distCoeffs>
+  <rotationVec>
+    0. 0. 0.</rotationVec>
+  <translationVec>
+    0. 0. 0.</translationVec>
+  <minReadDelay_ms>0</minReadDelay_ms>
+  <maxReadDelay_ms>100</maxReadDelay_ms>
+  <lightFilterSetting>
+    <UseHSV>0</UseHSV>
+    <morphoRadius>2</morphoRadius>
+    <BGRMinBlue>
+      180 0 0</BGRMinBlue>
+    <BGRMaxBlue>
+      255 245 245</BGRMaxBlue>
+    <BGRMinRed>
+      0 0 180</BGRMinRed>
+    <BGRMaxRed>
+      255 255 255</BGRMaxRed>
+    <HSVMinBlue>
+      180 150 150</HSVMinBlue>
+    <HSVMaxBlue>
+      255 255 255</HSVMaxBlue>
+    <HSVMinRed>
+      0 150 150</HSVMinRed>
+    <HSVMaxRed>
+      50 255 255</HSVMaxRed></lightFilterSetting></CameraBase>
+<ROSCamIn>
+  <topicName>cam1</topicName></ROSCamIn>
+</opencv_storage>

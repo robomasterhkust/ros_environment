@@ -1,0 +1,75 @@
+#include <string.h>
+
+const std::string flycapInterfaceTypeStr[] =
+    {
+        "INTERFACE_IEEE1394",
+        "INTERFACE_USB2",
+        "INTERFACE_USB3",
+        "INTERFACE_GIGE",
+        "INTERFACE_UNKNOWN"};
+
+const std::string flycapPropertyTypeNames[] = {
+    "BRIGHTNESS",
+    "AUTO_EXPOSURE",
+    "SHARPNESS",
+    "WHITE_BALANCE",
+    "HUE",
+    "SATURATION",
+    "GAMMA",
+    "IRIS",
+    "FOCUS",
+    "ZOOM",
+    "PAN",
+    "TILT",
+    "SHUTTER",
+    "GAIN",
+    "TRIGGER_MODE",
+    "TRIGGER_DELAY",
+    "FRAME_RATE",
+    "TEMPERATURE",
+    "UNSPECIFIED_PROPERTY_TYPE",
+    "PROPERTY_TYPE_FORCE_32BITS"};
+
+const std::string flycapPixelFormatNames[] = {
+    "MONO8",
+    "411YUV8",
+    "422YUV8",
+    "444YUV8",
+    "RGB8",
+    "MONO16",
+    "RGB16",
+    "S_MONO16",
+    "S_RGB16",
+    "RAW8",
+    "RAW16",
+    "MONO12",
+    "RAW12",
+    "BGR",
+    "BGRU",
+    "RGB",
+    "RGBU",
+    "BGR16",
+    "BGRU16",
+    "422YUV8_JPEG"};
+
+const long flycapPixelFormatBitFields[] = {
+    0x80000000,
+    0x40000000,
+    0x20000000,
+    0x10000000,
+    0x08000000,
+    0x04000000,
+    0x02000000,
+    0x01000000,
+    0x00800000,
+    0x00400000,
+    0x00200000,
+    0x00100000,
+    0x00080000,
+    0x80000008,
+    0x40000008,
+    0x08000000,
+    0x40000002,
+    0x02000001,
+    0x02000002,
+    0x40000001};
