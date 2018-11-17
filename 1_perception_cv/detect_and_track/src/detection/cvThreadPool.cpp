@@ -31,7 +31,7 @@ ThreadPool::~ThreadPool()
  * this function tries to create objects for accessing and processing cameras and their inputs
  * specified by the global Setting object
  * return true if at least one camera can be initiallized
- * 
+ *
  */
 bool ThreadPool::initialize()
 {
@@ -49,6 +49,7 @@ void ThreadPool::doWork()
 {
 	if (detectionNodeShared::rosIntertface->tryProcess(armorStoragesQ, displayQ))
 		return;
+
 
 	if (ArmorProcessor::tryProcess(lightStoragesQ, armorStoragesQ))
 		return;

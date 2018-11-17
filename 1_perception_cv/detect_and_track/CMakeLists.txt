@@ -33,6 +33,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(Threads REQUIRED)
 find_package(OpenCV REQUIRED)
+message(STATUS "OpenCV_VERSION: ${OpenCV_VERSION}")
 
 #flir camera related
 if (WITH_FLYCAP)
@@ -126,6 +127,16 @@ target_link_libraries(cam_reader
     ${POINTGREY_LIBRARIES}
 )
 
+#tracking_node
+add_executable( tracking_node
+    src/tracking/tracking_node.cpp
+)
+
+target_link_libraries( tracking_node
+    ${catkin_LIBRARIES}
+    ${Boost_SYSTEM_LIBRARY}
+    ${OpenCV_LIBS}
+)
 
 if (WITH_MINDVISION)
 target_sources(cam_reader PUBLIC src/cameraDriver/mvCamera.cpp)
