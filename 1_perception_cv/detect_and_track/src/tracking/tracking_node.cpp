@@ -17,8 +17,8 @@
 
 #include "tracking_node.hpp"
 
-#include "../detection/Settings.hpp"
-#include "../detection/ArmorDetection.hpp"
+#include "detection/Settings.hpp"
+#include "detection/ArmorDetection.hpp"
 
 using namespace cv;
 using namespace std;
@@ -43,7 +43,14 @@ vector<Mat> image_stack;
 Ptr<Tracker> tracker;
 
 bool
-detect(const Mat &cur_frame, Rect2d &bbox) {
+detect(const Mat cur_frame, Rect2d &bbox) {
+    LightFilterSetting *lightSetting = new LightFilterSetting();
+    LightStorage* lights = LightFinder::findLightwithSetting(cur_frame, lightSetting);
+
+    vector<ArmorProcessor::LightGp> RLightGps;
+    vector<ArmorProcessor::LightGp> BLightGps;
+    armorGrouper(lights->lightsR, RLightGps);
+    armorGrouper(lights->lightsB, BLightGps);
     return false;
 }
 
@@ -69,8 +76,7 @@ init_tracker(const Mat &cur_frame, const Rect2d &bbox) {
 }
 
 /* TODO: Add 2D feature correspondence
-bool
-feature_correspondence
+    bool feature_correspondence
  */
 
 void

@@ -29,7 +29,7 @@ public:
   /**
  * @brief Construct a new Light object
  * the rect will be smaller in dimension by 1 pixel
- * @param _rect 
+ * @param _rect
  */
   Light(RotatedRect &_rect, vector<cv::Point> &contour);
   RotatedRect rect;
@@ -118,6 +118,8 @@ namespace LightFinder
 bool tryProcess(ConcurrentQueue<FrameInfo> &inputQ, ConcurrentQueue<LightStorage> &outputQueue);
 //private:
 LightStorage *findLight(FrameInfo *const frame);
+
+LightStorage *findLightwithSetting(Mat image, LightFilterSetting *setting);
 
 static void ConvertRRectAngle2Normal(RotatedRect &rRect);
 

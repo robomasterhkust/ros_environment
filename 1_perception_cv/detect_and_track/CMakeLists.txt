@@ -130,6 +130,10 @@ target_link_libraries(cam_reader
 #tracking_node
 add_executable( tracking_node
     src/tracking/tracking_node.cpp
+    src/detection/ArmorDetection.cpp
+    src/detection/Settings.cpp
+    src/detection/Camera.cpp
+    src/detection/ROSCamIn.cpp
 )
 
 target_link_libraries( tracking_node
