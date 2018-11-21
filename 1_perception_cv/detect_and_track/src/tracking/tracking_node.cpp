@@ -16,9 +16,8 @@
 #include "rm_cv/vertice.h"
 
 #include "tracking_node.hpp"
-
-#include "detection/Settings.hpp"
-#include "detection/ArmorDetection.hpp"
+#include "armor_detect.h"
+#include "detection_setting.hpp"
 
 using namespace cv;
 using namespace std;
@@ -38,19 +37,23 @@ Rect2d bbox_detect_prev;
 enum _detect_state_t { IDLE, DETECTION, ASSOCIATION, TRACKING };
 _detect_state_t state = IDLE;
 
+
 // image tracker
 vector<Mat> image_stack;
 Ptr<Tracker> tracker;
 
+Settings settings("settings.xml");
+
 bool
 detect(const Mat cur_frame, Rect2d &bbox) {
     LightFilterSetting *lightSetting = new LightFilterSetting();
-    LightStorage* lights = LightFinder::findLightwithSetting(cur_frame, lightSetting);
 
-    vector<ArmorProcessor::LightGp> RLightGps;
-    vector<ArmorProcessor::LightGp> BLightGps;
-    armorGrouper(lights->lightsR, RLightGps);
-    armorGrouper(lights->lightsB, BLightGps);
+    LightStorage* lights = LightFinder::findLight(cur_frame, lightSetting, &settings);
+
+//    vector<ArmorProcessor::LightGp> RLightGps;
+//    vector<ArmorProcessor::LightGp> BLightGps;
+//    armorGrouper(lights->lightsR, RLightGps);
+//    armorGrouper(lights->lightsB, BLightGps);
     return false;
 }
 
@@ -102,6 +105,8 @@ int main(int argc, char **argv) {
     unsigned int tracking_count = 0;
     unsigned int verify_count_max = 5;
     unsigned int tracking_count_max = (unsigned int)(tracking_freq / redetection_freq);
+
+    settings.load();
 
     while (ros::ok()) {
         // state machine

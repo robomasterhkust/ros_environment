@@ -2,7 +2,7 @@
 
 #include "opencv2/core/core.hpp"
 #include <string>
-#include "defines.hpp"
+#include "../defines.hpp"
 
 using namespace std;
 using namespace cv;
@@ -24,26 +24,6 @@ namespace fsHelper {
 
     void setDoubleToInt(int pos, void *doublePtr);
 } // namespace fsHelper
-
-class CameraDeployConfig
-{
-public:
-    CameraDeployConfig()
-    {};
-    string camFileName = "";
-    //cameras have same id means they are used together as a setup of stereo vision
-    int stereoGp = -1;
-    //the motion group where the camera is located, 0 for fixed in the chassis, 1 for on the gimbal, others to be defined
-    int motionGroup = 0;
-
-    void write(FileStorage &fs) const;
-
-    void read(const FileNode &node);
-};
-
-void write(FileStorage &fs, const std::string &, const CameraDeployConfig &x);
-
-void read(const FileNode &node, CameraDeployConfig &x, const CameraDeployConfig &default_value = CameraDeployConfig());
 
 class ADSetting
 {
@@ -125,7 +105,6 @@ public:
 
     void load();
 
-    CameraDeployConfig *cameraConfigs;
     ADSetting adSetting;
     bool Debug = true;
     int threadCount = 2;

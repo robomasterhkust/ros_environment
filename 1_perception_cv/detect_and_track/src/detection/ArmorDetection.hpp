@@ -119,7 +119,7 @@ bool tryProcess(ConcurrentQueue<FrameInfo> &inputQ, ConcurrentQueue<LightStorage
 //private:
 LightStorage *findLight(FrameInfo *const frame);
 
-LightStorage *findLightwithSetting(Mat image, LightFilterSetting *setting);
+// LightStorage *findLightwithSetting(Mat image, LightFilterSetting *setting);
 
 static void ConvertRRectAngle2Normal(RotatedRect &rRect);
 

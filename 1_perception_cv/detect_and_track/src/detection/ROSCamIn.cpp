@@ -25,7 +25,7 @@ void ROSCamIn::pushImg(const boost::shared_ptr<sensor_msgs::Image> msg)
     ROS_INFO("%s incoming image with latency: %f ms", this->config_filename.c_str(), (ros::Time::now() - msg->header.stamp).toSec() * 1000.0);
 }
 
-FrameInfo *ROSCamIn::·()
+FrameInfo *ROSCamIn::()
 {
     //const sensor_msgs::Image *tempin;
     const boost::shared_ptr<sensor_msgs::Image> *tempin;
